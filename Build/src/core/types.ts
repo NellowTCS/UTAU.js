@@ -49,6 +49,11 @@ export interface PhonemeDef {
   voiced?: boolean
 }
 
+export interface PitchBend {
+  ticks: number[]
+  values: number[]
+}
+
 export interface Note {
   lyric: string
   noteNum: number
@@ -58,6 +63,7 @@ export interface Note {
   intensity?: number
   modulation?: number
   vibratoOverride?: Partial<VibratoConfig>
+  pitchBend?: PitchBend
 }
 
 export interface TempoEvent {

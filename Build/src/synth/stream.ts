@@ -67,6 +67,7 @@ export async function* streamScore(
       chunk.channels = 2
     }
     yield chunk
+    await new Promise((r) => setTimeout(r, 0))
     currentSample += chunk.data[0].length
     currentTick = noteTick + note.length
   }

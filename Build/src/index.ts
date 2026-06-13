@@ -1,7 +1,7 @@
 export type {
   GlottalConfig, FormantConfig, VibratoConfig, VoiceConfig,
   FormantTarget, NoiseConfig, PhonemeDef, Note, Score, TempoEvent,
-  AudioChunk, LanguageModule, GlottalSourceParams,
+  AudioChunk, LanguageModule, GlottalSourceParams, PitchBend,
 } from "./core/types"
 
 export { LFGlottalSource } from "./core/dsp/oscillator"
@@ -15,3 +15,5 @@ export { getVoice, registerVoice, maleVoice, femaleVoice, buildVoice, scaleVoice
 export { streamScore, renderScore, mixChunks, renderNote } from "./synth/index"
 export { StreamPlayer } from "./player/index"
 export type { PlayerState, PlayerEvent } from "./player/index"
+export { ufDataToScore, importScoreFromFile, importScoreFromBytes } from "./import/ufdata"
+export type { ImportOptions, UfData } from "./import/ufdata"

@@ -33,6 +33,7 @@
     "typescript-eslint": "^8.60.1"
   },
   "dependencies": {
-    "@nisoku/satori": "^0.1.3"
+    "@nisoku/satori": "^0.1.3",
+    "@sevenc-nanashi/utaformatix-ts": "npm:@jsr/sevenc-nanashi__utaformatix-ts@^0.4.0"
   }
 }

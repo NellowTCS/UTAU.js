@@ -1,4 +1,4 @@
-import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef } from "../core/types"
+import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef, PitchBend } from "../core/types"
 import { LFGlottalSource } from "../core/dsp/oscillator"
 import { FormantCascade, FormantFilter, interpolateFormants } from "../core/dsp/filter"
 function midiToFrequency(noteNum: number): number {
@@ -7,6 +7,21 @@ function midiToFrequency(noteNum: number): number {
 
 function ticksToDuration(tickLen: number, tempo: number, resolution: number, sampleRate: number): number {
   return tickLen * (60 / (tempo * resolution)) * sampleRate
+}
+
+function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, totalSamples: number, noteLenTicks: number): number {
+  if (!bend || bend.ticks.length === 0) return 0
+  const tickPos = (sampleIdx / totalSamples) * noteLenTicks
+  if (tickPos <= bend.ticks[0]) return bend.values[0]
+  const last = bend.ticks.length - 1
+  if (tickPos >= bend.ticks[last]) return bend.values[last]
+  for (let i = 0; i < last; i++) {
+    if (tickPos >= bend.ticks[i] && tickPos < bend.ticks[i + 1]) {
+      const t = (tickPos - bend.ticks[i]) / (bend.ticks[i + 1] - bend.ticks[i])
+      return bend.values[i] + t * (bend.values[i + 1] - bend.values[i])
+    }
+  }
+  return bend.values[last]
 }
 
 function computePhonemeDurations(
@@ -153,7 +168,9 @@ export function renderNote(
 
     const t = i / noteLen
     const vibGain = i < vibAttackSamp ? i / vibAttackSamp : 1
-    const f0 = baseF0 * Math.pow(2, Math.sin(2 * Math.PI * vibRate * i / sr) * vibDepth / 1200 * vibGain)
+    const pitchBendSemitones = interpolatePitchBend(note.pitchBend, i, noteLen, note.length)
+    const vibCents = Math.sin(2 * Math.PI * vibRate * i / sr) * vibDepth * vibGain
+    const f0 = baseF0 * Math.pow(2, (pitchBendSemitones * 100 + vibCents) / 1200)
     const pp = phonemes[Math.max(0, pi - 1)] ?? cp
     const segPos = i - phSegStart
     const tt = Math.min(1, segPos / Math.max(1, transitionLen))

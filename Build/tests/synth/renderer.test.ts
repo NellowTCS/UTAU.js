@@ -73,4 +73,63 @@ describe("renderNote", () => {
     expect(chunk.data.length).toBe(2)
     expect(chunk.channels).toBe(2)
   })
+
+  describe("pitch bend", () => {
+    it("produces valid output with pitchBend", () => {
+      const chunk = renderNote(
+        { lyric: "a", noteNum: 72, length: 480, tick: 0, pitchBend: { ticks: [0, 240], values: [0, 12] } },
+        voice, lang, 120, 480,
+      )
+      for (const ch of chunk.data) {
+        for (const s of ch) {
+          expect(isFinite(s)).toBe(true)
+          expect(isNaN(s)).toBe(false)
+          expect(Math.abs(s)).toBeLessThanOrEqual(1)
+        }
+      }
+    })
+
+    it("changes output compared to un-bent note", () => {
+      const base = renderNote(
+        { lyric: "a", noteNum: 72, length: 480, tick: 0 },
+        voice, lang, 120, 480,
+      )
+      const bent = renderNote(
+        { lyric: "a", noteNum: 72, length: 480, tick: 0, pitchBend: { ticks: [0, 480], values: [0, 12] } },
+        voice, lang, 120, 480,
+      )
+      let diff = 0
+      for (let i = 0; i < base.data[0].length; i++) {
+        diff += Math.abs(base.data[0][i] - bent.data[0][i])
+      }
+      expect(diff).toBeGreaterThan(0)
+    })
+
+    it("handles flat pitchBend (constant offset)", () => {
+      const chunk = renderNote(
+        { lyric: "a", noteNum: 72, length: 480, tick: 0, pitchBend: { ticks: [0], values: [0] } },
+        voice, lang, 120, 480,
+      )
+      expect(chunk.data[0].length).toBeGreaterThan(0)
+      for (const s of chunk.data[0]) expect(isFinite(s)).toBe(true)
+    })
+  })
+
+  describe("pitchBend type", () => {
+    it("pitchBend is optional on Note", () => {
+      const note: { lyric: string; noteNum: number; length: number; tick?: number; pitchBend?: { ticks: number[]; values: number[] } } = {
+        lyric: "a", noteNum: 72, length: 480, tick: 0,
+      }
+      expect(note.pitchBend).toBeUndefined()
+    })
+
+    it("pitchBend can be set on Note", () => {
+      const note: { lyric: string; noteNum: number; length: number; tick?: number; pitchBend?: { ticks: number[]; values: number[] } } = {
+        lyric: "a", noteNum: 72, length: 480, tick: 0,
+        pitchBend: { ticks: [0, 480], values: [0, 1] },
+      }
+      expect(note.pitchBend).toBeDefined()
+      expect(note.pitchBend!.ticks).toHaveLength(2)
+    })
+  })
 })

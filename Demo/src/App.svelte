@@ -9,6 +9,7 @@
     encodeWav,
     buildVoice,
     scaleVoice,
+    importScoreFromFile,
   } from "utaujs";
   import { StreamPlayer } from "utaujs";
   import { createDemoScore } from "./lib/score";
@@ -86,6 +87,21 @@
     playerState = "idle";
   }
 
+  let fileInput: HTMLInputElement | undefined;
+
+  async function handleOpen() {
+    const files = fileInput?.files;
+    if (!files || !files.length) return;
+    const s = await importScoreFromFile(files[0]);
+    score = s;
+    notes = s.notes;
+    selectedNote = null;
+  }
+
+  $effect(() => {
+    score.notes = notes;
+  });
+
   async function handleExport() {
     if (exporting) return;
     exporting = true;
@@ -128,10 +144,15 @@
 <div class="app">
   <header>
     <h1>UTAU.js</h1>
-    <select bind:value={langId}>
-      <option value="jp">Japanese</option>
-      <option value="en">English</option>
-    </select>
+    <div class="header-controls">
+      <input type="file" bind:this={fileInput} accept=".ust,.ustx,.vsqx,.vpr,.svp,.mid,.midi,.musicxml,.ppsf,.s5p,.tssln,.ccs,.dv,.ufdata"
+        style="display:none" onchange={handleOpen} />
+      <button onclick={() => fileInput?.click()}>Open</button>
+      <select bind:value={langId}>
+        <option value="jp">Japanese</option>
+        <option value="en">English</option>
+      </select>
+    </div>
   </header>
   <main>
     <div class="piano-area">
@@ -202,6 +223,22 @@
     color: #4fc3f7;
     letter-spacing: 2px;
   }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-controls button {
+    background: #1a1a2e;
+    color: #ddd;
+    border: 1px solid #555;
+    padding: 4px 10px;
+    font-family: monospace;
+    cursor: pointer;
+  }
+  .header-controls button:hover {
+    background: #2a2a4e;
+  }
   header select {
     background: #1a1a2e;
     color: #ddd;
@@ -217,7 +254,9 @@
   }
   .piano-area {
     flex: 1;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 8px;
   }
   .voice-area {
