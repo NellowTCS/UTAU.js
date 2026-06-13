@@ -4,6 +4,7 @@ export interface GlottalConfig {
   tenseness: number
   aspiration: number
   power: number
+  jitter?: number
 }
 
 export interface FormantConfig {

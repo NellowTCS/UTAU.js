@@ -9,8 +9,11 @@ export class FormantFilter {
   setResonator(freq: number, bw: number, sampleRate: number): void {
     const theta = (2 * Math.PI * freq) / sampleRate
     const r = Math.exp(-Math.PI * bw / sampleRate)
-    this.b0 = 1 - r * r; this.b1 = 0; this.b2 = 0
-    this.a1 = -2 * r * Math.cos(theta); this.a2 = r * r
+    const B = 2 * r * Math.cos(theta)
+    const C = -(r * r)
+    this.b0 = 1 - B - C
+    this.b1 = 0; this.b2 = 0
+    this.a1 = -B; this.a2 = -C
   }
 
   setAntiResonator(freq: number, bw: number, sampleRate: number): void {
@@ -20,28 +23,17 @@ export class FormantFilter {
     this.a1 = -2 * 0.99 * Math.cos(theta * 0.95); this.a2 = 0.99 * 0.99
   }
 
-  process(input: Float32Array): Float32Array {
-    const out = new Float32Array(input.length)
-    for (let i = 0; i < input.length; i++) {
-      const x = input[i]
-      const y = this.b0 * x + this.b1 * this.x1 + this.b2 * this.x2
-        - this.a1 * this.y1 - this.a2 * this.y2
-      this.x2 = this.x1; this.x1 = x
-      this.y2 = this.y1; this.y1 = y
-      out[i] = y
-    }
-    return out
+  setPassthrough(): void {
+    this.b0 = 1; this.b1 = 0; this.b2 = 0
+    this.a1 = 0; this.a2 = 0
   }
 
-  processInPlace(input: Float32Array): void {
-    for (let i = 0; i < input.length; i++) {
-      const x = input[i]
-      const y = this.b0 * x + this.b1 * this.x1 + this.b2 * this.x2
-        - this.a1 * this.y1 - this.a2 * this.y2
-      this.x2 = this.x1; this.x1 = x
-      this.y2 = this.y1; this.y1 = y
-      input[i] = y
-    }
+  processSample(x: number): number {
+    const y = this.b0 * x + this.b1 * this.x1 + this.b2 * this.x2
+      - this.a1 * this.y1 - this.a2 * this.y2
+    this.x2 = this.x1; this.x1 = x
+    this.y2 = this.y1; this.y1 = y
+    return y
   }
 
   reset(): void { this.y1 = 0; this.y2 = 0; this.x1 = 0; this.x2 = 0 }
@@ -49,26 +41,40 @@ export class FormantFilter {
 
 export class FormantCascade {
   private resonators: FormantFilter[]
+  private antiResonators: FormantFilter[]
 
   constructor(numFormants = 5) {
     this.resonators = Array.from({ length: numFormants }, () => new FormantFilter())
+    this.antiResonators = Array.from({ length: numFormants }, () => new FormantFilter())
   }
 
-  setFormants(targets: FormantTarget[], sampleRate: number): void {
+  setFormants(targets: FormantTarget[], sampleRate: number, antiformants?: FormantTarget[]): void {
     for (let i = 0; i < this.resonators.length; i++) {
       if (i < targets.length) {
         this.resonators[i].setResonator(targets[i].f, targets[i].bw, sampleRate)
       } else {
-        this.resonators[i].setResonator(5000 + i * 1000, 200, sampleRate)
+        this.resonators[i].setResonator(5000, sampleRate * 0.5, sampleRate)
+      }
+    }
+    for (let i = 0; i < this.antiResonators.length; i++) {
+      if (antiformants && i < antiformants.length) {
+        this.antiResonators[i].setAntiResonator(antiformants[i].f, antiformants[i].bw, sampleRate)
+      } else {
+        this.antiResonators[i].setPassthrough()
       }
     }
   }
 
-  processInPlace(input: Float32Array): void {
-    for (const res of this.resonators) res.processInPlace(input)
+  processSample(x: number): number {
+    for (const ar of this.antiResonators) x = ar.processSample(x)
+    for (const res of this.resonators) x = res.processSample(x)
+    return x
   }
 
-  reset(): void { for (const res of this.resonators) res.reset() }
+  reset(): void {
+    for (const res of this.resonators) res.reset()
+    for (const ar of this.antiResonators) ar.reset()
+  }
 }
 
 export function interpolateFormants(

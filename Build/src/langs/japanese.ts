@@ -71,12 +71,36 @@ const jpPhonemes: PhonemeDef[] = [
   },
 
   // Plosives:
-  { symbol: "k", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.06, noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] } },
-  { symbol: "g", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.06, noise: { amplitude: 0.2, formantShaping: [{ f: 2000, bw: 500 }] } },
-  { symbol: "t", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.05, noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] } },
-  { symbol: "d", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.05, noise: { amplitude: 0.25, formantShaping: [{ f: 4000, bw: 1000 }] } },
-  { symbol: "b", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.05, noise: { amplitude: 0.2, formantShaping: [{ f: 800, bw: 400 }] } },
-  { symbol: "p", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.05, noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] } },
+  {
+    symbol: "k", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.06,
+    formants: [{ f: 300, bw: 200 }, { f: 2000, bw: 200 }, { f: 2500, bw: 250 }],
+    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] }
+  },
+  {
+    symbol: "g", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.06,
+    formants: [{ f: 300, bw: 200 }, { f: 1800, bw: 200 }, { f: 2500, bw: 250 }],
+    noise: { amplitude: 0.2, formantShaping: [{ f: 2000, bw: 500 }] }
+  },
+  {
+    symbol: "t", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.05,
+    formants: [{ f: 300, bw: 200 }, { f: 1700, bw: 200 }, { f: 2600, bw: 250 }],
+    noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] }
+  },
+  {
+    symbol: "d", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.05,
+    formants: [{ f: 300, bw: 200 }, { f: 1700, bw: 200 }, { f: 2600, bw: 250 }],
+    noise: { amplitude: 0.25, formantShaping: [{ f: 4000, bw: 1000 }] }
+  },
+  {
+    symbol: "b", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.05,
+    formants: [{ f: 300, bw: 200 }, { f: 1100, bw: 200 }, { f: 2100, bw: 250 }],
+    noise: { amplitude: 0.2, formantShaping: [{ f: 800, bw: 400 }] }
+  },
+  {
+    symbol: "p", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.05,
+    formants: [{ f: 300, bw: 200 }, { f: 1100, bw: 200 }, { f: 2100, bw: 250 }],
+    noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] }
+  },
 
   // Fricatives:
   { symbol: "s", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.08, noise: { amplitude: 0.4, formantShaping: [{ f: 7000, bw: 2000 }] } },
@@ -88,6 +112,7 @@ const jpPhonemes: PhonemeDef[] = [
   // Approximants:
   { symbol: "y", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
   { symbol: "r", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.06, formants: [{ f: 400, bw: 200 }, { f: 1300, bw: 300 }] },
+  { symbol: "l", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.06, formants: [{ f: 400, bw: 200 }, { f: 1300, bw: 300 }] },
   { symbol: "w", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
 
   // Affricates:
@@ -145,7 +170,7 @@ function romajiToPhonemes(romaji: string): string[] {
     "ye": "y e",
   }
   const vowels = new Set(["a", "i", "u", "e", "o"])
-  const consonants = new Set(["k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p", "sh", "ch", "ts", "f", "j"])
+  const consonants = new Set(["k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p", "sh", "ch", "ts", "f", "j", "l"])
   let s = romaji.toLowerCase().replace(/\s+/g, "")
   if (special[s]) { s = special[s] }
   const result: string[] = []
