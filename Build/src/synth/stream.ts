@@ -1,4 +1,4 @@
-import type { AudioChunk, Score, VoiceConfig } from "../core/types"
+import type { AudioChunk, Score, VoiceConfig, TempoEvent } from "../core/types"
 import { getLanguage } from "../langs/index"
 import { getVoice } from "../voices/index"
 import { renderNote } from "./renderer"
@@ -22,17 +22,45 @@ export async function* streamScore(
   let currentTempo = tempos[0]?.tempo ?? 120
   let tempoIdx = 0
 
-  for (const [idx, note] of notes.entries()) {
+  function tempoAt(tick: number): number {
+    let t = tempos[0]?.tempo ?? 120
+    for (const ev of tempos) { if (ev.tick <= tick) t = ev.tempo; else break }
+    return t
+  }
+
+  function noteSampleDuration(noteTick: number, noteLen: number): number {
+    const end = noteTick + noteLen
+    let total = 0
+    let seg = noteTick
+    let t = tempos[0]?.tempo ?? 120
+    for (const ev of tempos) {
+      if (ev.tick > seg && ev.tick < end) {
+        total += ticksToDuration(ev.tick - seg, t, resolution, sr)
+        seg = ev.tick
+      }
+      if (ev.tick <= seg) t = ev.tempo
+      if (seg >= end) break
+    }
+    if (seg < end) total += ticksToDuration(end - seg, t, resolution, sr)
+    return total
+  }
+
+  for (const note of notes) {
     const noteTick = note.tick ?? currentTick
     const gap = Math.max(0, noteTick - currentTick)
     currentSample += Math.round(ticksToDuration(gap, currentTempo, resolution, sr))
+
+    const noteTempo = tempoAt(noteTick)
 
     while (tempoIdx < tempos.length && tempos[tempoIdx].tick <= currentTick + note.length + gap) {
       currentTempo = tempos[tempoIdx].tempo
       tempoIdx++
     }
 
-    const chunk = renderNote(note, voice, lang, currentTempo, resolution)
+    const noteSamples = Math.round(noteSampleDuration(noteTick, note.length))
+    const adjustedLength = Math.max(1, Math.round(noteSamples * noteTempo * resolution / (60 * sr)))
+    const adjustedNote = { ...note, length: adjustedLength }
+    const chunk = renderNote(adjustedNote, voice, lang, noteTempo, resolution)
     chunk.startSample = currentSample
     if (voice.channels === 2 && chunk.data.length === 1) {
       chunk.data = [new Float32Array(chunk.data[0]), new Float32Array(chunk.data[0])]

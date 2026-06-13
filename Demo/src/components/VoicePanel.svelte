@@ -3,9 +3,9 @@
   const ADV_DEFAULTS = {
     oq: 0.5,
     sq: 0.9,
-    fScale: 0.94,
-    fShift: 1,
-    vRate: 5.8,
+    fScale: 1.0,
+    fShift: 0,
+    vRate: 5.5,
     vAttack: 0.12,
   } as const;
   function adv(key: keyof typeof ADV_DEFAULTS): number {
@@ -117,7 +117,7 @@
           min="0.7"
           max="1.3"
           step="0.01"
-          value={params.fScale ?? 0.94}
+          value={params.fScale ?? 1.0}
           oninput={(e) => (params.fScale = parseFloat(e.currentTarget.value))}
         /></label
       >
@@ -127,7 +127,7 @@
           min="-6"
           max="6"
           step="1"
-          value={params.fShift ?? 1}
+          value={params.fShift ?? 0}
           oninput={(e) => (params.fShift = parseFloat(e.currentTarget.value))}
         /></label
       >
@@ -138,7 +138,7 @@
           min="2"
           max="10"
           step="0.1"
-          value={params.vRate ?? 5.8}
+          value={params.vRate ?? 5.5}
           oninput={(e) => (params.vRate = parseFloat(e.currentTarget.value))}
         /></label
       >

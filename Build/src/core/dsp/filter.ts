@@ -20,7 +20,8 @@ export class FormantFilter {
     const theta = (2 * Math.PI * freq) / sampleRate
     const rz = Math.exp(-Math.PI * bw / sampleRate)
     this.b0 = 1; this.b1 = -2 * rz * Math.cos(theta); this.b2 = rz * rz
-    this.a1 = -2 * 0.99 * Math.cos(theta * 0.95); this.a2 = 0.99 * 0.99
+    const rp = Math.exp(-Math.PI * bw * 1.5 / sampleRate)
+    this.a1 = -2 * rp * Math.cos(theta); this.a2 = rp * rp
   }
 
   setPassthrough(): void {
@@ -34,6 +35,12 @@ export class FormantFilter {
     this.x2 = this.x1; this.x1 = x
     this.y2 = this.y1; this.y1 = y
     return y
+  }
+
+  process(input: Float32Array): Float32Array {
+    const out = new Float32Array(input.length)
+    for (let i = 0; i < input.length; i++) out[i] = this.processSample(input[i])
+    return out
   }
 
   reset(): void { this.y1 = 0; this.y2 = 0; this.x1 = 0; this.x2 = 0 }

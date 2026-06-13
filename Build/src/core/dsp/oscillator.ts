@@ -5,18 +5,25 @@ export class LFGlottalSource {
   private prevSample = 0
   private dcX = 0
   private dcY = 0
+  private jitterF0 = 0
+  private jitterPeriod = 0
 
   reset(): void {
     this.phase = 0
     this.prevSample = 0
     this.dcX = 0
     this.dcY = 0
+    this.jitterF0 = 0
+    this.jitterPeriod = 0
   }
 
   nextSample(params: GlottalSourceParams): number {
     const { f0, sampleRate, openQuotient, speedQuotient, tenseness, aspiration, power, jitter = 0 } = params
-    const jitterF0 = f0 * (1 + jitter * (Math.random() * 2 - 1))
-    const period = sampleRate / jitterF0
+    if (this.phase === 0 || this.phase >= this.jitterPeriod) {
+      this.jitterF0 = f0 * (1 + jitter * (Math.random() * 2 - 1))
+      this.jitterPeriod = sampleRate / Math.max(1, this.jitterF0)
+    }
+    const period = this.jitterPeriod
     const oq = Math.max(0.2, Math.min(0.9, openQuotient))
     const sq = Math.max(0.3, Math.min(3.0, speedQuotient))
     const te = oq * period

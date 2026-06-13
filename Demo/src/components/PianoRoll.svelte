@@ -105,14 +105,14 @@
   function handleMouseUp() { dragging = null }
 
   function handleKeyDown(e: KeyboardEvent) {
+    const target = e.target as HTMLElement
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return
     if ((e.key === "Delete" || e.key === "Backspace") && selectedNote != null) {
       notes.splice(selectedNote, 1); selectedNote = null
     }
   }
 
-  $effect(() => render())
-  $effect(() => { notes; render() })
-  $effect(() => { selectedNote; render() })
+  $effect(() => { notes; selectedNote; render() })
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />

@@ -69,7 +69,11 @@ export function renderNote(
   const sr = voice.sampleRate
   const baseF0 = midiToFrequency(note.noteNum)
   const phonemeSymbols = lang.lyricToPhonemes(note.lyric)
-  const phonemes = phonemeSymbols.map((s) => lang.phonemes.get(s)).filter((p): p is NonNullable<typeof p> => p !== undefined)
+  const phonemes = phonemeSymbols.map((s) => {
+    const p = lang.phonemes.get(s)
+    if (!p) console.warn(`renderNote: missing phoneme "${s}" in lyric "${note.lyric}"`)
+    return p
+  }).filter((p): p is NonNullable<typeof p> => p !== undefined)
 
   if (phonemes.length === 0) {
     const len = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)))
@@ -134,6 +138,7 @@ export function renderNote(
     if (pi !== prevPi) {
       phSegStart = i
       prevPi = pi
+      cascade.reset()
       const noiseTargets = cp.noise?.formantShaping ?? []
       for (let fi = 0; fi < parallelFilters.length; fi++) {
         if (fi < noiseTargets.length) {
@@ -169,7 +174,7 @@ export function renderNote(
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen))
     const phDur = phSampleCounts[pi]
-    const noiseFadeOut = Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen))
+    const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)))
     const noiseEnv = Math.min(noiseFadeIn, noiseFadeOut)
 
     let glottalSignal = voiced ? gSample : 0
@@ -202,7 +207,7 @@ export function renderNote(
     if (Math.abs(enveloped) > overallPeak) overallPeak = Math.abs(enveloped)
   }
 
-  const gain = 0.4 / overallPeak
+  const gain = Math.min(100, 0.4 / Math.max(1e-6, overallPeak))
   for (let i = 0; i < noteLen; i++) mono[i] *= gain
 
   if (voice.channels === 2) return { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 }

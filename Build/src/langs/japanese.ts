@@ -176,6 +176,7 @@ function romajiToPhonemes(romaji: string): string[] {
   const result: string[] = []
   let i = 0
   while (i < s.length) {
+    if (s[i] === " ") { i++; continue }
     if (s[i] === "n" && (i + 1 >= s.length || !vowels.has(s[i + 1]))) { result.push("N"); i++; continue }
     if (s[i] === s[i + 1] && consonants.has(s[i])) { result.push(s[i]); i++; continue }
     const two = s.slice(i, i + 2)

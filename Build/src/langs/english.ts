@@ -44,6 +44,7 @@ const enPhonemes: PhonemeDef[] = [
   baseVowel("UH", 440, 1020, 2240),
   baseVowel("UW", 300, 870, 2240, 60, 80, 110),
   baseVowel("AH", 640, 1190, 2390),
+  baseVowel("OW", 470, 1000, 2400),
   {
     symbol: "ER", type: "vowel", voiced: true, defaultDuration: 0.12,
     formants: [{ f: 490, bw: 100 }, { f: 1350, bw: 150 }, { f: 1690, bw: 150 }, { f: 3500, bw: 200 }, { f: 4500, bw: 300 }]

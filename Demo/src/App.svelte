@@ -2,7 +2,14 @@
   import PianoRoll from "./components/PianoRoll.svelte";
   import VoicePanel from "./components/VoicePanel.svelte";
   import TransportBar from "./components/TransportBar.svelte";
-  import { streamScore, buildVoice, scaleVoice } from "utaujs";
+  import {
+    streamScore,
+    renderScore,
+    mixChunks,
+    encodeWav,
+    buildVoice,
+    scaleVoice,
+  } from "utaujs";
   import { StreamPlayer } from "utaujs";
   import { createDemoScore } from "./lib/score";
 
@@ -31,8 +38,10 @@
     vAttack?: number;
   });
   let advancedOpen = $state(false);
+  let volume = $state(0.8);
   let player: StreamPlayer | null = $state(null);
   let playerState = $state("idle");
+  let exporting = $state(false);
 
   $effect(() => {
     score.notes = notes;
@@ -44,6 +53,7 @@
   });
 
   async function handlePlay() {
+    player?.stop();
     const p = new StreamPlayer();
     player = p;
     p.on((ev) => {
@@ -58,7 +68,7 @@
     const v = scaleVoice(buildVoice(), voiceParams);
     const currentLang = langId;
     const stream = streamScore(score, v, currentLang);
-    await p.play(stream).catch(() => {
+    await p.play(stream, volume, v.sampleRate).catch(() => {
       player = null;
       playerState = "idle";
     });
@@ -74,6 +84,26 @@
     player?.stop();
     player = null;
     playerState = "idle";
+  }
+
+  async function handleExport() {
+    if (exporting) return;
+    exporting = true;
+    try {
+      const v = scaleVoice(buildVoice(), voiceParams);
+      const chunks = await renderScore(score, v, langId);
+      const mixed = mixChunks(chunks);
+      const wav = encodeWav([mixed], volume);
+      const blob = new Blob([wav], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "utaujs-export.wav";
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      exporting = false;
+    }
   }
 
   const NOTE_NAMES = [
@@ -132,10 +162,13 @@
   </main>
   <TransportBar
     bind:state={playerState}
+    bind:volume
     onPlay={handlePlay}
     onPause={handlePause}
     onResume={handleResume}
     onStop={handleStop}
+    onExport={handleExport}
+    {exporting}
   />
 </div>
 
