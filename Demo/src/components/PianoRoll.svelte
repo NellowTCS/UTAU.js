@@ -211,6 +211,25 @@
 
     if (selectedNote != null) {
       const n = notes[selectedNote];
+      if (n) {
+        const resizeZone = mx >= noteX(n) + noteW(n) - 10 && mx <= noteX(n) + noteW(n) && my >= noteY(n) && my <= noteY(n) + NOTE_HEIGHT;
+        if (resizeZone) {
+          activePoint = -1;
+          dragging = {
+            type: "resize",
+            startX: mx,
+            startY: my,
+            origTick: n.tick ?? 0,
+            origLen: n.length,
+            origNote: n.noteNum,
+          };
+          return;
+        }
+      }
+    }
+
+    if (selectedNote != null) {
+      const n = notes[selectedNote];
       if (n && mx >= noteX(n) && mx <= noteX(n) + noteW(n) && my >= noteY(n) - NOTE_HEIGHT * 3 && my <= noteY(n) + NOTE_HEIGHT * 4) {
         if (n.pitchBend) {
           const pi = findPitchPoint(n, mx, my);
