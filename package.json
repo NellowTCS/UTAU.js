@@ -1,0 +1,16 @@
+{
+  "name": "utaujs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "Build",
+    "Demo"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "cd Build && npx tsc --noEmit"
+  },
+  "license": "MIT"
+}
