@@ -1,4 +1,4 @@
-import type { PhonemeDef, LanguageModule } from "../core/types"
+import type { PhonemeDef, LanguageModule } from "../core/types";
 
 // Japanese phoneme data.
 //
@@ -27,27 +27,36 @@ import type { PhonemeDef, LanguageModule } from "../core/types"
 //
 // Kana / romaji parsing: standard Hepburn romanisation rules.
 //   Kenkyusha's New Japanese-English Dictionary (5th ed.), 2003. (Yes really.)
-// 
-// (I STILL don't know Japanese sighhh but I have the vast library of the internet at my disposal, 
+//
+// (I STILL don't know Japanese sighhh but I have the vast library of the internet at my disposal,
 // and this was the clearest source I could find for comprehensive kana/romaji mappings.)
 //
-// Another silly note: Isn't it funny how Japanese is much easier to map to phonemes than English, 
-// even though English is the one with a reputation for "spelling being bad"?  
-// I guess it's just that the irregularities in English spelling are more widely known, 
-// while the fact that Japanese kana are basically a syllabary is less commonly discussed in language-learning circles. 
+// Another silly note: Isn't it funny how Japanese is much easier to map to phonemes than English,
+// even though English is the one with a reputation for "spelling being bad"?
+// I guess it's just that the irregularities in English spelling are more widely known,
+// while the fact that Japanese kana are basically a syllabary is less commonly discussed in language-learning circles.
 // (I mean, I guess it doesn't help that the word "kana" isn't exactly a household term in the way "alphabet" is, though it *should* be, but still :P)
 
 const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 80, bw2 = 100, bw3 = 120): PhonemeDef => ({
-  symbol, type: "vowel", voiced: true, defaultDuration: 0.12,
-  formants: [{ f: f1, bw: bw1 }, { f: f2, bw: bw2 }, { f: f3, bw: bw3 }, { f: 3500, bw: 200 }, { f: 4500, bw: 300 }],
-})
+  symbol,
+  type: "vowel",
+  voiced: true,
+  defaultDuration: 0.12,
+  formants: [
+    { f: f1, bw: bw1 },
+    { f: f2, bw: bw2 },
+    { f: f3, bw: bw3 },
+    { f: 3500, bw: 200 },
+    { f: 4500, bw: 300 },
+  ],
+});
 
 const jpPhonemes: PhonemeDef[] = [
-  // Vowels: 
+  // Vowels:
   // (Yamada et al. 2019 F1/F2; Kitamura et al. 2009 F3)
-  // 
-  // why isn't this aeiou order you ask?  because i wanted to list them 
-  // in the order of their F1 values, which is more relevant to their acoustic 
+  //
+  // why isn't this aeiou order you ask?  because i wanted to list them
+  // in the order of their F1 values, which is more relevant to their acoustic
   // properties and how they should be synthesized.
   baseVowel("a", 687, 1283, 2672),
   baseVowel("i", 301, 2154, 3000, 60, 90, 120),
@@ -58,138 +67,408 @@ const jpPhonemes: PhonemeDef[] = [
   // Nasals:
   // Stevens (1998) Acoustic Phonetics; Fujimura (1962).
   {
-    symbol: "N", type: "consonant", consonantType: "nasal", voiced: true, defaultDuration: 0.08,
-    formants: [{ f: 250, bw: 100 }, { f: 1200, bw: 200 }, { f: 2500, bw: 250 }], antiformants: [{ f: 400, bw: 100 }]
+    symbol: "N",
+    type: "consonant",
+    consonantType: "nasal",
+    voiced: true,
+    defaultDuration: 0.08,
+    formants: [
+      { f: 250, bw: 100 },
+      { f: 1200, bw: 200 },
+      { f: 2500, bw: 250 },
+    ],
+    antiformants: [{ f: 400, bw: 100 }],
   },
   {
-    symbol: "n", type: "consonant", consonantType: "nasal", voiced: true, defaultDuration: 0.07,
-    formants: [{ f: 300, bw: 100 }, { f: 1300, bw: 200 }, { f: 2600, bw: 250 }], antiformants: [{ f: 450, bw: 100 }]
+    symbol: "n",
+    type: "consonant",
+    consonantType: "nasal",
+    voiced: true,
+    defaultDuration: 0.07,
+    formants: [
+      { f: 300, bw: 100 },
+      { f: 1300, bw: 200 },
+      { f: 2600, bw: 250 },
+    ],
+    antiformants: [{ f: 450, bw: 100 }],
   },
   {
-    symbol: "m", type: "consonant", consonantType: "nasal", voiced: true, defaultDuration: 0.07,
-    formants: [{ f: 280, bw: 100 }, { f: 1100, bw: 200 }, { f: 2400, bw: 250 }], antiformants: [{ f: 350, bw: 100 }]
+    symbol: "m",
+    type: "consonant",
+    consonantType: "nasal",
+    voiced: true,
+    defaultDuration: 0.07,
+    formants: [
+      { f: 280, bw: 100 },
+      { f: 1100, bw: 200 },
+      { f: 2400, bw: 250 },
+    ],
+    antiformants: [{ f: 350, bw: 100 }],
   },
 
   // Plosives:
   {
-    symbol: "k", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.06,
-    formants: [{ f: 300, bw: 200 }, { f: 2000, bw: 200 }, { f: 2500, bw: 250 }],
-    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] }
+    symbol: "k",
+    type: "consonant",
+    consonantType: "plosive",
+    voiced: false,
+    defaultDuration: 0.06,
+    formants: [
+      { f: 300, bw: 200 },
+      { f: 2000, bw: 200 },
+      { f: 2500, bw: 250 },
+    ],
+    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] },
   },
   {
-    symbol: "g", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.06,
-    formants: [{ f: 300, bw: 200 }, { f: 1800, bw: 200 }, { f: 2500, bw: 250 }],
-    noise: { amplitude: 0.2, formantShaping: [{ f: 2000, bw: 500 }] }
+    symbol: "g",
+    type: "consonant",
+    consonantType: "plosive",
+    voiced: true,
+    defaultDuration: 0.06,
+    formants: [
+      { f: 300, bw: 200 },
+      { f: 1800, bw: 200 },
+      { f: 2500, bw: 250 },
+    ],
+    noise: { amplitude: 0.2, formantShaping: [{ f: 2000, bw: 500 }] },
   },
   {
-    symbol: "t", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.05,
-    formants: [{ f: 300, bw: 200 }, { f: 1700, bw: 200 }, { f: 2600, bw: 250 }],
-    noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] }
+    symbol: "t",
+    type: "consonant",
+    consonantType: "plosive",
+    voiced: false,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 300, bw: 200 },
+      { f: 1700, bw: 200 },
+      { f: 2600, bw: 250 },
+    ],
+    noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] },
   },
   {
-    symbol: "d", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.05,
-    formants: [{ f: 300, bw: 200 }, { f: 1700, bw: 200 }, { f: 2600, bw: 250 }],
-    noise: { amplitude: 0.25, formantShaping: [{ f: 4000, bw: 1000 }] }
+    symbol: "d",
+    type: "consonant",
+    consonantType: "plosive",
+    voiced: true,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 300, bw: 200 },
+      { f: 1700, bw: 200 },
+      { f: 2600, bw: 250 },
+    ],
+    noise: { amplitude: 0.25, formantShaping: [{ f: 4000, bw: 1000 }] },
   },
   {
-    symbol: "b", type: "consonant", consonantType: "plosive", voiced: true, defaultDuration: 0.05,
-    formants: [{ f: 300, bw: 200 }, { f: 1100, bw: 200 }, { f: 2100, bw: 250 }],
-    noise: { amplitude: 0.2, formantShaping: [{ f: 800, bw: 400 }] }
+    symbol: "b",
+    type: "consonant",
+    consonantType: "plosive",
+    voiced: true,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 300, bw: 200 },
+      { f: 1100, bw: 200 },
+      { f: 2100, bw: 250 },
+    ],
+    noise: { amplitude: 0.2, formantShaping: [{ f: 800, bw: 400 }] },
   },
   {
-    symbol: "p", type: "consonant", consonantType: "plosive", voiced: false, defaultDuration: 0.05,
-    formants: [{ f: 300, bw: 200 }, { f: 1100, bw: 200 }, { f: 2100, bw: 250 }],
-    noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] }
+    symbol: "p",
+    type: "consonant",
+    consonantType: "plosive",
+    voiced: false,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 300, bw: 200 },
+      { f: 1100, bw: 200 },
+      { f: 2100, bw: 250 },
+    ],
+    noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] },
   },
 
   // Fricatives:
-  { symbol: "s", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.08, noise: { amplitude: 0.4, formantShaping: [{ f: 7000, bw: 2000 }] } },
-  { symbol: "z", type: "consonant", consonantType: "fricative", voiced: true, defaultDuration: 0.08, noise: { amplitude: 0.3, formantShaping: [{ f: 6000, bw: 2000 }] } },
-  { symbol: "sh", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.08, noise: { amplitude: 0.4, formantShaping: [{ f: 3500, bw: 1500 }] } },
+  {
+    symbol: "s",
+    type: "consonant",
+    consonantType: "fricative",
+    voiced: false,
+    defaultDuration: 0.08,
+    noise: { amplitude: 0.4, formantShaping: [{ f: 7000, bw: 2000 }] },
+  },
+  {
+    symbol: "z",
+    type: "consonant",
+    consonantType: "fricative",
+    voiced: true,
+    defaultDuration: 0.08,
+    noise: { amplitude: 0.3, formantShaping: [{ f: 6000, bw: 2000 }] },
+  },
+  {
+    symbol: "sh",
+    type: "consonant",
+    consonantType: "fricative",
+    voiced: false,
+    defaultDuration: 0.08,
+    noise: { amplitude: 0.4, formantShaping: [{ f: 3500, bw: 1500 }] },
+  },
   { symbol: "h", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.06, noise: { amplitude: 0.25 } },
-  { symbol: "f", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.07, noise: { amplitude: 0.35, formantShaping: [{ f: 2000, bw: 1000 }] } },
+  {
+    symbol: "f",
+    type: "consonant",
+    consonantType: "fricative",
+    voiced: false,
+    defaultDuration: 0.07,
+    noise: { amplitude: 0.35, formantShaping: [{ f: 2000, bw: 1000 }] },
+  },
 
   // Approximants:
   { symbol: "y", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
-  { symbol: "r", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.06, formants: [{ f: 400, bw: 200 }, { f: 1300, bw: 300 }] },
-  { symbol: "l", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.06, formants: [{ f: 400, bw: 200 }, { f: 1300, bw: 300 }] },
+  {
+    symbol: "r",
+    type: "consonant",
+    consonantType: "approximant",
+    voiced: true,
+    defaultDuration: 0.06,
+    formants: [
+      { f: 400, bw: 200 },
+      { f: 1300, bw: 300 },
+    ],
+  },
+  {
+    symbol: "l",
+    type: "consonant",
+    consonantType: "approximant",
+    voiced: true,
+    defaultDuration: 0.06,
+    formants: [
+      { f: 400, bw: 200 },
+      { f: 1300, bw: 300 },
+    ],
+  },
   { symbol: "w", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
 
   // Affricates:
-  { symbol: "ch", type: "consonant", consonantType: "affricate", voiced: false, defaultDuration: 0.08, noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] } },
-  { symbol: "ts", type: "consonant", consonantType: "affricate", voiced: false, defaultDuration: 0.08, noise: { amplitude: 0.35, formantShaping: [{ f: 6000, bw: 2000 }] } },
-  { symbol: "j", type: "consonant", consonantType: "affricate", voiced: true, defaultDuration: 0.07, noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] } },
-]
+  {
+    symbol: "ch",
+    type: "consonant",
+    consonantType: "affricate",
+    voiced: false,
+    defaultDuration: 0.08,
+    noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] },
+  },
+  {
+    symbol: "ts",
+    type: "consonant",
+    consonantType: "affricate",
+    voiced: false,
+    defaultDuration: 0.08,
+    noise: { amplitude: 0.35, formantShaping: [{ f: 6000, bw: 2000 }] },
+  },
+  {
+    symbol: "j",
+    type: "consonant",
+    consonantType: "affricate",
+    voiced: true,
+    defaultDuration: 0.07,
+    noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
+  },
+];
 
 function sanitizeLyric(lyric: string): string {
   const hiraganaMap: Record<string, string> = {
-    "あ": "a", "い": "i", "う": "u", "え": "e", "お": "o",
-    "か": "ka", "き": "ki", "く": "ku", "け": "ke", "こ": "ko",
-    "さ": "sa", "し": "shi", "す": "su", "せ": "se", "そ": "so",
-    "た": "ta", "ち": "chi", "つ": "tsu", "て": "te", "と": "to",
-    "な": "na", "に": "ni", "ぬ": "nu", "ね": "ne", "の": "no",
-    "は": "ha", "ひ": "hi", "ふ": "fu", "へ": "he", "ほ": "ho",
-    "ま": "ma", "み": "mi", "む": "mu", "め": "me", "も": "mo",
-    "や": "ya", "ゆ": "yu", "よ": "yo",
-    "ら": "ra", "り": "ri", "る": "ru", "れ": "re", "ろ": "ro",
-    "わ": "wa", "を": "wo", "ん": "n",
-    "が": "ga", "ぎ": "gi", "ぐ": "gu", "げ": "ge", "ご": "go",
-    "ざ": "za", "じ": "ji", "ず": "zu", "ぜ": "ze", "ぞ": "zo",
-    "だ": "da", "ぢ": "ji", "づ": "zu", "で": "de", "ど": "do",
-    "ば": "ba", "び": "bi", "ぶ": "bu", "べ": "be", "ぼ": "bo",
-    "ぱ": "pa", "ぴ": "pi", "ぷ": "pu", "ぺ": "pe", "ぽ": "po",
-    "きゃ": "kya", "きゅ": "kyu", "きょ": "kyo",
-    "しゃ": "sha", "しゅ": "shu", "しょ": "sho",
-    "ちゃ": "cha", "ちゅ": "chu", "ちょ": "cho",
-    "にゃ": "nya", "にゅ": "nyu", "にょ": "nyo",
-    "ひゃ": "hya", "ひゅ": "hyu", "ひょ": "hyo",
-    "みゃ": "mya", "みゅ": "myu", "みょ": "myo",
-    "りゃ": "rya", "りゅ": "ryu", "りょ": "ryo",
-    "ぎゃ": "gya", "ぎゅ": "gyu", "ぎょ": "gyo",
-    "じゃ": "ja", "じゅ": "ju", "じょ": "jo",
-    "びゃ": "bya", "びゅ": "byu", "びょ": "byo",
-    "ぴゃ": "pya", "ぴゅ": "pyu", "ぴょ": "pyo",
-  }
-  return hiraganaMap[lyric] ?? lyric
+    あ: "a",
+    い: "i",
+    う: "u",
+    え: "e",
+    お: "o",
+    か: "ka",
+    き: "ki",
+    く: "ku",
+    け: "ke",
+    こ: "ko",
+    さ: "sa",
+    し: "shi",
+    す: "su",
+    せ: "se",
+    そ: "so",
+    た: "ta",
+    ち: "chi",
+    つ: "tsu",
+    て: "te",
+    と: "to",
+    な: "na",
+    に: "ni",
+    ぬ: "nu",
+    ね: "ne",
+    の: "no",
+    は: "ha",
+    ひ: "hi",
+    ふ: "fu",
+    へ: "he",
+    ほ: "ho",
+    ま: "ma",
+    み: "mi",
+    む: "mu",
+    め: "me",
+    も: "mo",
+    や: "ya",
+    ゆ: "yu",
+    よ: "yo",
+    ら: "ra",
+    り: "ri",
+    る: "ru",
+    れ: "re",
+    ろ: "ro",
+    わ: "wa",
+    を: "wo",
+    ん: "n",
+    が: "ga",
+    ぎ: "gi",
+    ぐ: "gu",
+    げ: "ge",
+    ご: "go",
+    ざ: "za",
+    じ: "ji",
+    ず: "zu",
+    ぜ: "ze",
+    ぞ: "zo",
+    だ: "da",
+    ぢ: "ji",
+    づ: "zu",
+    で: "de",
+    ど: "do",
+    ば: "ba",
+    び: "bi",
+    ぶ: "bu",
+    べ: "be",
+    ぼ: "bo",
+    ぱ: "pa",
+    ぴ: "pi",
+    ぷ: "pu",
+    ぺ: "pe",
+    ぽ: "po",
+    きゃ: "kya",
+    きゅ: "kyu",
+    きょ: "kyo",
+    しゃ: "sha",
+    しゅ: "shu",
+    しょ: "sho",
+    ちゃ: "cha",
+    ちゅ: "chu",
+    ちょ: "cho",
+    にゃ: "nya",
+    にゅ: "nyu",
+    にょ: "nyo",
+    ひゃ: "hya",
+    ひゅ: "hyu",
+    ひょ: "hyo",
+    みゃ: "mya",
+    みゅ: "myu",
+    みょ: "myo",
+    りゃ: "rya",
+    りゅ: "ryu",
+    りょ: "ryo",
+    ぎゃ: "gya",
+    ぎゅ: "gyu",
+    ぎょ: "gyo",
+    じゃ: "ja",
+    じゅ: "ju",
+    じょ: "jo",
+    びゃ: "bya",
+    びゅ: "byu",
+    びょ: "byo",
+    ぴゃ: "pya",
+    ぴゅ: "pyu",
+    ぴょ: "pyo",
+  };
+  return hiraganaMap[lyric] ?? lyric;
 }
 
 function romajiToPhonemes(romaji: string): string[] {
   const special: Record<string, string> = {
-    "shi": "sh i", "chi": "ch i", "tsu": "ts u", "fu": "f u", "ji": "j i",
-    "kya": "k y a", "kyu": "k y u", "kyo": "k y o",
-    "sha": "sh a", "shu": "sh u", "sho": "sh o",
-    "cha": "ch a", "chu": "ch u", "cho": "ch o",
-    "nya": "n y a", "nyu": "n y u", "nyo": "n y o",
-    "hya": "h y a", "hyu": "h y u", "hyo": "h y o",
-    "mya": "m y a", "myu": "m y u", "myo": "m y o",
-    "rya": "r y a", "ryu": "r y u", "ryo": "r y o",
-    "gya": "g y a", "gyu": "g y u", "gyo": "g y o",
-    "ja": "j a", "ju": "j u", "jo": "j o",
-    "bya": "b y a", "byu": "b y u", "byo": "b y o",
-    "pya": "p y a", "pyu": "p y u", "pyo": "p y o",
-    "ye": "y e",
+    shi: "sh i",
+    chi: "ch i",
+    tsu: "ts u",
+    fu: "f u",
+    ji: "j i",
+    kya: "k y a",
+    kyu: "k y u",
+    kyo: "k y o",
+    sha: "sh a",
+    shu: "sh u",
+    sho: "sh o",
+    cha: "ch a",
+    chu: "ch u",
+    cho: "ch o",
+    nya: "n y a",
+    nyu: "n y u",
+    nyo: "n y o",
+    hya: "h y a",
+    hyu: "h y u",
+    hyo: "h y o",
+    mya: "m y a",
+    myu: "m y u",
+    myo: "m y o",
+    rya: "r y a",
+    ryu: "r y u",
+    ryo: "r y o",
+    gya: "g y a",
+    gyu: "g y u",
+    gyo: "g y o",
+    ja: "j a",
+    ju: "j u",
+    jo: "j o",
+    bya: "b y a",
+    byu: "b y u",
+    byo: "b y o",
+    pya: "p y a",
+    pyu: "p y u",
+    pyo: "p y o",
+    ye: "y e",
+  };
+  const vowels = new Set(["a", "i", "u", "e", "o"]);
+  const consonants = new Set(["k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p", "sh", "ch", "ts", "f", "j", "l"]);
+  let s = romaji.toLowerCase().replace(/\s+/g, "");
+  if (special[s]) {
+    s = special[s];
   }
-  const vowels = new Set(["a", "i", "u", "e", "o"])
-  const consonants = new Set(["k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p", "sh", "ch", "ts", "f", "j", "l"])
-  let s = romaji.toLowerCase().replace(/\s+/g, "")
-  if (special[s]) { s = special[s] }
-  const result: string[] = []
-  let i = 0
+  const result: string[] = [];
+  let i = 0;
   while (i < s.length) {
-    if (s[i] === " ") { i++; continue }
-    if (s[i] === "n" && (i + 1 >= s.length || !vowels.has(s[i + 1]))) { result.push("N"); i++; continue }
-    if (s[i] === s[i + 1] && consonants.has(s[i])) { result.push(s[i]); i++; continue }
-    const two = s.slice(i, i + 2)
-    if (two === "ts" || two === "ch" || two === "sh") { result.push(two); i += 2 }
-    else { result.push(s[i]); i++ }
+    if (s[i] === " ") {
+      i++;
+      continue;
+    }
+    if (s[i] === "n" && (i + 1 >= s.length || !vowels.has(s[i + 1]))) {
+      result.push("N");
+      i++;
+      continue;
+    }
+    if (s[i] === s[i + 1] && consonants.has(s[i])) {
+      result.push(s[i]);
+      i++;
+      continue;
+    }
+    const two = s.slice(i, i + 2);
+    if (two === "ts" || two === "ch" || two === "sh") {
+      result.push(two);
+      i += 2;
+    } else {
+      result.push(s[i]);
+      i++;
+    }
   }
-  return result
+  return result;
 }
 
 export const japanese: LanguageModule = {
-  id: "jp", name: "Japanese",
+  id: "jp",
+  name: "Japanese",
   phonemes: new Map(jpPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
-    return sanitizeLyric(lyric).split(/[\s_-]+/).filter(Boolean).flatMap((p) => romajiToPhonemes(p))
+    return sanitizeLyric(lyric)
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .flatMap((p) => romajiToPhonemes(p));
   },
-}
+};

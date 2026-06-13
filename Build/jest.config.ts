@@ -1,4 +1,4 @@
-import type { Config } from "jest"
+import type { Config } from "jest";
 
 const config: Config = {
   preset: "ts-jest",
@@ -11,6 +11,6 @@ const config: Config = {
     "^.+\\.tsx?$": ["ts-jest", { useESM: true }],
   },
   extensionsToTreatAsEsm: [".ts"],
-}
+};
 
-export default config
+export default config;

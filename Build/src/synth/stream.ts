@@ -1,94 +1,100 @@
-import type { AudioChunk, Score, VoiceConfig, TempoEvent } from "../core/types"
-import { getLanguage } from "../langs/index"
-import { getVoice } from "../voices/index"
-import { renderNote } from "./renderer"
+import type { AudioChunk, Score, VoiceConfig } from "../core/types";
+import { getLanguage } from "../langs/index";
+import { getVoice } from "../voices/index";
+import { renderNote } from "./renderer";
 
 function ticksToDuration(tickLen: number, tempo: number, resolution: number, sampleRate: number): number {
-  return tickLen * (60 / (tempo * resolution)) * sampleRate
+  return tickLen * (60 / (tempo * resolution)) * sampleRate;
 }
 
-export async function* streamScore(
-  score: Score, voiceInput?: string | VoiceConfig, langId?: string,
-): AsyncGenerator<AudioChunk> {
-  const lang = getLanguage(langId ?? "jp")
-  const voice = typeof voiceInput === "object" ? voiceInput : getVoice(voiceInput ?? "female")
-  if (!lang) throw new Error(`Language not found: ${langId ?? "jp"}`)
-  if (!voice) throw new Error(`Voice not found: ${String(voiceInput)}`)
+export async function* streamScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): AsyncGenerator<AudioChunk> {
+  const lang = getLanguage(langId ?? "jp");
+  const voice = typeof voiceInput === "object" ? voiceInput : getVoice(voiceInput ?? "female");
+  if (!lang) throw new Error(`Language not found: ${langId ?? "jp"}`);
+  if (!voice) throw new Error(`Voice not found: ${String(voiceInput)}`);
 
-  const sr = voice.sampleRate
-  const { tempos, resolution, notes } = score
-  let currentTick = 0
-  let currentSample = 0
-  let currentTempo = tempos[0]?.tempo ?? 120
-  let tempoIdx = 0
+  const sr = voice.sampleRate;
+  const { tempos, resolution, notes } = score;
+  let currentTick = 0;
+  let currentSample = 0;
+  let currentTempo = tempos[0]?.tempo ?? 120;
+  let tempoIdx = 0;
 
   function tempoAt(tick: number): number {
-    let t = tempos[0]?.tempo ?? 120
-    for (const ev of tempos) { if (ev.tick <= tick) t = ev.tempo; else break }
-    return t
+    let t = tempos[0]?.tempo ?? 120;
+    for (const ev of tempos) {
+      if (ev.tick <= tick) t = ev.tempo;
+      else break;
+    }
+    return t;
   }
 
   function noteSampleDuration(noteTick: number, noteLen: number): number {
-    const end = noteTick + noteLen
-    let total = 0
-    let seg = noteTick
-    let t = tempos[0]?.tempo ?? 120
+    const end = noteTick + noteLen;
+    let total = 0;
+    let seg = noteTick;
+    let t = tempos[0]?.tempo ?? 120;
     for (const ev of tempos) {
       if (ev.tick > seg && ev.tick < end) {
-        total += ticksToDuration(ev.tick - seg, t, resolution, sr)
-        seg = ev.tick
+        total += ticksToDuration(ev.tick - seg, t, resolution, sr);
+        seg = ev.tick;
       }
-      if (ev.tick <= seg) t = ev.tempo
-      if (seg >= end) break
+      if (ev.tick <= seg) t = ev.tempo;
+      if (seg >= end) break;
     }
-    if (seg < end) total += ticksToDuration(end - seg, t, resolution, sr)
-    return total
+    if (seg < end) total += ticksToDuration(end - seg, t, resolution, sr);
+    return total;
   }
 
   for (const note of notes) {
-    const noteTick = note.tick ?? currentTick
-    const gap = Math.max(0, noteTick - currentTick)
-    currentSample += Math.round(ticksToDuration(gap, currentTempo, resolution, sr))
+    const noteTick = note.tick ?? currentTick;
+    const gap = Math.max(0, noteTick - currentTick);
+    currentSample += Math.round(ticksToDuration(gap, currentTempo, resolution, sr));
 
-    const noteTempo = tempoAt(noteTick)
+    const noteTempo = tempoAt(noteTick);
 
     while (tempoIdx < tempos.length && tempos[tempoIdx].tick <= currentTick + note.length + gap) {
-      currentTempo = tempos[tempoIdx].tempo
-      tempoIdx++
+      currentTempo = tempos[tempoIdx].tempo;
+      tempoIdx++;
     }
 
-    const noteSamples = Math.round(noteSampleDuration(noteTick, note.length))
-    const adjustedLength = Math.max(1, Math.round(noteSamples * noteTempo * resolution / (60 * sr)))
-    const adjustedNote = { ...note, length: adjustedLength }
-    const chunk = renderNote(adjustedNote, voice, lang, noteTempo, resolution)
-    chunk.startSample = currentSample
+    const noteSamples = Math.round(noteSampleDuration(noteTick, note.length));
+    const adjustedLength = Math.max(1, Math.round((noteSamples * noteTempo * resolution) / (60 * sr)));
+    const adjustedNote = { ...note, length: adjustedLength };
+    const chunk = renderNote(adjustedNote, voice, lang, noteTempo, resolution);
+    chunk.startSample = currentSample;
     if (voice.channels === 2 && chunk.data.length === 1) {
-      chunk.data = [new Float32Array(chunk.data[0]), new Float32Array(chunk.data[0])]
-      chunk.channels = 2
+      chunk.data = [new Float32Array(chunk.data[0]), new Float32Array(chunk.data[0])];
+      chunk.channels = 2;
     }
-    yield chunk
-    await new Promise((r) => setTimeout(r, 0))
-    currentSample += chunk.data[0].length
-    currentTick = noteTick + note.length
+    yield chunk;
+    await new Promise((r) => setTimeout(r, 0));
+    currentSample += chunk.data[0].length;
+    currentTick = noteTick + note.length;
   }
 }
 
 export async function renderScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): Promise<AudioChunk[]> {
-  const chunks: AudioChunk[] = []
-  for await (const chunk of streamScore(score, voiceInput, langId)) chunks.push(chunk)
-  return chunks
+  const chunks: AudioChunk[] = [];
+  for await (const chunk of streamScore(score, voiceInput, langId)) chunks.push(chunk);
+  return chunks;
 }
 
 export function mixChunks(chunks: AudioChunk[]): AudioChunk {
-  if (!chunks.length) return { data: [new Float32Array(0), new Float32Array(0)], sampleRate: 44100, startSample: 0, channels: 2 }
-  const sr = chunks[0].sampleRate, ch = chunks[0].channels
-  const totalLen = chunks.reduce((m, c) => Math.max(m, c.startSample + c.data[0].length), 0)
-  const mix: Float32Array[] = Array.from({ length: ch }, () => new Float32Array(totalLen))
+  if (!chunks.length) return { data: [new Float32Array(0), new Float32Array(0)], sampleRate: 44100, startSample: 0, channels: 2 };
+  const sr = chunks[0].sampleRate,
+    ch = chunks[0].channels;
+  const totalLen = chunks.reduce((m, c) => Math.max(m, c.startSample + c.data[0].length), 0);
+  const mix: Float32Array[] = Array.from({ length: ch }, () => new Float32Array(totalLen));
   for (const chunk of chunks) {
     for (let c = 0; c < Math.min(ch, chunk.data.length); c++) {
-      const src = chunk.data[c], dst = mix[c]
-      for (let i = 0; i < src.length; i++) { const idx = chunk.startSample + i; if (idx < totalLen) dst[idx] += src[i] }
+      const src = chunk.data[c],
+        dst = mix[c];
+      for (let i = 0; i < src.length; i++) {
+        const idx = chunk.startSample + i;
+        if (idx < totalLen) dst[idx] += src[i];
+      }
     }
   }
-  return { data: mix, sampleRate: sr, startSample: 0, channels: ch }
+  return { data: mix, sampleRate: sr, startSample: 0, channels: ch };
 }

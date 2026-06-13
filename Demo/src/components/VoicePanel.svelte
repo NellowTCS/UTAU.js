@@ -28,57 +28,27 @@
     <h3>Easy</h3>
     <label
       >Gender
-      <input
-        type="range"
-        min="-1"
-        max="1"
-        step="0.01"
-        bind:value={params.gender}
-      />
+      <input type="range" min="-1" max="1" step="0.01" bind:value={params.gender} />
       <span class="val">{params.gender?.toFixed(2)}</span>
     </label>
     <label
       >Breathiness
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        bind:value={params.breathiness}
-      />
+      <input type="range" min="0" max="1" step="0.01" bind:value={params.breathiness} />
       <span class="val">{params.breathiness?.toFixed(2)}</span>
     </label>
     <label
       >Tension
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        bind:value={params.tension}
-      />
+      <input type="range" min="0" max="1" step="0.01" bind:value={params.tension} />
       <span class="val">{params.tension?.toFixed(2)}</span>
     </label>
     <label
       >Brightness
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        bind:value={params.brightness}
-      />
+      <input type="range" min="0" max="1" step="0.01" bind:value={params.brightness} />
       <span class="val">{params.brightness?.toFixed(2)}</span>
     </label>
     <label
       >Vibrato
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        bind:value={params.vibratoAmount}
-      />
+      <input type="range" min="0" max="1" step="0.01" bind:value={params.vibratoAmount} />
       <span class="val">{params.vibratoAmount?.toFixed(2)}</span>
     </label>
   </div>

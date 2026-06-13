@@ -1,0 +1,26 @@
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import svelte from "eslint-plugin-svelte";
+
+export default [
+  { ignores: ["dist/", "node_modules/"] },
+  {
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+    ...js.configs.recommended,
+    languageOptions: { globals: globals.browser },
+  },
+  ...tseslint.configs.recommended.map((c) => ({
+    ...c,
+    files: c.files ?? ["**/*.{ts,tsx,mts,cts}"],
+  })),
+  ...svelte.configs.recommended,
+  {
+    files: ["**/*.svelte"],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+    },
+  },
+];

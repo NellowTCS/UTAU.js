@@ -1,2 +1,2 @@
-export { streamScore, renderScore, mixChunks } from "./stream"
-export { renderNote } from "./renderer"
+export { streamScore, renderScore, mixChunks } from "./stream";
+export { renderNote } from "./renderer";

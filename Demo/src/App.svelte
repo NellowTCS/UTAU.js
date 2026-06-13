@@ -2,15 +2,7 @@
   import PianoRoll from "./components/PianoRoll.svelte";
   import VoicePanel from "./components/VoicePanel.svelte";
   import TransportBar from "./components/TransportBar.svelte";
-  import {
-    streamScore,
-    renderScore,
-    mixChunks,
-    encodeWav,
-    buildVoice,
-    scaleVoice,
-    importScoreFromFile,
-  } from "utaujs";
+  import { streamScore, renderScore, mixChunks, encodeWav, buildVoice, scaleVoice, importScoreFromFile } from "utaujs";
   import { StreamPlayer } from "utaujs";
   import { createDemoScore } from "./lib/score";
 
@@ -122,20 +114,7 @@
     }
   }
 
-  const NOTE_NAMES = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-  ];
+  const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   function noteName(n: number) {
     return `${NOTE_NAMES[n % 12]}${Math.floor(n / 12) - 1}`;
   }
@@ -145,8 +124,13 @@
   <header>
     <h1>UTAU.js</h1>
     <div class="header-controls">
-      <input type="file" bind:this={fileInput} accept=".ust,.ustx,.vsqx,.vpr,.svp,.mid,.midi,.musicxml,.ppsf,.s5p,.tssln,.ccs,.dv,.ufdata"
-        style="display:none" onchange={handleOpen} />
+      <input
+        type="file"
+        bind:this={fileInput}
+        accept=".ust,.ustx,.vsqx,.vpr,.svp,.mid,.midi,.musicxml,.ppsf,.s5p,.tssln,.ccs,.dv,.ufdata"
+        style="display:none"
+        onchange={handleOpen}
+      />
       <button onclick={() => fileInput?.click()}>Open</button>
       <select bind:value={langId}>
         <option value="jp">Japanese</option>
@@ -160,19 +144,9 @@
       {#if selectedNote != null && notes[selectedNote]}
         <div class="note-editor">
           <span>Lyric:</span>
-          <input
-            type="text"
-            bind:value={notes[selectedNote].lyric}
-            oninput={() => (notes = notes)}
-          />
+          <input type="text" bind:value={notes[selectedNote].lyric} oninput={() => (notes = notes)} />
           <span>Note:</span>
-          <input
-            type="number"
-            min={0}
-            max={127}
-            bind:value={notes[selectedNote].noteNum}
-            oninput={() => (notes = notes)}
-          />
+          <input type="number" min={0} max={127} bind:value={notes[selectedNote].noteNum} oninput={() => (notes = notes)} />
           <span class="note-name">{noteName(notes[selectedNote].noteNum)}</span>
         </div>
       {/if}

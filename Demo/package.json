@@ -6,15 +6,24 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.js,.svelte --fix",
+    "make-pretty": "prettier --write ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "eslint": "^10.5.0",
+    "eslint-plugin-svelte": "^3.19.0",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "prettier-plugin-svelte": "^3.3.0",
     "svelte": "^5.0.0",
+    "typescript-eslint": "^8.61.0",
     "vite": "^8.0.16"
   },
   "dependencies": {
-    "utaujs": "*",
-    "@nisoku/satori": "^0.1.3"
+    "@nisoku/satori": "^0.1.3",
+    "utaujs": "*"
   }
 }
