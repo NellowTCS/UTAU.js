@@ -18,6 +18,10 @@ jobs:
 
       - run: npm ci
 
+      - name: Build Library
+        working-directory: Build
+        run: npm run build
+
       - name: Build Demo
         working-directory: Demo
         run: npm run build

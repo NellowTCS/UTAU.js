@@ -13,17 +13,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "22" # Using latest Node 22 for 2026 compatibility
+          node-version: "22"
+          cache: npm
 
-      - name: Install dependencies
-        working-directory: Demo
-        run: npm i
+      - run: npm ci
+
+      - name: Build Library
+        working-directory: Build
+        run: npm run build
 
       - name: Demo
         working-directory: Demo
