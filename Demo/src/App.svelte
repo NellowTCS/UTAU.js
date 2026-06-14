@@ -2,7 +2,7 @@
   import PianoRoll from "./components/PianoRoll.svelte";
   import VoicePanel from "./components/VoicePanel.svelte";
   import TransportBar from "./components/TransportBar.svelte";
-  import { streamScore, renderScore, mixChunks, encodeWav, buildVoice, scaleVoice, importScoreFromFile } from "utaujs";
+  import { streamScore, renderScore, mixChunks, encodeWav, buildVoice, scaleVoice, importScoreFromFile, downloadScore } from "utaujs";
   import { StreamPlayer } from "utaujs";
   import { createDemoScore } from "./lib/score";
 
@@ -32,38 +32,66 @@
   });
   let advancedOpen = $state(false);
   let volume = $state(0.8);
+  let tempo = $state(120);
   let player: StreamPlayer | null = $state(null);
   let playerState = $state("idle");
   let exporting = $state(false);
+  let buffering = $state(false);
+  let bufferAhead = $state(0);
 
   $effect(() => {
     score.notes = notes;
+  });
+
+  $effect(() => {
+    if (score.tempos[0]) score.tempos[0].tempo = tempo;
   });
   $effect(() => {
     const s = createDemoScore(langId);
     score = s;
     notes = s.notes;
+    tempo = s.tempos[0]?.tempo ?? 120;
   });
 
   async function handlePlay() {
     player?.stop();
     const p = new StreamPlayer();
     player = p;
+    buffering = true;
     p.on((ev) => {
-      if (ev.type === "stateChange") playerState = ev.state;
+      if (ev.type === "stateChange") {
+        playerState = ev.state;
+        if (ev.state === "playing") buffering = false;
+        if (ev.state === "idle") buffering = false;
+      }
+    });
+    p.on((ev) => {
+      if (ev.type === "progress") bufferAhead = ev.bufferAhead;
+    });
+    p.on((ev) => {
+      if (ev.type === "bufferUnderrun") bufferAhead = ev.bufferAhead;
     });
     p.on((ev) => {
       if (ev.type === "done") {
         player = null;
         playerState = "idle";
+        bufferAhead = 0;
+      }
+    });
+    p.on((ev) => {
+      if (ev.type === "error") {
+        buffering = false;
+        bufferAhead = 0;
       }
     });
     const v = scaleVoice(buildVoice(), voiceParams);
     const currentLang = langId;
     const stream = streamScore(score, v, currentLang);
-    await p.play(stream, volume, v.sampleRate).catch(() => {
+    await p.play(stream, volume, v.sampleRate, { preBufferThreshold: 0.5 }).catch(() => {
       player = null;
       playerState = "idle";
+      buffering = false;
+      bufferAhead = 0;
     });
   }
 
@@ -88,6 +116,7 @@
     score = s;
     notes = s.notes;
     selectedNote = null;
+    tempo = s.tempos[0]?.tempo ?? 120;
   }
 
   $effect(() => {
@@ -112,6 +141,10 @@
     } finally {
       exporting = false;
     }
+  }
+
+  async function handleScoreExport() {
+    await downloadScore(score, { projectName: "utaujs-export", format: "ustx" });
   }
 
   const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -158,11 +191,15 @@
   <TransportBar
     bind:state={playerState}
     bind:volume
+    bind:tempo
+    {buffering}
+    {bufferAhead}
     onPlay={handlePlay}
     onPause={handlePause}
     onResume={handleResume}
     onStop={handleStop}
     onExport={handleExport}
+    onScoreExport={handleScoreExport}
     {exporting}
   />
 </div>

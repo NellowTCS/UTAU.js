@@ -1,22 +1,32 @@
 <script lang="ts">
+  import { Play, Pause, Square, FileDown, FileOutput, Metronome } from "@lucide/svelte";
+
   let {
     onPlay = () => {},
     onPause = () => {},
     onStop = () => {},
     onResume = () => {},
     onExport = () => {},
+    onScoreExport = () => {},
     exporting = false,
+    buffering = false,
+    bufferAhead = 0,
     state = $bindable("idle"),
     volume = $bindable(0.8),
+    tempo = $bindable(120),
   }: {
     onPlay?: () => void;
     onPause?: () => void;
     onStop?: () => void;
     onResume?: () => void;
     onExport?: () => void;
+    onScoreExport?: () => void;
     exporting?: boolean;
+    buffering?: boolean;
+    bufferAhead?: number;
     state?: string;
     volume?: number;
+    tempo?: number;
   } = $props();
 
   function handlePrimary() {
@@ -28,18 +38,48 @@
 
 <div class="transport">
   <button class="btn" onclick={handlePrimary}>
-    {state === "playing" ? "⏸" : "▶"}
+    {#if state === "playing"}
+      <Pause size={16} />
+    {:else}
+      <Play size={16} />
+    {/if}
   </button>
-  <button class="btn" onclick={onStop} disabled={state === "idle"}>⏹</button>
+  <button class="btn" onclick={onStop} disabled={state === "idle"}>
+    <Square size={14} />
+  </button>
   <label class="vol-label">
     Vol
     <input type="range" min="0" max="1" step="0.01" bind:value={volume} class="vol-slider" />
     <span class="vol-val">{Math.round(volume * 100)}%</span>
   </label>
+  <label class="bpm-label">
+    <Metronome size={14} />
+    <input type="range" min="40" max="240" step="1" bind:value={tempo} class="bpm-slider" />
+    <input type="number" min="40" max="240" bind:value={tempo} class="bpm-input" />
+  </label>
   <div class="spacer"></div>
-  <span class="status">{state === "idle" ? "Ready" : state === "playing" ? "Playing" : "Paused"}</span>
+  <span class="status">
+    {#if buffering}
+      Buffering…
+    {:else if state === "playing" && bufferAhead < 0.2}
+      Underrun
+    {:else if state === "idle"}
+      Ready
+    {:else if state === "playing"}
+      Playing
+    {:else}
+      Paused
+    {/if}
+  </span>
   <button class="btn export" onclick={onExport} disabled={exporting}>
-    {exporting ? "..." : "⬇"}
+    {#if exporting}
+      <span class="dots">...</span>
+    {:else}
+      <FileDown size={16} />
+    {/if}
+  </button>
+  <button class="btn export" onclick={onScoreExport}>
+    <FileOutput size={16} />
   </button>
 </div>
 
@@ -107,5 +147,28 @@
     width: auto;
     padding: 0 12px;
     font-size: 14px;
+  }
+  .bpm-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #4fc3f7;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+  .bpm-slider {
+    width: 60px;
+    height: 4px;
+    accent-color: #4fc3f7;
+  }
+  .bpm-input {
+    width: 40px;
+    background: #0f0f23;
+    color: #ddd;
+    border: 1px solid #555;
+    padding: 2px 4px;
+    font-family: monospace;
+    font-size: 11px;
+    text-align: center;
   }
 </style>

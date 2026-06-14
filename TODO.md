@@ -3,17 +3,16 @@
 ## Demo UX
 
 - [ ] PianoRoll: undo/redo stack
-- [ ] File save (.json score export)
-- [ ] Tempo/BPM control in TransportBar
+- [X] File save (.ustx score export)
+- [X] Tempo/BPM control in TransportBar
 - [ ] Scroll-to-playhead during playback
 - [ ] Seek to position
 - [ ] Loop region
-- [ ] Pre-buffer threshold / buffer underrun handling
+- [X] Pre-buffer threshold / buffer underrun handling
 
 ## Languages
 
 - [ ] Expand English G2P to ~1000+ common words using a script probably
-- [x] Pitch accent support for Japanese
 - [ ] Chinese (Mandarin) language module
 - [ ] Phoneme alias map for cross-language compatibility
 

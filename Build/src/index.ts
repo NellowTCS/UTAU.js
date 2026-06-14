@@ -25,6 +25,8 @@ export { getLanguage, registerLanguage, japanese, english } from "./langs/index"
 export { getVoice, registerVoice, maleVoice, femaleVoice, buildVoice, scaleVoice } from "./voices/index";
 export { streamScore, renderScore, mixChunks, renderNote } from "./synth/index";
 export { StreamPlayer } from "./player/index";
-export type { PlayerState, PlayerEvent } from "./player/index";
+export type { PlayerState, PlayerEvent, PlayOptions } from "./player/index";
 export { ufDataToScore, importScoreFromFile, importScoreFromBytes } from "./import/ufdata";
 export type { ImportOptions, UfData } from "./import/ufdata";
+export { scoreToUfData, exportScoreToBytes, exportScoreToBlob, exportScoreToUrl, downloadScore } from "./export/ufdata";
+export type { ExportOptions } from "./export/ufdata";

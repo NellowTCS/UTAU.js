@@ -11,14 +11,26 @@ export type PlayerEvent =
       type: "progress";
       renderedSamples: number;
       totalSamples: number;
+      bufferAhead: number;
     }
   | {
       type: "done";
     }
   | {
+      type: "bufferUnderrun";
+      bufferAhead: number;
+    }
+  | {
       type: "error";
       error: Error;
     };
+
+export interface PlayOptions {
+  volume?: number;
+  sampleRate?: number;
+  /** Seconds of audio to pre-buffer before starting playback. Default 0.5. */
+  preBufferThreshold?: number;
+}
 
 export class StreamPlayer {
   private ctx: AudioContext | null = null;
@@ -28,6 +40,9 @@ export class StreamPlayer {
   private abortController: AbortController | null = null;
   private gainNode: GainNode | null = null;
   private totalSamplesScheduled = 0;
+  private totalDurationSec = 0;
+  private preBufferThreshold = 0.5;
+  private underrunEmitted = false;
 
   setVolume(v: number): void {
     if (this.gainNode) this.gainNode.gain.value = v;
@@ -54,41 +69,80 @@ export class StreamPlayer {
     }
   }
 
-  async play(stream: AsyncGenerator<AudioChunk>, volume = 0.8, sampleRate?: number): Promise<void> {
+  private scheduleChunk(chunk: AudioChunk): void {
+    if (this.abortController?.signal.aborted) return;
+    const sr = chunk.sampleRate;
+    const startSec = chunk.startSample / sr;
+    const t = Math.max(this.ctx!.currentTime + 0.01, this.startTime + startSec);
+    for (let c = 0; c < chunk.data.length; c++) {
+      const buf = this.ctx!.createBuffer(1, chunk.data[c].length, sr);
+      buf.copyToChannel(chunk.data[c] as Float32Array<ArrayBuffer>, 0);
+      const src = this.ctx!.createBufferSource();
+      src.buffer = buf;
+      src.connect(this.gainNode!);
+      src.start(t);
+    }
+    this.totalSamplesScheduled = Math.max(this.totalSamplesScheduled, chunk.startSample + chunk.data[0].length);
+
+    const scheduledEnd = this.startTime + (chunk.startSample + chunk.data[0].length) / sr;
+    const bufferAhead = Math.max(0, scheduledEnd - this.ctx!.currentTime);
+    if (bufferAhead < 0.15 && !this.underrunEmitted) {
+      this.underrunEmitted = true;
+      this.emit({ type: "bufferUnderrun", bufferAhead });
+    }
+    if (this.totalSamplesScheduled > 0) {
+      this.emit({
+        type: "progress",
+        renderedSamples: chunk.startSample + chunk.data[0].length,
+        totalSamples: this.totalDurationSec > 0
+          ? Math.round(this.totalDurationSec * sr)
+          : this.totalSamplesScheduled,
+        bufferAhead,
+      });
+    }
+  }
+
+  async play(stream: AsyncGenerator<AudioChunk>, volume = 0.8, sampleRate?: number, options?: PlayOptions): Promise<void> {
     this.stop();
+    this.preBufferThreshold = options?.preBufferThreshold ?? 0.5;
+    this.underrunEmitted = false;
     this.ctx = new AudioContext({ sampleRate: sampleRate ?? 44100 });
     this.gainNode = this.ctx.createGain();
     this.gainNode.connect(this.ctx.destination);
     this.gainNode.gain.value = Math.max(0, Math.min(1, volume));
     this.abortController = new AbortController();
-    this.state = "playing";
-    this.startTime = this.ctx.currentTime;
-    this.emit({ type: "stateChange", state: "playing" });
     const signal = this.abortController.signal;
     this.totalSamplesScheduled = 0;
+    this.totalDurationSec = 0;
 
+    const iter = stream[Symbol.asyncIterator]();
+
+    // Pre-buffer: collect chunks until threshold met or stream exhausted
+    const buf: AudioChunk[] = [];
+    let bufSec = 0;
+    for (;;) {
+      if (signal.aborted) { this.cleanup(); return; }
+      const { value: chunk, done } = await iter.next();
+      if (done) break;
+      this.totalDurationSec += chunk.data[0].length / chunk.sampleRate;
+      buf.push(chunk);
+      bufSec += chunk.data[0].length / chunk.sampleRate;
+      if (bufSec >= this.preBufferThreshold) break;
+    }
+
+    // Start playback
+    this.startTime = this.ctx.currentTime + 0.05;
+    this.state = "playing";
+    this.emit({ type: "stateChange", state: "playing" });
+    for (const chunk of buf) this.scheduleChunk(chunk);
+
+    // Consume remaining chunks
     try {
-      for await (const chunk of stream) {
+      for (;;) {
         if (signal.aborted) break;
-        const sr = chunk.sampleRate;
-        const startSec = chunk.startSample / sr;
-        const t = Math.max(this.ctx.currentTime + 0.01, this.startTime + startSec);
-        for (let c = 0; c < chunk.data.length; c++) {
-          const buf = this.ctx.createBuffer(1, chunk.data[c].length, sr);
-          buf.copyToChannel(chunk.data[c] as Float32Array<ArrayBuffer>, 0);
-          const src = this.ctx.createBufferSource();
-          src.buffer = buf;
-          src.connect(this.gainNode!);
-          src.start(t);
-        }
-        this.totalSamplesScheduled = Math.max(this.totalSamplesScheduled, chunk.startSample + chunk.data[0].length);
-        if (this.totalSamplesScheduled > 0) {
-          this.emit({
-            type: "progress",
-            renderedSamples: chunk.startSample + chunk.data[0].length,
-            totalSamples: this.totalSamplesScheduled,
-          });
-        }
+        const { value: chunk, done } = await iter.next();
+        if (done) break;
+        this.scheduleChunk(chunk);
       }
       if (!signal.aborted) {
         this.state = "idle";
@@ -99,7 +153,15 @@ export class StreamPlayer {
       this.state = "idle";
       this.emit({ type: "error", error: err instanceof Error ? err : new Error(String(err)) });
       this.emit({ type: "stateChange", state: "idle" });
+    } finally {
+      if (signal.aborted) this.cleanup();
     }
+  }
+
+  private cleanup(): void {
+    this.abortController = null;
+    this.ctx = null;
+    this.gainNode = null;
   }
 
   pause(): void {
