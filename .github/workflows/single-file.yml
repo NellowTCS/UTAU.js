@@ -1,4 +1,4 @@
-name: Create single file build
+name: Create single file Demo
 
 on:
   push:
@@ -22,20 +22,20 @@ jobs:
           node-version: "22" # Using latest Node 22 for 2026 compatibility
 
       - name: Install dependencies
-        working-directory: Build
+        working-directory: Demo
         run: npm i
 
-      - name: Build
-        working-directory: Build
+      - name: Demo
+        working-directory: Demo
         run: npm run build:single
 
       - name: Rename for distribution
-        working-directory: Build/dist
-        run: mv index.html Web-Template.html
+        working-directory: Demo/dist
+        run: mv index.html UTAUjsEditor.html
 
-      - name: Upload Build Artifact
+      - name: Upload Demo Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Web-Template-Standalone
-          path: Build/dist/Web-Template.html
+          name: UTAUjsEditor-Standalone
+          path: Demo/dist/UTAUjsEditor.html
           if-no-files-found: error

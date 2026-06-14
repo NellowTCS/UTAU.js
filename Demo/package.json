@@ -23,6 +23,7 @@
     "vite": "^8.0.16"
   },
   "dependencies": {
+    "@nellowtcs/updato": "^1.0.3",
     "@nisoku/satori": "^0.1.3",
     "utaujs": "*"
   }

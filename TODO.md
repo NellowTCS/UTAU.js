@@ -2,49 +2,35 @@
 
 ## CI & Release
 
-- [ ] GitHub Actions: run tests + build on push/PR
-- [ ] Tags + release workflow
+- [X] GitHub Actions: run tests + build on push/PR
+- [X] Tags + release workflow
+- [X] Updato CDN
 
 ## Demo UX
 
-- [x] Connect VoicePanel easy params to render pipeline
-- [x] TransportBar play button uses current voice params + selected language
-- [x] PianoRoll: note selection highlight + pitch curve overlay
 - [ ] PianoRoll: undo/redo stack
 - [ ] File save (.json score export)
-- [x] WAV export
-- [x] UST/USTX/VPR/VSQX/MIDI import (via utaformatix-ts)
 - [ ] Tempo/BPM control in TransportBar
-- [x] Volume slider
 - [ ] Scroll-to-playhead during playback
 
 ## Synthesis Pipeline
 
 - [ ] Consonant–vowel co-articulation between consecutive notes
-- [ ] Phoneme-level attack/decay envelopes (currently uses global fade)
-- [ ] Diphthong formant sweeping over note duration
-- [x] Nasal anti-resonator integration in renderNote
-- [x] Tempo: read Score.tempos, convert note ticks to seconds
-- [x] Stereo output (dual mono — true stereo mixing still needed)
-- [x] Noise mixing for fricatives during phoneme transitions
-- [x] Voice scaling: apply user params (gender, breathiness, tension, brightness)
-- [x] Pitch curve support (pitchBend on Note, interpolated per-sample in renderer)
-- [ ] Per-note vibratoOverride from Note.vibratoOverride (defined but unused)
+- [ ] Phoneme-level attack/decay envelopes (per phoneme type: plosive 2ms attack / 15ms decay, fricative 5ms/3ms, vowel 5ms/3ms)
+- [ ] Diphthong formant sweeping over phoneme duration (via `endFormants` on `PhonemeDef`)
+- [ ] Per-note vibratoOverride from Note.vibratoOverride
 
 ## Languages
 
-- [ ] Expand English G2P to ~1000+ common words
+- [ ] Expand English G2P to ~1000+ common words using a script probably
 - [ ] Pitch accent support for Japanese
-- [x] Language selector in UI that switches the renderer
 - [ ] Chinese (Mandarin) language module
 - [ ] Phoneme alias map for cross-language compatibility
 
 ## Player
 
-- [x] Emit progress events during playback
 - [ ] Seek to position
 - [ ] Loop region
-- [x] Volume control (gain node + setVolume API)
 - [ ] Pre-buffer threshold / buffer underrun handling
 
 ## Performance

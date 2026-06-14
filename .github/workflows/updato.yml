@@ -14,18 +14,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Build
-        working-directory: Build
-        run: npm ci && npm run build
+      - run: npm ci
 
-      - name: Read version
-        id: version
-        run: echo "version=$(node -p "require('./Build/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Build Demo
+        working-directory: Demo
+        run: npm run build
 
       - uses: NellowTCS/updato@1.0.3
         with:
-          mode: version
-          dist_dir: Build/dist
-          version: ${{ steps.version.outputs.version }}
+          mode: commit
+          dist_dir: Demo/dist
+          build_script: ""
           github_token: ${{ secrets.GITHUB_TOKEN }}
