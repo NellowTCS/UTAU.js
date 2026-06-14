@@ -42,6 +42,7 @@ export interface PhonemeDef {
   symbol: string;
   type: "vowel" | "consonant" | "diphthong" | "silence";
   formants?: FormantTarget[];
+  endFormants?: FormantTarget[];
   consonantType?: "plosive" | "fricative" | "nasal" | "approximant" | "affricate";
   noise?: NoiseConfig;
   antiformants?: FormantTarget[];

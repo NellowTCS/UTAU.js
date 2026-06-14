@@ -1,11 +1,5 @@
 # TODO
 
-## CI & Release
-
-- [X] GitHub Actions: run tests + build on push/PR
-- [X] Tags + release workflow
-- [X] Updato CDN
-
 ## Demo UX
 
 - [ ] PianoRoll: undo/redo stack
@@ -15,10 +9,10 @@
 
 ## Synthesis Pipeline
 
-- [ ] Consonant–vowel co-articulation between consecutive notes
-- [ ] Phoneme-level attack/decay envelopes (per phoneme type: plosive 2ms attack / 15ms decay, fricative 5ms/3ms, vowel 5ms/3ms)
-- [ ] Diphthong formant sweeping over phoneme duration (via `endFormants` on `PhonemeDef`)
-- [ ] Per-note vibratoOverride from Note.vibratoOverride
+- [X] Consonant–vowel co-articulation between consecutive notes
+- [X] Phoneme-level attack/decay envelopes (per phoneme type: plosive 2ms attack / 15ms decay, fricative 5ms/3ms, vowel 5ms/3ms)
+- [X] Diphthong formant sweeping over phoneme duration (via `endFormants` on `PhonemeDef`)
+- [X] Per-note vibratoOverride from Note.vibratoOverride
 
 ## Languages
 

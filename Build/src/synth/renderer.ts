@@ -1,4 +1,4 @@
-import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef, PitchBend } from "../core/types";
+import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef, PitchBend, FormantTarget } from "../core/types";
 import { LFGlottalSource } from "../core/dsp/oscillator";
 import { FormantCascade, FormantFilter, interpolateFormants } from "../core/dsp/filter";
 function midiToFrequency(noteNum: number): number {
@@ -76,7 +76,18 @@ function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr
   return dur;
 }
 
-export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule, tempo: number, resolution: number): AudioChunk {
+function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number; decay: number } {
+  if (ph.type === "silence") return { attack: 0, decay: 0 };
+  if (ph.consonantType === "plosive") {
+    return { attack: Math.round(0.002 * sr), decay: Math.round(0.015 * sr) };
+  }
+  if (ph.type === "consonant") {
+    return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
+  }
+  return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
+}
+
+export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule, tempo: number, resolution: number, prevFormants?: FormantTarget[]): { chunk: AudioChunk; finalFormants: FormantTarget[] } {
   const sr = voice.sampleRate;
   const baseF0 = midiToFrequency(note.noteNum);
   const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
@@ -87,11 +98,6 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
       return p;
     })
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
-
-  if (phonemes.length === 0) {
-    const len = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
-    return { data: [new Float32Array(len), new Float32Array(len)], sampleRate: sr, startSample: 0, channels: voice.channels };
-  }
 
   const noteLen = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
   const fScale = voice.formant.scale;
@@ -108,13 +114,20 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     { f: 4500, bw: 500 },
   ]);
 
+  if (phonemes.length === 0) {
+    const len = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
+    const chunk: AudioChunk = { data: [new Float32Array(len), new Float32Array(len)], sampleRate: sr, startSample: 0, channels: voice.channels };
+    return { chunk, finalFormants: DEFAULT_FORMANTS };
+  }
+
   const glottal = new LFGlottalSource();
   const cascade = new FormantCascade();
 
   const mono = new Float32Array(noteLen);
-  const vibRate = voice.vibrato.rate;
-  const vibDepth = voice.vibrato.depth;
-  const vibAttackSamp = Math.round(voice.vibrato.attack * sr);
+  const vibOverride = note.vibratoOverride ?? {};
+  const vibRate = vibOverride.rate ?? voice.vibrato.rate;
+  const vibDepth = vibOverride.depth ?? voice.vibrato.depth;
+  const vibAttackSamp = Math.round((vibOverride.attack ?? voice.vibrato.attack) * sr);
 
   const transitionLen = Math.round(0.03 * sr);
   const fadeLen = Math.round(0.003 * sr);
@@ -139,11 +152,11 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     }
   }
 
+  const phEnvelopes = phonemes.map((ph) => getPhonemeEnvelopeSamples(ph, sr));
+
   let prevPi = -1;
   let phSegStart = 0;
   let overallPeak = 1e-10;
-  const attackSamp = Math.round(0.005 * sr);
-  const releaseSamp = Math.round(0.01 * sr);
 
   const parallelFilters: FormantFilter[] = Array.from({ length: 3 }, () => new FormantFilter());
   for (const pf of parallelFilters) pf.setPassthrough();
@@ -172,8 +185,11 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     const pitchBendSemitones = interpolatePitchBend(note.pitchBend, i, noteLen, note.length);
     const vibCents = Math.sin((2 * Math.PI * vibRate * i) / sr) * vibDepth * vibGain;
     const f0 = baseF0 * Math.pow(2, (pitchBendSemitones * 100 + vibCents) / 1200);
-    const pp = phonemes[Math.max(0, pi - 1)] ?? cp;
+    const pp = pi === 0 && prevFormants
+      ? { formants: prevFormants } as PhonemeDef
+      : phonemes[Math.max(0, pi - 1)] ?? cp;
     const segPos = i - phSegStart;
+    const phDur = phSampleCounts[pi];
     const tt = Math.min(1, segPos / Math.max(1, transitionLen));
 
     const ft = pp.formants ?? [];
@@ -184,6 +200,10 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
         sr,
         cp.antiformants ? applyVoice(cp.antiformants) : undefined,
       );
+    } else if (cp.type === "diphthong" && cp.endFormants && cp.endFormants.length > 0) {
+      const sweepT = Math.min(1, (segPos - transitionLen) / Math.max(1, phDur - transitionLen));
+      const swept = interpolateFormants(applyVoice(ct), applyVoice(cp.endFormants), sweepT);
+      cascade.setFormants(swept, sr, cp.antiformants ? applyVoice(cp.antiformants) : undefined);
     } else if (ct.length) {
       cascade.setFormants(applyVoice(ct), sr, cp.antiformants ? applyVoice(cp.antiformants) : undefined);
     } else {
@@ -195,7 +215,6 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     const nSample = Math.random() * 2 - 1;
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
-    const phDur = phSampleCounts[pi];
     const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)));
     const noiseEnv = Math.min(noiseFadeIn, noiseFadeOut);
 
@@ -215,13 +234,15 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
       glottalSignal += nSample * voice.glottal.aspiration * 0.3 * noiseEnv;
     }
 
+    const phEnv = phEnvelopes[pi];
     let env = 1;
-    if (i < attackSamp) {
-      const t = i / attackSamp;
-      env = t * t * (3 - 2 * t);
-    } else if (i >= noteLen - releaseSamp) {
-      const t = (noteLen - i) / releaseSamp;
-      env = t * t * (3 - 2 * t);
+    if (phEnv.attack > 0 && segPos < phEnv.attack) {
+      const t = segPos / phEnv.attack;
+      env *= t * t * (3 - 2 * t);
+    }
+    if (phEnv.decay > 0 && segPos >= phDur - phEnv.decay) {
+      const t = (phDur - segPos) / phEnv.decay;
+      env *= t * t * (3 - 2 * t);
     }
     const cascaded = cascade.processSample(glottalSignal);
     const enveloped = (cascaded + noiseSignal) * env;
@@ -232,6 +253,18 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
   const gain = Math.min(100, 0.4 / Math.max(1e-6, overallPeak));
   for (let i = 0; i < noteLen; i++) mono[i] *= gain;
 
-  if (voice.channels === 2) return { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 };
-  return { data: [mono], sampleRate: sr, startSample: 0, channels: 1 };
+  const lastPh = phonemes[phonemes.length - 1];
+  let finalFormants: FormantTarget[];
+  if (lastPh.type === "diphthong" && lastPh.endFormants && lastPh.endFormants.length > 0) {
+    finalFormants = applyVoice(lastPh.endFormants);
+  } else if (lastPh.formants && lastPh.formants.length > 0) {
+    finalFormants = applyVoice(lastPh.formants);
+  } else {
+    finalFormants = DEFAULT_FORMANTS;
+  }
+
+  const chunk: AudioChunk = voice.channels === 2
+    ? { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 }
+    : { data: [mono], sampleRate: sr, startSample: 0, channels: 1 };
+  return { chunk, finalFormants };
 }

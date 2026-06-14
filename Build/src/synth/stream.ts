@@ -1,4 +1,4 @@
-import type { AudioChunk, Score, VoiceConfig } from "../core/types";
+import type { AudioChunk, Score, VoiceConfig, FormantTarget } from "../core/types";
 import { getLanguage } from "../langs/index";
 import { getVoice } from "../voices/index";
 import { renderNote } from "./renderer";
@@ -46,9 +46,11 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
     return total;
   }
 
+  let prevFormants: FormantTarget[] | undefined;
   for (const note of notes) {
     const noteTick = note.tick ?? currentTick;
     const gap = Math.max(0, noteTick - currentTick);
+    if (gap > 0) prevFormants = undefined;
     currentSample += Math.round(ticksToDuration(gap, currentTempo, resolution, sr));
 
     const noteTempo = tempoAt(noteTick);
@@ -61,7 +63,8 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
     const noteSamples = Math.round(noteSampleDuration(noteTick, note.length));
     const adjustedLength = Math.max(1, Math.round((noteSamples * noteTempo * resolution) / (60 * sr)));
     const adjustedNote = { ...note, length: adjustedLength };
-    const chunk = renderNote(adjustedNote, voice, lang, noteTempo, resolution);
+    const { chunk, finalFormants } = renderNote(adjustedNote, voice, lang, noteTempo, resolution, prevFormants);
+    prevFormants = finalFormants;
     chunk.startSample = currentSample;
     if (voice.channels === 2 && chunk.data.length === 1) {
       chunk.data = [new Float32Array(chunk.data[0]), new Float32Array(chunk.data[0])];
