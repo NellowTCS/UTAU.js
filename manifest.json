@@ -1,28 +1,15 @@
 {
   "app": "UTAU.js",
-  "mode": "version",
-  "latest": "0.1.0",
+  "mode": "commit",
+  "latest": "4d1593267a744713c8eaca6818a657eaec32c6b1",
   "files": [
-    "apple-touch-icon-180x180.png",
-    "assets/index-FOi4kX9Q.css",
-    "assets/index-bvylKMQf.js",
-    "assets/index-bvylKMQf.js.map",
-    "favicon.ico",
-    "favicon.png",
-    "index.html",
-    "manifest.webmanifest",
-    "maskable-icon-512x512.png",
-    "pwa-192x192.png",
-    "pwa-512x512.png",
-    "pwa-64x64.png",
-    "registerSW.js",
-    "sw.js",
-    "sw.js.map",
-    "workbox-57884417.js",
-    "workbox-57884417.js.map"
+    "assets/base-C2Hohp7q.js",
+    "assets/index-Bq0A8BxV.css",
+    "assets/index-D5dungqX.js",
+    "index.html"
   ],
   "modules": [
-    "assets/index-bvylKMQf.js"
+    "assets/index-D5dungqX.js"
   ],
-  "timestamp": 1781326202
+  "timestamp": 1781403215
 }
