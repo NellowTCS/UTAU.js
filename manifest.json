@@ -1,15 +1,15 @@
 {
   "app": "UTAU.js",
   "mode": "commit",
-  "latest": "a68117581e4fc975b0a5daf5c8b647aadd0a0b8e",
+  "latest": "2d875f85aba9867efdb7b7a881b2627e6a477f0e",
   "files": [
     "assets/base-C2Hohp7q.js",
-    "assets/index-BPKZ2yft.js",
-    "assets/index-Bq0A8BxV.css",
+    "assets/index-CueO5V6k.css",
+    "assets/index-wUGRhzlb.js",
     "index.html"
   ],
   "modules": [
-    "assets/index-BPKZ2yft.js"
+    "assets/index-wUGRhzlb.js"
   ],
-  "timestamp": 1781461855
+  "timestamp": 1781467552
 }
