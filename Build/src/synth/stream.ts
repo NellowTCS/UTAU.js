@@ -1,4 +1,4 @@
-import type { AudioChunk, Score, VoiceConfig, FormantTarget } from "../core/types";
+import type { AudioChunk, Score, VoiceConfig, FormantTarget, Note, LanguageModule } from "../core/types";
 import { getLanguage } from "../langs/index";
 import { getVoice } from "../voices/index";
 import { renderNote } from "./renderer";
@@ -46,8 +46,11 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
     return total;
   }
 
+  const accentOffsets = computeAccentOffsets(notes, lang);
+
   let prevFormants: FormantTarget[] | undefined;
-  for (const note of notes) {
+  for (let ni = 0; ni < notes.length; ni++) {
+    const note = notes[ni];
     const noteTick = note.tick ?? currentTick;
     const gap = Math.max(0, noteTick - currentTick);
     if (gap > 0) prevFormants = undefined;
@@ -63,6 +66,9 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
     const noteSamples = Math.round(noteSampleDuration(noteTick, note.length));
     const adjustedLength = Math.max(1, Math.round((noteSamples * noteTempo * resolution) / (60 * sr)));
     const adjustedNote = { ...note, length: adjustedLength };
+    if (accentOffsets[ni] !== undefined) {
+      adjustedNote.pitchAccent = accentOffsets[ni];
+    }
     const { chunk, finalFormants } = renderNote(adjustedNote, voice, lang, noteTempo, resolution, prevFormants);
     prevFormants = finalFormants;
     chunk.startSample = currentSample;
@@ -75,6 +81,41 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
     currentSample += chunk.data[0].length;
     currentTick = noteTick + note.length;
   }
+}
+
+function computeAccentOffsets(notes: Note[], lang: LanguageModule): (number | undefined)[] {
+  if (!lang.resolveAccents) return [];
+  const offsets: (number | undefined)[] = new Array(notes.length).fill(undefined);
+  const phraseLyrics: string[] = [];
+  const phraseIndices: number[] = [];
+  let prevTick = 0;
+  for (let ni = 0; ni < notes.length; ni++) {
+    const n = notes[ni];
+    const noteTick = n.tick ?? prevTick;
+    const gap = Math.max(0, noteTick - prevTick);
+    if (gap > 0 && phraseLyrics.length > 0) {
+      const result = lang.resolveAccents(phraseLyrics);
+      if (result) {
+        for (let oi = 0; oi < result.length; oi++) {
+          if (result[oi] !== undefined) offsets[phraseIndices[oi]] = result[oi];
+        }
+      }
+      phraseLyrics.length = 0;
+      phraseIndices.length = 0;
+    }
+    phraseLyrics.push(n.lyric);
+    phraseIndices.push(ni);
+    prevTick = noteTick + n.length;
+  }
+  if (phraseLyrics.length > 0) {
+    const result = lang.resolveAccents(phraseLyrics);
+    if (result) {
+      for (let oi = 0; oi < result.length; oi++) {
+        if (result[oi] !== undefined) offsets[phraseIndices[oi]] = result[oi];
+      }
+    }
+  }
+  return offsets;
 }
 
 export async function renderScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): Promise<AudioChunk[]> {

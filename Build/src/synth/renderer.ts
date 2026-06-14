@@ -107,10 +107,10 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     targets.map((t) => ({ f: t.f * fScale * Math.pow(2, fShift / 12), bw: t.bw * voice.formant.bandwidth }));
 
   const DEFAULT_FORMANTS = applyVoice([
-    { f: 500, bw: 200 },
-    { f: 1500, bw: 300 },
-    { f: 2500, bw: 300 },
-    { f: 3500, bw: 400 },
+    { f: 500, bw: 120 },
+    { f: 1500, bw: 180 },
+    { f: 2500, bw: 220 },
+    { f: 3500, bw: 350 },
     { f: 4500, bw: 500 },
   ]);
 
@@ -184,7 +184,8 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     const vibGain = i < vibAttackSamp ? i / vibAttackSamp : 1;
     const pitchBendSemitones = interpolatePitchBend(note.pitchBend, i, noteLen, note.length);
     const vibCents = Math.sin((2 * Math.PI * vibRate * i) / sr) * vibDepth * vibGain;
-    const f0 = baseF0 * Math.pow(2, (pitchBendSemitones * 100 + vibCents) / 1200);
+    const accentCents = (note.pitchAccent ?? 0) * 100;
+    const f0 = baseF0 * Math.pow(2, (pitchBendSemitones * 100 + vibCents + accentCents) / 1200);
     const pp = pi === 0 && prevFormants
       ? { formants: prevFormants } as PhonemeDef
       : phonemes[Math.max(0, pi - 1)] ?? cp;
@@ -216,7 +217,9 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
     const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)));
-    const noiseEnv = Math.min(noiseFadeIn, noiseFadeOut);
+    const noiseEnv = cp.consonantType === "plosive"
+      ? Math.min(noiseFadeIn, Math.max(0, 1 - segPos / Math.max(1, Math.round(0.012 * sr))))
+      : Math.min(noiseFadeIn, noiseFadeOut);
 
     let glottalSignal = voiced ? gSample : 0;
     let noiseSignal = 0;

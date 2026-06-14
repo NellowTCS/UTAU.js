@@ -27,7 +27,7 @@ import type { PhonemeDef, LanguageModule } from "../core/types";
 // (And I guess it's kind of fun to have a "core vocabulary" of words that the synthesizer can reliably pronounce,
 // even if it doesn't cover every possible word.)
 
-const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 80, bw2 = 100, bw3 = 120): PhonemeDef => ({
+const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 70, bw2 = 90, bw3 = 130): PhonemeDef => ({
   symbol,
   type: "vowel",
   voiced: true,
@@ -44,16 +44,35 @@ const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 80,
 const enPhonemes: PhonemeDef[] = [
   // Vowels:
   // (P&B 1952 male means)
-  baseVowel("IY", 270, 2290, 3010, 60, 90, 120),
+  baseVowel("IY", 270, 2290, 3010, 60, 80, 120),
   baseVowel("IH", 390, 1990, 2550),
   baseVowel("EH", 530, 1840, 2480),
   baseVowel("AE", 660, 1720, 2410),
   baseVowel("AA", 730, 1090, 2440),
   baseVowel("AO", 570, 840, 2410),
   baseVowel("UH", 440, 1020, 2240),
-  baseVowel("UW", 300, 870, 2240, 60, 80, 110),
+  baseVowel("UW", 300, 870, 2240, 60, 80, 120),
   baseVowel("AH", 640, 1190, 2390),
-  baseVowel("OW", 470, 1000, 2400),
+  {
+    symbol: "OW",
+    type: "diphthong",
+    voiced: true,
+    defaultDuration: 0.14,
+    formants: [
+      { f: 470, bw: 70 },
+      { f: 1000, bw: 100 },
+      { f: 2400, bw: 150 },
+      { f: 3500, bw: 200 },
+      { f: 4500, bw: 300 },
+    ],
+    endFormants: [
+      { f: 440, bw: 60 },
+      { f: 1020, bw: 80 },
+      { f: 2240, bw: 120 },
+      { f: 3500, bw: 200 },
+      { f: 4500, bw: 300 },
+    ],
+  },
   {
     symbol: "ER",
     type: "vowel",
@@ -76,9 +95,16 @@ const enPhonemes: PhonemeDef[] = [
     voiced: true,
     defaultDuration: 0.15,
     formants: [
-      { f: 730, bw: 100 },
-      { f: 1300, bw: 150 },
+      { f: 730, bw: 90 },
+      { f: 1300, bw: 120 },
       { f: 2600, bw: 150 },
+      { f: 3500, bw: 200 },
+      { f: 4500, bw: 300 },
+    ],
+    endFormants: [
+      { f: 390, bw: 60 },
+      { f: 1990, bw: 80 },
+      { f: 2550, bw: 120 },
       { f: 3500, bw: 200 },
       { f: 4500, bw: 300 },
     ],
@@ -89,9 +115,16 @@ const enPhonemes: PhonemeDef[] = [
     voiced: true,
     defaultDuration: 0.14,
     formants: [
-      { f: 550, bw: 100 },
-      { f: 1850, bw: 150 },
+      { f: 550, bw: 80 },
+      { f: 1850, bw: 120 },
       { f: 2600, bw: 150 },
+      { f: 3500, bw: 200 },
+      { f: 4500, bw: 300 },
+    ],
+    endFormants: [
+      { f: 390, bw: 60 },
+      { f: 1990, bw: 80 },
+      { f: 2550, bw: 120 },
       { f: 3500, bw: 200 },
       { f: 4500, bw: 300 },
     ],
@@ -102,9 +135,16 @@ const enPhonemes: PhonemeDef[] = [
     voiced: true,
     defaultDuration: 0.15,
     formants: [
-      { f: 500, bw: 100 },
-      { f: 1200, bw: 150 },
+      { f: 500, bw: 80 },
+      { f: 1200, bw: 120 },
       { f: 2550, bw: 150 },
+      { f: 3500, bw: 200 },
+      { f: 4500, bw: 300 },
+    ],
+    endFormants: [
+      { f: 390, bw: 60 },
+      { f: 1990, bw: 80 },
+      { f: 2550, bw: 120 },
       { f: 3500, bw: 200 },
       { f: 4500, bw: 300 },
     ],
@@ -115,9 +155,16 @@ const enPhonemes: PhonemeDef[] = [
     voiced: true,
     defaultDuration: 0.15,
     formants: [
-      { f: 700, bw: 100 },
-      { f: 1200, bw: 150 },
+      { f: 700, bw: 90 },
+      { f: 1200, bw: 120 },
       { f: 2550, bw: 150 },
+      { f: 3500, bw: 200 },
+      { f: 4500, bw: 300 },
+    ],
+    endFormants: [
+      { f: 440, bw: 60 },
+      { f: 1020, bw: 80 },
+      { f: 2240, bw: 120 },
       { f: 3500, bw: 200 },
       { f: 4500, bw: 300 },
     ],
@@ -132,7 +179,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "plosive",
     voiced: false,
     defaultDuration: 0.05,
-    noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] },
+    noise: { amplitude: 0.45, formantShaping: [{ f: 800, bw: 400 }] },
   },
   {
     symbol: "B",
@@ -140,7 +187,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "plosive",
     voiced: true,
     defaultDuration: 0.05,
-    noise: { amplitude: 0.2, formantShaping: [{ f: 800, bw: 400 }] },
+    noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] },
   },
   {
     symbol: "T",
@@ -148,7 +195,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "plosive",
     voiced: false,
     defaultDuration: 0.05,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] },
+    noise: { amplitude: 0.45, formantShaping: [{ f: 4000, bw: 1000 }] },
   },
   {
     symbol: "D",
@@ -156,7 +203,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "plosive",
     voiced: true,
     defaultDuration: 0.05,
-    noise: { amplitude: 0.25, formantShaping: [{ f: 4000, bw: 1000 }] },
+    noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] },
   },
   {
     symbol: "K",
@@ -164,7 +211,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "plosive",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] },
+    noise: { amplitude: 0.45, formantShaping: [{ f: 2000, bw: 500 }] },
   },
   {
     symbol: "G",
@@ -172,7 +219,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "plosive",
     voiced: true,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.2, formantShaping: [{ f: 2000, bw: 500 }] },
+    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] },
   },
 
   // Fricatives:
@@ -193,6 +240,11 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "fricative",
     voiced: true,
     defaultDuration: 0.08,
+    formants: [
+      { f: 350, bw: 100 },
+      { f: 2000, bw: 150 },
+      { f: 2600, bw: 200 },
+    ],
     noise: { amplitude: 0.3, formantShaping: [{ f: 6000, bw: 2000 }] },
   },
   {
@@ -209,6 +261,11 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "fricative",
     voiced: true,
     defaultDuration: 0.08,
+    formants: [
+      { f: 350, bw: 100 },
+      { f: 1800, bw: 150 },
+      { f: 2500, bw: 200 },
+    ],
     noise: { amplitude: 0.3, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
@@ -225,6 +282,11 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "fricative",
     voiced: true,
     defaultDuration: 0.07,
+    formants: [
+      { f: 400, bw: 100 },
+      { f: 1400, bw: 150 },
+      { f: 2500, bw: 200 },
+    ],
     noise: { amplitude: 0.25, formantShaping: [{ f: 2000, bw: 1000 }] },
   },
   {
@@ -241,9 +303,26 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "fricative",
     voiced: true,
     defaultDuration: 0.06,
+    formants: [
+      { f: 450, bw: 100 },
+      { f: 1600, bw: 150 },
+      { f: 2500, bw: 200 },
+    ],
     noise: { amplitude: 0.2, formantShaping: [{ f: 4000, bw: 1000 }] },
   },
-  { symbol: "HH", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.06, noise: { amplitude: 0.25 } },
+  {
+    symbol: "HH",
+    type: "consonant",
+    consonantType: "fricative",
+    voiced: false,
+    defaultDuration: 0.06,
+    formants: [
+      { f: 550, bw: 100 },
+      { f: 1400, bw: 150 },
+      { f: 2400, bw: 200 },
+    ],
+    noise: { amplitude: 0.25 },
+  },
 
   // Nasals:
   // Formant/antiformant values: Stevens (1998), Fujimura (1962).
@@ -315,8 +394,30 @@ const enPhonemes: PhonemeDef[] = [
       { f: 2400, bw: 250 },
     ],
   },
-  { symbol: "Y", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
-  { symbol: "W", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
+  {
+    symbol: "Y",
+    type: "consonant",
+    consonantType: "approximant",
+    voiced: true,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 270, bw: 80 },
+      { f: 2290, bw: 150 },
+      { f: 3010, bw: 200 },
+    ],
+  },
+  {
+    symbol: "W",
+    type: "consonant",
+    consonantType: "approximant",
+    voiced: true,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 300, bw: 80 },
+      { f: 870, bw: 150 },
+      { f: 2240, bw: 200 },
+    ],
+  },
 
   // Affricates:
   {
@@ -333,6 +434,11 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: true,
     defaultDuration: 0.07,
+    formants: [
+      { f: 400, bw: 100 },
+      { f: 1800, bw: 150 },
+      { f: 2500, bw: 200 },
+    ],
     noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
 ];

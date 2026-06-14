@@ -65,6 +65,7 @@ export interface Note {
   modulation?: number;
   vibratoOverride?: Partial<VibratoConfig>;
   pitchBend?: PitchBend;
+  pitchAccent?: number;
 }
 
 export interface TempoEvent {
@@ -91,6 +92,7 @@ export interface LanguageModule {
   name: string;
   phonemes: Map<string, PhonemeDef>;
   lyricToPhonemes(lyric: string): string[];
+  resolveAccents?(lyrics: string[]): (number | undefined)[];
 }
 
 export type GlottalSourceParams = {

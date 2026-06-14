@@ -37,7 +37,7 @@ import type { PhonemeDef, LanguageModule } from "../core/types";
 // while the fact that Japanese kana are basically a syllabary is less commonly discussed in language-learning circles.
 // (I mean, I guess it doesn't help that the word "kana" isn't exactly a household term in the way "alphabet" is, though it *should* be, but still :P)
 
-const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 80, bw2 = 100, bw3 = 120): PhonemeDef => ({
+const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 70, bw2 = 90, bw3 = 130): PhonemeDef => ({
   symbol,
   type: "vowel",
   voiced: true,
@@ -59,8 +59,8 @@ const jpPhonemes: PhonemeDef[] = [
   // in the order of their F1 values, which is more relevant to their acoustic
   // properties and how they should be synthesized.
   baseVowel("a", 687, 1283, 2672),
-  baseVowel("i", 301, 2154, 3000, 60, 90, 120),
-  baseVowel("u", 348, 1435, 2133, 70, 80, 110),
+  baseVowel("i", 301, 2154, 3000, 60, 80, 120),
+  baseVowel("u", 348, 1435, 2133, 65, 80, 120),
   baseVowel("e", 443, 1947, 2391),
   baseVowel("o", 462, 949, 2414),
 
@@ -118,7 +118,7 @@ const jpPhonemes: PhonemeDef[] = [
       { f: 2000, bw: 200 },
       { f: 2500, bw: 250 },
     ],
-    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] },
+    noise: { amplitude: 0.45, formantShaping: [{ f: 2000, bw: 500 }] },
   },
   {
     symbol: "g",
@@ -131,7 +131,7 @@ const jpPhonemes: PhonemeDef[] = [
       { f: 1800, bw: 200 },
       { f: 2500, bw: 250 },
     ],
-    noise: { amplitude: 0.2, formantShaping: [{ f: 2000, bw: 500 }] },
+    noise: { amplitude: 0.3, formantShaping: [{ f: 2000, bw: 500 }] },
   },
   {
     symbol: "t",
@@ -144,7 +144,7 @@ const jpPhonemes: PhonemeDef[] = [
       { f: 1700, bw: 200 },
       { f: 2600, bw: 250 },
     ],
-    noise: { amplitude: 0.35, formantShaping: [{ f: 4000, bw: 1000 }] },
+    noise: { amplitude: 0.45, formantShaping: [{ f: 4000, bw: 1000 }] },
   },
   {
     symbol: "d",
@@ -183,7 +183,7 @@ const jpPhonemes: PhonemeDef[] = [
       { f: 1100, bw: 200 },
       { f: 2100, bw: 250 },
     ],
-    noise: { amplitude: 0.3, formantShaping: [{ f: 800, bw: 400 }] },
+    noise: { amplitude: 0.4, formantShaping: [{ f: 800, bw: 400 }] },
   },
 
   // Fricatives:
@@ -201,6 +201,11 @@ const jpPhonemes: PhonemeDef[] = [
     consonantType: "fricative",
     voiced: true,
     defaultDuration: 0.08,
+    formants: [
+      { f: 350, bw: 100 },
+      { f: 2000, bw: 150 },
+      { f: 2600, bw: 200 },
+    ],
     noise: { amplitude: 0.3, formantShaping: [{ f: 6000, bw: 2000 }] },
   },
   {
@@ -211,7 +216,19 @@ const jpPhonemes: PhonemeDef[] = [
     defaultDuration: 0.08,
     noise: { amplitude: 0.4, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
-  { symbol: "h", type: "consonant", consonantType: "fricative", voiced: false, defaultDuration: 0.06, noise: { amplitude: 0.25 } },
+  {
+    symbol: "h",
+    type: "consonant",
+    consonantType: "fricative",
+    voiced: false,
+    defaultDuration: 0.06,
+    formants: [
+      { f: 550, bw: 100 },
+      { f: 1400, bw: 150 },
+      { f: 2400, bw: 200 },
+    ],
+    noise: { amplitude: 0.25 },
+  },
   {
     symbol: "f",
     type: "consonant",
@@ -222,7 +239,18 @@ const jpPhonemes: PhonemeDef[] = [
   },
 
   // Approximants:
-  { symbol: "y", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
+  {
+    symbol: "y",
+    type: "consonant",
+    consonantType: "approximant",
+    voiced: true,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 301, bw: 80 },
+      { f: 2154, bw: 150 },
+      { f: 3000, bw: 200 },
+    ],
+  },
   {
     symbol: "r",
     type: "consonant",
@@ -230,8 +258,9 @@ const jpPhonemes: PhonemeDef[] = [
     voiced: true,
     defaultDuration: 0.06,
     formants: [
-      { f: 400, bw: 200 },
-      { f: 1300, bw: 300 },
+      { f: 400, bw: 150 },
+      { f: 1300, bw: 250 },
+      { f: 2400, bw: 250 },
     ],
   },
   {
@@ -241,11 +270,23 @@ const jpPhonemes: PhonemeDef[] = [
     voiced: true,
     defaultDuration: 0.06,
     formants: [
-      { f: 400, bw: 200 },
-      { f: 1300, bw: 300 },
+      { f: 400, bw: 150 },
+      { f: 1300, bw: 250 },
+      { f: 2800, bw: 250 },
     ],
   },
-  { symbol: "w", type: "consonant", consonantType: "approximant", voiced: true, defaultDuration: 0.05 },
+  {
+    symbol: "w",
+    type: "consonant",
+    consonantType: "approximant",
+    voiced: true,
+    defaultDuration: 0.05,
+    formants: [
+      { f: 348, bw: 80 },
+      { f: 1435, bw: 150 },
+      { f: 2133, bw: 200 },
+    ],
+  },
 
   // Affricates:
   {
@@ -270,6 +311,11 @@ const jpPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: true,
     defaultDuration: 0.07,
+    formants: [
+      { f: 400, bw: 100 },
+      { f: 1800, bw: 150 },
+      { f: 2500, bw: 200 },
+    ],
     noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
 ];
@@ -461,6 +507,17 @@ function romajiToPhonemes(romaji: string): string[] {
   return result;
 }
 
+const HIGH_OFFSET = 1;
+
+function resolveAccents(lyrics: string[]): (number | undefined)[] {
+  const result: (number | undefined)[] = new Array(lyrics.length).fill(undefined);
+  if (lyrics.length === 0) return result;
+  for (let i = 0; i < lyrics.length; i++) {
+    result[i] = i === 0 ? 0 : HIGH_OFFSET;
+  }
+  return result;
+}
+
 export const japanese: LanguageModule = {
   id: "jp",
   name: "Japanese",
@@ -471,4 +528,5 @@ export const japanese: LanguageModule = {
       .filter(Boolean)
       .flatMap((p) => romajiToPhonemes(p));
   },
+  resolveAccents,
 };

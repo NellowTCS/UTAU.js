@@ -6,26 +6,16 @@
 - [ ] File save (.json score export)
 - [ ] Tempo/BPM control in TransportBar
 - [ ] Scroll-to-playhead during playback
-
-## Synthesis Pipeline
-
-- [X] Consonant–vowel co-articulation between consecutive notes
-- [X] Phoneme-level attack/decay envelopes (per phoneme type: plosive 2ms attack / 15ms decay, fricative 5ms/3ms, vowel 5ms/3ms)
-- [X] Diphthong formant sweeping over phoneme duration (via `endFormants` on `PhonemeDef`)
-- [X] Per-note vibratoOverride from Note.vibratoOverride
+- [ ] Seek to position
+- [ ] Loop region
+- [ ] Pre-buffer threshold / buffer underrun handling
 
 ## Languages
 
 - [ ] Expand English G2P to ~1000+ common words using a script probably
-- [ ] Pitch accent support for Japanese
+- [x] Pitch accent support for Japanese
 - [ ] Chinese (Mandarin) language module
 - [ ] Phoneme alias map for cross-language compatibility
-
-## Player
-
-- [ ] Seek to position
-- [ ] Loop region
-- [ ] Pre-buffer threshold / buffer underrun handling
 
 ## Performance
 

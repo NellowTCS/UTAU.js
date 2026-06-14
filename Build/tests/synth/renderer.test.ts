@@ -1,6 +1,7 @@
 import { renderNote } from "../../src/synth/renderer";
 import { getLanguage } from "../../src/langs/index";
 import { buildVoice } from "../../src/voices/index";
+import type { Note, AudioChunk } from "../../src/core/types";
 
 describe("renderNote", () => {
   const lang = getLanguage("jp")!;
@@ -124,6 +125,46 @@ describe("renderNote", () => {
       };
       expect(note.pitchBend).toBeDefined();
       expect(note.pitchBend!.ticks).toHaveLength(2);
+    });
+  });
+
+  describe("pitchAccent", () => {
+    it("is optional on Note", () => {
+      const note: Note = { lyric: "a", noteNum: 72, length: 480 };
+      expect(note.pitchAccent).toBeUndefined();
+    });
+
+    it("produces valid output when set", () => {
+      const { chunk } = renderNote(
+        { lyric: "a", noteNum: 72, length: 480, tick: 0, pitchAccent: 1 },
+        voice,
+        lang,
+        120,
+        480,
+      );
+      for (const ch of chunk.data) {
+        for (const s of ch) {
+          expect(isFinite(s)).toBe(true);
+          expect(isNaN(s)).toBe(false);
+          expect(Math.abs(s)).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+
+    it("changes output compared to un-accented note", () => {
+      const { chunk: base } = renderNote({ lyric: "a", noteNum: 72, length: 480, tick: 0 }, voice, lang, 120, 480);
+      const { chunk: accented } = renderNote(
+        { lyric: "a", noteNum: 72, length: 480, tick: 0, pitchAccent: 2 },
+        voice,
+        lang,
+        120,
+        480,
+      );
+      let diff = 0;
+      for (let i = 0; i < base.data[0].length; i++) {
+        diff += Math.abs(base.data[0][i] - accented.data[0][i]);
+      }
+      expect(diff).toBeGreaterThan(0);
     });
   });
 });

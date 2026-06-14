@@ -7,6 +7,8 @@ export class LFGlottalSource {
   private dcY = 0;
   private jitterF0 = 0;
   private jitterPeriod = 0;
+  private noiseLP = 0;
+  private shimmerAmp = 1;
 
   reset(): void {
     this.phase = 0;
@@ -15,6 +17,8 @@ export class LFGlottalSource {
     this.dcY = 0;
     this.jitterF0 = 0;
     this.jitterPeriod = 0;
+    this.noiseLP = 0;
+    this.shimmerAmp = 1;
   }
 
   nextSample(params: GlottalSourceParams): number {
@@ -22,6 +26,7 @@ export class LFGlottalSource {
     if (this.phase === 0 || this.phase >= this.jitterPeriod) {
       this.jitterF0 = f0 * (1 + jitter * (Math.random() * 2 - 1));
       this.jitterPeriod = sampleRate / Math.max(1, this.jitterF0);
+      this.shimmerAmp = 1 + jitter * 2 * (Math.random() * 2 - 1);
     }
     const period = this.jitterPeriod;
     const oq = Math.max(0.2, Math.min(0.9, openQuotient));
@@ -48,8 +53,10 @@ export class LFGlottalSource {
       sample = 0;
     }
     const tilt = 1 - tenseness * 0.3;
-    const breathyNoise = Math.random() * 2 - 1;
-    const rawSample = sample * tilt * power + breathyNoise * aspiration * 0.1;
+    const rawNoise = Math.random() * 2 - 1;
+    this.noiseLP = this.noiseLP * 0.6 + rawNoise * 0.4;
+    const breathyNoise = rawNoise - this.noiseLP;
+    const rawSample = (sample * tilt * power + breathyNoise * aspiration * 0.15) * this.shimmerAmp;
     const smoothed = rawSample * 0.8 + this.prevSample * 0.2;
     this.prevSample = smoothed;
     const centeredSample = smoothed - this.dcX + 0.995 * this.dcY;

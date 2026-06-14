@@ -59,4 +59,30 @@ describe("japanese", () => {
       }
     }
   });
+
+  describe("resolveAccents", () => {
+    it("is defined", () => {
+      expect(japanese.resolveAccents).toBeDefined();
+    });
+
+    it("returns heiban pattern for a multi-mora word", () => {
+      const result = japanese.resolveAccents!(["ka", "ra", "su"]);
+      expect(result).toEqual([0, 1, 1]);
+    });
+
+    it("returns 0 for a single-mora word", () => {
+      const result = japanese.resolveAccents!(["ki"]);
+      expect(result).toEqual([0]);
+    });
+
+    it("handles empty input", () => {
+      const result = japanese.resolveAccents!([]);
+      expect(result).toEqual([]);
+    });
+
+    it("handles a phrase with many morae", () => {
+      const result = japanese.resolveAccents!(["a", "ri", "ga", "to", "u"]);
+      expect(result).toEqual([0, 1, 1, 1, 1]);
+    });
+  });
 });

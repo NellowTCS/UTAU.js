@@ -6,10 +6,10 @@ describe("buildVoice", () => {
     expect(v.name).toBe("Custom");
     expect(v.sampleRate).toBe(44100);
     expect(v.channels).toBe(2);
-    expect(v.glottal.openQuotient).toBe(0.5);
+    expect(v.glottal.openQuotient).toBe(0.48);
     expect(v.formant.scale).toBe(1.0);
     expect(v.formant.shift).toBe(0);
-    expect(v.glottal.jitter).toBe(0.02);
+    expect(v.glottal.jitter).toBe(0.015);
   });
 
   it("merges overrides", () => {
@@ -21,8 +21,8 @@ describe("buildVoice", () => {
   it("merges nested glottal overrides", () => {
     const v = buildVoice({ glottal: { openQuotient: 0.7 } });
     expect(v.glottal.openQuotient).toBe(0.7);
-    expect(v.glottal.speedQuotient).toBe(0.9);
-    expect(v.glottal.jitter).toBe(0.02);
+    expect(v.glottal.speedQuotient).toBe(0.85);
+    expect(v.glottal.jitter).toBe(0.015);
   });
 });
 
@@ -37,19 +37,19 @@ describe("scaleVoice", () => {
 
   it("adjusts gender correctly", () => {
     const male = scaleVoice(buildVoice({ formant: { scale: 1.0 } }), { gender: -1 });
-    expect(male.formant.scale).toBeCloseTo(0.85, 2);
+    expect(male.formant.scale).toBeCloseTo(0.8, 2);
     const female = scaleVoice(buildVoice({ formant: { scale: 1.0 } }), { gender: 1 });
-    expect(female.formant.scale).toBeCloseTo(1.15, 2);
+    expect(female.formant.scale).toBeCloseTo(1.2, 2);
   });
 
   it("clamps gender to [-1, 1]", () => {
     const v = scaleVoice(buildVoice(), { gender: 2 });
-    expect(v.formant.scale).toBeCloseTo(1.15, 2);
+    expect(v.formant.scale).toBeCloseTo(1.2, 2);
   });
 
   it("adjusts breathiness", () => {
     const v = scaleVoice(buildVoice({ glottal: { openQuotient: 0.5 } }), { breathiness: 1 });
-    expect(v.glottal.openQuotient).toBeCloseTo(0.65, 2);
+    expect(v.glottal.openQuotient).toBeCloseTo(0.56, 2);
     expect(v.glottal.aspiration).toBeGreaterThan(0.1);
   });
 
@@ -87,13 +87,13 @@ describe("voice registry", () => {
 describe("maleVoice", () => {
   it("has male-typical formant scale (1.0)", () => {
     expect(maleVoice.formant.scale).toBe(1.0);
-    expect(maleVoice.glottal.jitter).toBe(0.015);
+    expect(maleVoice.glottal.jitter).toBe(0.01);
   });
 });
 
 describe("femaleVoice", () => {
-  it("has 15% higher formant scale", () => {
-    expect(femaleVoice.formant.scale).toBe(1.15);
+  it("has 20% higher formant scale", () => {
+    expect(femaleVoice.formant.scale).toBe(1.18);
     expect(femaleVoice.glottal.jitter).toBe(0.02);
   });
 });
