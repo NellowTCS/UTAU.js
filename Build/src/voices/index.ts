@@ -24,7 +24,15 @@ export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
     sampleRate: 44100,
     channels: 2,
     ...overrides,
-    glottal: { openQuotient: 0.48, speedQuotient: 0.85, tenseness: 0.55, aspiration: 0.08, power: 0.7, jitter: 0.015, ...overrides.glottal },
+    glottal: {
+      openQuotient: 0.48,
+      speedQuotient: 0.85,
+      tenseness: 0.55,
+      aspiration: 0.08,
+      power: 0.7,
+      jitter: 0.015,
+      ...overrides.glottal,
+    },
     formant: { scale: 1.0, shift: 0, bandwidth: 1.0, ...overrides.formant },
     vibrato: { rate: 5.5, depth: 35, attack: 0.12, ...overrides.vibrato },
   };

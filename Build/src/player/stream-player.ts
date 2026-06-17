@@ -38,7 +38,6 @@ interface PoolEntry {
 }
 
 const BATCH_TARGET_SEC = 0.5;
-const MIN_POOL_SIZE = 4;
 
 export class StreamPlayer {
   private ctx: AudioContext | null = null;
@@ -142,10 +141,7 @@ export class StreamPlayer {
       this.emit({
         type: "progress",
         renderedSamples: this.totalSamplesScheduled,
-        totalSamples:
-          this.totalDurationSec > 0
-            ? Math.round(this.totalDurationSec * sr)
-            : this.totalSamplesScheduled,
+        totalSamples: this.totalDurationSec > 0 ? Math.round(this.totalDurationSec * sr) : this.totalSamplesScheduled,
         bufferAhead,
       });
     }
@@ -161,21 +157,13 @@ export class StreamPlayer {
       this.currentBatchStartSample = chunk.startSample;
     }
     this.currentBatchDuration += chunk.data[0].length / chunk.sampleRate;
-    this.totalSamplesScheduled = Math.max(
-      this.totalSamplesScheduled,
-      chunk.startSample + chunk.data[0].length,
-    );
+    this.totalSamplesScheduled = Math.max(this.totalSamplesScheduled, chunk.startSample + chunk.data[0].length);
     if (this.currentBatchDuration >= BATCH_TARGET_SEC) {
       this.flushBatch();
     }
   }
 
-  async play(
-    stream: AsyncGenerator<AudioChunk>,
-    volume = 0.8,
-    sampleRate?: number,
-    options?: PlayOptions,
-  ): Promise<void> {
+  async play(stream: AsyncGenerator<AudioChunk>, volume = 0.8, sampleRate?: number, options?: PlayOptions): Promise<void> {
     this.stop();
     this.preBufferThreshold = options?.preBufferThreshold ?? 1.0;
     this.underrunEmitted = false;

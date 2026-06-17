@@ -10,10 +10,7 @@ export default defineConfig(() => {
 
   return {
     base: "./",
-    plugins: [
-      svelte(),
-      ...(isSingleFile ? [viteSingleFile()] : []),
-    ],
+    plugins: [svelte(), ...(isSingleFile ? [viteSingleFile()] : [])],
     define: {
       __BUILD_HASH__: JSON.stringify(buildHash),
     },

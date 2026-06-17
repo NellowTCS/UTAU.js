@@ -16,8 +16,6 @@
 
 - [ ] Move note rendering to a Web Worker
 - [ ] Chunk prefetch: render ahead of playback clock
-- [x] AudioBuffer recycling / pool allocation
-- [x] Reuse Web Audio nodes instead of createBuffer+createBufferSource per chunk
 
 ## Documentation
 

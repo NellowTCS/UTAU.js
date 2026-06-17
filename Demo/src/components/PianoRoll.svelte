@@ -210,15 +210,15 @@
       const n = notes[selectedNote];
       if (n) {
         const pi = findPitchPoint(n, mx, my);
-          if (pi >= 0) {
-            n.pitchBend!.ticks.splice(pi, 1);
-            n.pitchBend!.values.splice(pi, 1);
-            if (n.pitchBend!.ticks.length === 0) n.pitchBend = undefined;
-            activePoint = -1;
-            saveSnapshot();
-            render();
-            return;
-          }
+        if (pi >= 0) {
+          n.pitchBend!.ticks.splice(pi, 1);
+          n.pitchBend!.values.splice(pi, 1);
+          if (n.pitchBend!.ticks.length === 0) n.pitchBend = undefined;
+          activePoint = -1;
+          saveSnapshot();
+          render();
+          return;
+        }
       }
     }
 

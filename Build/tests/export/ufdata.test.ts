@@ -39,12 +39,14 @@ describe("scoreToUfData", () => {
   });
 
   it("maps tempos correctly", () => {
-    const uf = scoreToUfData(makeScore({
-      tempos: [
-        { tick: 0, tempo: 80 },
-        { tick: 960, tempo: 160 },
-      ],
-    }));
+    const uf = scoreToUfData(
+      makeScore({
+        tempos: [
+          { tick: 0, tempo: 80 },
+          { tick: 960, tempo: 160 },
+        ],
+      }),
+    );
     expect(uf.project.tempos).toHaveLength(2);
     expect(uf.project.tempos[0]).toEqual({ tickPosition: 0, bpm: 80 });
     expect(uf.project.tempos[1]).toEqual({ tickPosition: 960, bpm: 160 });

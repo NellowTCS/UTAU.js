@@ -87,7 +87,14 @@ function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number
   return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
 }
 
-export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule, tempo: number, resolution: number, prevFormants?: FormantTarget[]): { chunk: AudioChunk; finalFormants: FormantTarget[] } {
+export function renderNote(
+  note: Note,
+  voice: VoiceConfig,
+  lang: LanguageModule,
+  tempo: number,
+  resolution: number,
+  prevFormants?: FormantTarget[],
+): { chunk: AudioChunk; finalFormants: FormantTarget[] } {
   const sr = voice.sampleRate;
   const baseF0 = midiToFrequency(note.noteNum);
   const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
@@ -122,7 +129,12 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
 
   if (phonemes.length === 0) {
     const len = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
-    const chunk: AudioChunk = { data: [new Float32Array(len), new Float32Array(len)], sampleRate: sr, startSample: 0, channels: voice.channels };
+    const chunk: AudioChunk = {
+      data: [new Float32Array(len), new Float32Array(len)],
+      sampleRate: sr,
+      startSample: 0,
+      channels: voice.channels,
+    };
     return { chunk, finalFormants: DEFAULT_FORMANTS };
   }
 
@@ -190,9 +202,7 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     const vibCents = Math.sin((2 * Math.PI * vibRate * i) / sr) * vibDepth * vibGain;
     const accentCents = (note.pitchAccent ?? 0) * 100;
     const f0 = baseF0 * Math.pow(2, (pitchBendSemitones * 100 + vibCents + accentCents) / 1200);
-    const pp = pi === 0 && prevFormants
-      ? { formants: prevFormants } as PhonemeDef
-      : phonemes[Math.max(0, pi - 1)] ?? cp;
+    const pp = pi === 0 && prevFormants ? ({ formants: prevFormants } as PhonemeDef) : (phonemes[Math.max(0, pi - 1)] ?? cp);
     const segPos = i - phSegStart;
     const phDur = phSampleCounts[pi];
     const tt = Math.min(1, segPos / Math.max(1, transitionLen));
@@ -221,9 +231,10 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
     const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)));
-    const noiseEnv = cp.consonantType === "plosive"
-      ? Math.min(noiseFadeIn, Math.max(0, 1 - segPos / Math.max(1, Math.round(0.012 * sr))))
-      : Math.min(noiseFadeIn, noiseFadeOut);
+    const noiseEnv =
+      cp.consonantType === "plosive"
+        ? Math.min(noiseFadeIn, Math.max(0, 1 - segPos / Math.max(1, Math.round(0.012 * sr))))
+        : Math.min(noiseFadeIn, noiseFadeOut);
 
     let glottalSignal = voiced ? gSample : 0;
     let noiseSignal = 0;
@@ -270,8 +281,9 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     finalFormants = DEFAULT_FORMANTS;
   }
 
-  const chunk: AudioChunk = voice.channels === 2
-    ? { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 }
-    : { data: [mono], sampleRate: sr, startSample: 0, channels: 1 };
+  const chunk: AudioChunk =
+    voice.channels === 2
+      ? { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 }
+      : { data: [mono], sampleRate: sr, startSample: 0, channels: 1 };
   return { chunk, finalFormants };
 }

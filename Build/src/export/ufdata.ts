@@ -21,6 +21,7 @@ const FORMAT_GENERATORS: Record<string, string> = {
   xml: "generateMusicXml",
 };
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function buildTrackPitch(notes: Score["notes"], resolution: number): { ticks: number[]; values: number[] } | undefined {
   const totalTicks: number[] = [];
   const totalValues: number[] = [];

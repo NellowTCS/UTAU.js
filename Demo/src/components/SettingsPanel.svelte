@@ -20,7 +20,14 @@
 
 {#if open}
   <div class="overlay" onclick={onClose} onkeydown={(e) => e.key === "Enter" && onClose()} role="presentation">
-    <div class="panel" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="dialog" aria-label="Settings" tabindex="-1">
+    <div
+      class="panel"
+      onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-label="Settings"
+      tabindex="-1"
+    >
       <div class="header">
         <h2>Settings</h2>
         <button class="close-btn" onclick={onClose}><X size={16} /></button>
