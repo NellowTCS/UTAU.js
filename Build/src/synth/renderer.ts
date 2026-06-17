@@ -99,6 +99,12 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     })
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
+  // Handle note-join marker (＠): suppress the initial consonant so the
+  // vowel carries through as a continuation of the previous note.
+  if (note.lyric.includes("＠") && phonemes.length > 0 && phonemes[0].type === "consonant") {
+    phonemes.shift();
+  }
+
   const noteLen = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
   const fScale = voice.formant.scale;
   const fShift = voice.formant.shift;
@@ -168,7 +174,6 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
     if (pi !== prevPi) {
       phSegStart = i;
       prevPi = pi;
-      cascade.reset();
       const noiseTargets = cp.noise?.formantShaping ?? [];
       for (let fi = 0; fi < parallelFilters.length; fi++) {
         if (fi < noiseTargets.length) {
@@ -177,7 +182,6 @@ export function renderNote(note: Note, voice: VoiceConfig, lang: LanguageModule,
         } else {
           parallelFilters[fi].setPassthrough();
         }
-        parallelFilters[fi].reset();
       }
     }
 

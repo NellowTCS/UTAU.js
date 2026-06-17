@@ -318,9 +318,21 @@ const jpPhonemes: PhonemeDef[] = [
     ],
     noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
+  {
+    symbol: "sil",
+    type: "silence",
+    defaultDuration: 0.06,
+  },
 ];
 
 function sanitizeLyric(lyric: string): string {
+  // Handle pronunciation alias (※): use text after ※ as the effective lyric
+  const aliasIdx = lyric.indexOf("※");
+  const effectiveLyric = aliasIdx >= 0 ? lyric.slice(aliasIdx + 1) : lyric;
+  // Dot-prefixed lyrics (.sil, .S, etc.) are UTAU rest/special commands so treat as empty for now.
+  if (effectiveLyric.startsWith(".")) return "";
+  const cleaned = effectiveLyric.replace(/[＠％]/g, "");
+  if (!cleaned) return "";
   const hiraganaMap: Record<string, string> = {
     あ: "a",
     い: "i",
@@ -340,6 +352,7 @@ function sanitizeLyric(lyric: string): string {
     た: "ta",
     ち: "chi",
     つ: "tsu",
+    っ: "sil",
     て: "te",
     と: "to",
     な: "na",
@@ -427,7 +440,7 @@ function sanitizeLyric(lyric: string): string {
     ぴゅ: "pyu",
     ぴょ: "pyo",
   };
-  return hiraganaMap[lyric] ?? lyric;
+  return hiraganaMap[cleaned] ?? cleaned;
 }
 
 function romajiToPhonemes(romaji: string): string[] {

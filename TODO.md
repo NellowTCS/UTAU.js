@@ -3,7 +3,6 @@
 ## Demo UX
 
 - [ ] Scroll-to-playhead during playback (toggleable, settings)
-- [x] PianoRoll: undo/redo stack (using undora)
 - [ ] Seek to position
 - [ ] Loop region
 
@@ -17,8 +16,8 @@
 
 - [ ] Move note rendering to a Web Worker
 - [ ] Chunk prefetch: render ahead of playback clock
-- [ ] AudioBuffer recycling / pool allocation
-- [ ] Reuse Web Audio nodes instead of createBuffer+createBufferSource per chunk
+- [x] AudioBuffer recycling / pool allocation
+- [x] Reuse Web Audio nodes instead of createBuffer+createBufferSource per chunk
 
 ## Documentation
 

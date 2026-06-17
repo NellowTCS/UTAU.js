@@ -28,9 +28,17 @@ export type PlayerEvent =
 export interface PlayOptions {
   volume?: number;
   sampleRate?: number;
-  /** Seconds of audio to pre-buffer before starting playback. Default 0.5. */
+  /** Seconds of audio to pre-buffer before starting playback. Default 1.0. */
   preBufferThreshold?: number;
 }
+
+interface PoolEntry {
+  buf: AudioBuffer;
+  inUse: boolean;
+}
+
+const BATCH_TARGET_SEC = 0.5;
+const MIN_POOL_SIZE = 4;
 
 export class StreamPlayer {
   private ctx: AudioContext | null = null;
@@ -41,8 +49,14 @@ export class StreamPlayer {
   private gainNode: GainNode | null = null;
   private totalSamplesScheduled = 0;
   private totalDurationSec = 0;
-  private preBufferThreshold = 0.5;
+  private preBufferThreshold = 1.0;
   private underrunEmitted = false;
+
+  // Batching + buffer pool
+  private bufferPool: PoolEntry[] = [];
+  private currentBatch: AudioChunk[] = [];
+  private currentBatchStartSample = 0;
+  private currentBatchDuration = 0;
 
   setVolume(v: number): void {
     if (this.gainNode) this.gainNode.gain.value = v;
@@ -69,42 +83,101 @@ export class StreamPlayer {
     }
   }
 
-  private scheduleChunk(chunk: AudioChunk): void {
-    if (this.abortController?.signal.aborted) return;
-    const sr = chunk.sampleRate;
-    const startSec = chunk.startSample / sr;
-    const t = Math.max(this.ctx!.currentTime + 0.01, this.startTime + startSec);
-    for (let c = 0; c < chunk.data.length; c++) {
-      const buf = this.ctx!.createBuffer(1, chunk.data[c].length, sr);
-      buf.copyToChannel(chunk.data[c] as Float32Array<ArrayBuffer>, 0);
+  private acquireBuffer(sampleRate: number, length: number): AudioBuffer {
+    for (const entry of this.bufferPool) {
+      if (!entry.inUse && entry.buf.sampleRate === sampleRate && entry.buf.length >= length) {
+        entry.inUse = true;
+        entry.buf.getChannelData(0).fill(0);
+        return entry.buf;
+      }
+    }
+    const buf = this.ctx!.createBuffer(1, length, sampleRate);
+    this.bufferPool.push({ buf, inUse: true });
+    return buf;
+  }
+
+  private releaseBuffer(buf: AudioBuffer): void {
+    for (const entry of this.bufferPool) {
+      if (entry.buf === buf) {
+        entry.inUse = false;
+        return;
+      }
+    }
+  }
+
+  private flushBatch(): void {
+    if (this.currentBatch.length === 0) return;
+    const sr = this.currentBatch[0].sampleRate;
+    const channels = this.currentBatch[0].data.length;
+    const totalLen = this.currentBatch.reduce((s, c) => s + c.data[0].length, 0);
+    const batchStartSec = this.currentBatchStartSample / sr;
+    const t = Math.max(this.ctx!.currentTime + 0.01, this.startTime + batchStartSec);
+
+    for (let c = 0; c < channels; c++) {
+      const buf = this.acquireBuffer(sr, totalLen);
+      const channelData = buf.getChannelData(0);
+      let offset = 0;
+      for (const chunk of this.currentBatch) {
+        const src = chunk.data[c];
+        channelData.set(src, offset);
+        offset += src.length;
+      }
       const src = this.ctx!.createBufferSource();
       src.buffer = buf;
       src.connect(this.gainNode!);
       src.start(t);
+      src.onended = () => this.releaseBuffer(buf);
     }
-    this.totalSamplesScheduled = Math.max(this.totalSamplesScheduled, chunk.startSample + chunk.data[0].length);
 
-    const scheduledEnd = this.startTime + (chunk.startSample + chunk.data[0].length) / sr;
+    const lastChunk = this.currentBatch[this.currentBatch.length - 1];
+    const scheduledEnd = this.startTime + (lastChunk.startSample + lastChunk.data[0].length) / sr;
     const bufferAhead = Math.max(0, scheduledEnd - this.ctx!.currentTime);
+
     if (bufferAhead < 0.15 && !this.underrunEmitted) {
       this.underrunEmitted = true;
       this.emit({ type: "bufferUnderrun", bufferAhead });
     }
+
     if (this.totalSamplesScheduled > 0) {
       this.emit({
         type: "progress",
-        renderedSamples: chunk.startSample + chunk.data[0].length,
-        totalSamples: this.totalDurationSec > 0
-          ? Math.round(this.totalDurationSec * sr)
-          : this.totalSamplesScheduled,
+        renderedSamples: this.totalSamplesScheduled,
+        totalSamples:
+          this.totalDurationSec > 0
+            ? Math.round(this.totalDurationSec * sr)
+            : this.totalSamplesScheduled,
         bufferAhead,
       });
     }
+
+    this.currentBatch = [];
+    this.currentBatchDuration = 0;
   }
 
-  async play(stream: AsyncGenerator<AudioChunk>, volume = 0.8, sampleRate?: number, options?: PlayOptions): Promise<void> {
+  private scheduleChunk(chunk: AudioChunk): void {
+    if (this.abortController?.signal.aborted) return;
+    this.currentBatch.push(chunk);
+    if (this.currentBatch.length === 1) {
+      this.currentBatchStartSample = chunk.startSample;
+    }
+    this.currentBatchDuration += chunk.data[0].length / chunk.sampleRate;
+    this.totalSamplesScheduled = Math.max(
+      this.totalSamplesScheduled,
+      chunk.startSample + chunk.data[0].length,
+    );
+    if (this.currentBatchDuration >= BATCH_TARGET_SEC) {
+      this.flushBatch();
+    }
+  }
+
+  async play(
+    stream: AsyncGenerator<AudioChunk>,
+    volume = 0.8,
+    sampleRate?: number,
+    options?: PlayOptions,
+  ): Promise<void> {
     this.stop();
-    this.preBufferThreshold = options?.preBufferThreshold ?? 0.5;
+    this.preBufferThreshold = options?.preBufferThreshold ?? 1.0;
     this.underrunEmitted = false;
     this.ctx = new AudioContext({ sampleRate: sampleRate ?? 44100 });
     this.gainNode = this.ctx.createGain();
@@ -114,6 +187,9 @@ export class StreamPlayer {
     const signal = this.abortController.signal;
     this.totalSamplesScheduled = 0;
     this.totalDurationSec = 0;
+    this.bufferPool = [];
+    this.currentBatch = [];
+    this.currentBatchDuration = 0;
 
     const iter = stream[Symbol.asyncIterator]();
 
@@ -121,7 +197,10 @@ export class StreamPlayer {
     const buf: AudioChunk[] = [];
     let bufSec = 0;
     for (;;) {
-      if (signal.aborted) { this.cleanup(); return; }
+      if (signal.aborted) {
+        this.cleanup();
+        return;
+      }
       const { value: chunk, done } = await iter.next();
       if (done) break;
       this.totalDurationSec += chunk.data[0].length / chunk.sampleRate;
@@ -134,7 +213,10 @@ export class StreamPlayer {
     this.startTime = this.ctx.currentTime + 0.05;
     this.state = "playing";
     this.emit({ type: "stateChange", state: "playing" });
+
+    // Schedule pre-buffered chunks (goes through batching)
     for (const chunk of buf) this.scheduleChunk(chunk);
+    this.flushBatch();
 
     // Consume remaining chunks
     try {
@@ -144,6 +226,7 @@ export class StreamPlayer {
         if (done) break;
         this.scheduleChunk(chunk);
       }
+      this.flushBatch();
       if (!signal.aborted) {
         this.state = "idle";
         this.emit({ type: "done" });
@@ -151,7 +234,10 @@ export class StreamPlayer {
       }
     } catch (err) {
       this.state = "idle";
-      this.emit({ type: "error", error: err instanceof Error ? err : new Error(String(err)) });
+      this.emit({
+        type: "error",
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
       this.emit({ type: "stateChange", state: "idle" });
     } finally {
       if (signal.aborted) this.cleanup();
@@ -162,6 +248,9 @@ export class StreamPlayer {
     this.abortController = null;
     this.ctx = null;
     this.gainNode = null;
+    this.bufferPool = [];
+    this.currentBatch = [];
+    this.currentBatchDuration = 0;
   }
 
   pause(): void {
@@ -170,6 +259,7 @@ export class StreamPlayer {
     this.state = "paused";
     this.emit({ type: "stateChange", state: "paused" });
   }
+
   resume(): void {
     if (this.state !== "paused" || !this.ctx) return;
     this.ctx.resume();
@@ -186,6 +276,9 @@ export class StreamPlayer {
     const oldGain = this.gainNode;
     this.ctx = null;
     this.gainNode = null;
+    this.bufferPool = [];
+    this.currentBatch = [];
+    this.currentBatchDuration = 0;
     if (!oldCtx) return;
     if (oldGain) {
       oldGain.gain.setValueAtTime(oldGain.gain.value, oldCtx.currentTime);

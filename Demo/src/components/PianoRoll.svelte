@@ -401,12 +401,18 @@
   function scrollToNotes() {
     if (!notes.length || !canvas) return;
     const ticks = notes.map((n) => (n.tick ?? 0) + n.length / 2);
-    const midTick = (Math.min(...ticks) + Math.max(...ticks)) / 2;
+    const minTick = Math.min(...notes.map((n) => n.tick ?? 0));
+    const maxTick = Math.max(...ticks);
+    const midTick = (minTick + maxTick) / 2;
     const midNote = (Math.min(...notes.map((n) => n.noteNum)) + Math.max(...notes.map((n) => n.noteNum))) / 2;
 
     scrollX = Math.max(
       0,
-      Math.min(contentWidth - canvas.clientWidth, KEY_WIDTH + (midTick / ticksPerBeat) * BEAT_WIDTH - canvas.clientWidth / 2),
+      Math.min(
+        contentWidth - canvas.clientWidth,
+        KEY_WIDTH + (midTick / ticksPerBeat) * BEAT_WIDTH - canvas.clientWidth / 2,
+        KEY_WIDTH + (minTick / ticksPerBeat) * BEAT_WIDTH,
+      ),
     );
     scrollY = Math.max(
       0,
