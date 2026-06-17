@@ -2,13 +2,11 @@
 
 ## Demo UX
 
+- [x] Add settings to Demo
+- [ ] Scroll-to-playhead during playback (toggleable, settings)
 - [ ] PianoRoll: undo/redo stack
-- [X] File save (.ustx score export)
-- [X] Tempo/BPM control in TransportBar
-- [ ] Scroll-to-playhead during playback
 - [ ] Seek to position
 - [ ] Loop region
-- [X] Pre-buffer threshold / buffer underrun handling
 
 ## Languages
 

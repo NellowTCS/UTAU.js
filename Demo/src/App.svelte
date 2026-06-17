@@ -2,6 +2,8 @@
   import PianoRoll from "./components/PianoRoll.svelte";
   import VoicePanel from "./components/VoicePanel.svelte";
   import TransportBar from "./components/TransportBar.svelte";
+  import SettingsPanel from "./components/SettingsPanel.svelte";
+  import { Settings } from "@lucide/svelte";
   import { streamScore, renderScore, mixChunks, encodeWav, buildVoice, scaleVoice, importScoreFromFile, downloadScore } from "utaujs";
   import { StreamPlayer } from "utaujs";
   import { createDemoScore } from "./lib/score";
@@ -31,6 +33,8 @@
     vAttack?: number;
   });
   let advancedOpen = $state(false);
+  let settingsOpen = $state(false);
+  let autoScroll = $state(true);
   let volume = $state(0.8);
   let tempo = $state(120);
   let player: StreamPlayer | null = $state(null);
@@ -169,6 +173,7 @@
         <option value="jp">Japanese</option>
         <option value="en">English</option>
       </select>
+      <button class="icon-btn" onclick={() => (settingsOpen = true)}><Settings size={16} /></button>
     </div>
   </header>
   <main>
@@ -188,6 +193,7 @@
       <VoicePanel bind:params={voiceParams} bind:advancedOpen />
     </div>
   </main>
+  <SettingsPanel bind:open={settingsOpen} bind:autoScroll onClose={() => (settingsOpen = false)} />
   <TransportBar
     bind:state={playerState}
     bind:volume
@@ -249,6 +255,20 @@
   }
   .header-controls button:hover {
     background: #2a2a4e;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .icon-btn:hover {
+    background: #2a2a4e;
+    color: #fff;
   }
   header select {
     background: #1a1a2e;
