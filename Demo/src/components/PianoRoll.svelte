@@ -7,6 +7,18 @@
     ticksPerBeat = 480,
     noteRangeMin = 0,
     noteRangeMax = 127,
+    saveSnapshot = () => {},
+    handleUndo = () => {},
+    handleRedo = () => {},
+  }: {
+    notes?: Note[];
+    selectedNote?: number | null;
+    ticksPerBeat?: number;
+    noteRangeMin?: number;
+    noteRangeMax?: number;
+    saveSnapshot?: () => void;
+    handleUndo?: () => void;
+    handleRedo?: () => void;
   } = $props();
 
   const NOTE_HEIGHT = 20,
@@ -198,14 +210,15 @@
       const n = notes[selectedNote];
       if (n) {
         const pi = findPitchPoint(n, mx, my);
-        if (pi >= 0) {
-          n.pitchBend!.ticks.splice(pi, 1);
-          n.pitchBend!.values.splice(pi, 1);
-          if (n.pitchBend!.ticks.length === 0) n.pitchBend = undefined;
-          activePoint = -1;
-          render();
-          return;
-        }
+          if (pi >= 0) {
+            n.pitchBend!.ticks.splice(pi, 1);
+            n.pitchBend!.values.splice(pi, 1);
+            if (n.pitchBend!.ticks.length === 0) n.pitchBend = undefined;
+            activePoint = -1;
+            saveSnapshot();
+            render();
+            return;
+          }
       }
     }
 
@@ -353,6 +366,7 @@
   function handleMouseUp() {
     dragging = null;
     activePoint = -1;
+    saveSnapshot();
     render();
   }
 
@@ -364,6 +378,7 @@
     const target = e.target as HTMLElement;
     if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
     if ((e.key === "Delete" || e.key === "Backspace") && selectedNote != null) {
+      saveSnapshot();
       notes.splice(selectedNote, 1);
       selectedNote = null;
     }

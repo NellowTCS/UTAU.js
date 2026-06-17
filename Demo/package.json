@@ -29,6 +29,7 @@
     "@lucide/svelte": "^1.18.0",
     "@nellowtcs/updato": "^1.0.3",
     "@nisoku/satori": "^0.1.3",
+    "undora": "^0.1.2",
     "utaujs": "*"
   }
 }

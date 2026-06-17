@@ -3,7 +3,9 @@
   import VoicePanel from "./components/VoicePanel.svelte";
   import TransportBar from "./components/TransportBar.svelte";
   import SettingsPanel from "./components/SettingsPanel.svelte";
-  import { Settings } from "@lucide/svelte";
+  import { Settings, Undo2, Redo2 } from "@lucide/svelte";
+  import { Undora } from "undora";
+  import type { Note } from "utaujs";
   import { streamScore, renderScore, mixChunks, encodeWav, buildVoice, scaleVoice, importScoreFromFile, downloadScore } from "utaujs";
   import { StreamPlayer } from "utaujs";
   import { createDemoScore } from "./lib/score";
@@ -35,6 +37,29 @@
   let advancedOpen = $state(false);
   let settingsOpen = $state(false);
   let autoScroll = $state(true);
+  let canUndo = $state(false);
+  let canRedo = $state(false);
+  const history = new Undora<Note[]>({ capacity: 50 });
+  history.pushState(_initScore.notes, { silent: true });
+  function saveSnapshot() {
+    history.pushState(notes, { silent: true });
+    canUndo = history.canUndo();
+    canRedo = history.canRedo();
+  }
+  function handleUndo() {
+    history.undo();
+    const state = history.getCurrent();
+    if (state !== undefined) notes = state;
+    canUndo = history.canUndo();
+    canRedo = history.canRedo();
+  }
+  function handleRedo() {
+    history.redo();
+    const state = history.getCurrent();
+    if (state !== undefined) notes = state;
+    canUndo = history.canUndo();
+    canRedo = history.canRedo();
+  }
   let volume = $state(0.8);
   let tempo = $state(120);
   let player: StreamPlayer | null = $state(null);
@@ -55,6 +80,10 @@
     score = s;
     notes = s.notes;
     tempo = s.tempos[0]?.tempo ?? 120;
+    history.clear();
+    history.pushState(s.notes, { silent: true });
+    canUndo = false;
+    canRedo = false;
   });
 
   async function handlePlay() {
@@ -121,6 +150,10 @@
     notes = s.notes;
     selectedNote = null;
     tempo = s.tempos[0]?.tempo ?? 120;
+    history.clear();
+    history.pushState(s.notes, { silent: true });
+    canUndo = false;
+    canRedo = false;
   }
 
   $effect(() => {
@@ -151,12 +184,26 @@
     await downloadScore(score, { projectName: "utaujs-export", format: "ustx" });
   }
 
+  function handleGlobalKeydown(e: KeyboardEvent) {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key === "z" && !e.shiftKey) {
+      e.preventDefault();
+      handleUndo();
+    } else if (mod && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
+      e.preventDefault();
+      handleRedo();
+    }
+  }
+
   const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   function noteName(n: number) {
     return `${NOTE_NAMES[n % 12]}${Math.floor(n / 12) - 1}`;
   }
 </script>
 
+<svelte:window onkeydown={handleGlobalKeydown} />
 <div class="app">
   <header>
     <h1>UTAU.js</h1>
@@ -173,18 +220,20 @@
         <option value="jp">Japanese</option>
         <option value="en">English</option>
       </select>
+      <button class="icon-btn" onclick={handleUndo} disabled={!canUndo}><Undo2 size={16} /></button>
+      <button class="icon-btn" onclick={handleRedo} disabled={!canRedo}><Redo2 size={16} /></button>
       <button class="icon-btn" onclick={() => (settingsOpen = true)}><Settings size={16} /></button>
     </div>
   </header>
   <main>
     <div class="piano-area">
-      <PianoRoll bind:notes bind:selectedNote />
+      <PianoRoll bind:notes bind:selectedNote {saveSnapshot} {handleUndo} {handleRedo} />
       {#if selectedNote != null && notes[selectedNote]}
         <div class="note-editor">
           <span>Lyric:</span>
-          <input type="text" bind:value={notes[selectedNote].lyric} oninput={() => (notes = notes)} />
+          <input type="text" bind:value={notes[selectedNote].lyric} onblur={saveSnapshot} />
           <span>Note:</span>
-          <input type="number" min={0} max={127} bind:value={notes[selectedNote].noteNum} oninput={() => (notes = notes)} />
+          <input type="number" min={0} max={127} bind:value={notes[selectedNote].noteNum} onblur={saveSnapshot} />
           <span class="note-name">{noteName(notes[selectedNote].noteNum)}</span>
         </div>
       {/if}

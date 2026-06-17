@@ -2,9 +2,8 @@
 
 ## Demo UX
 
-- [x] Add settings to Demo
 - [ ] Scroll-to-playhead during playback (toggleable, settings)
-- [ ] PianoRoll: undo/redo stack
+- [x] PianoRoll: undo/redo stack (using undora)
 - [ ] Seek to position
 - [ ] Loop region
 
