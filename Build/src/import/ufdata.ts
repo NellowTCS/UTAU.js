@@ -12,18 +12,29 @@ interface UfTrack {
   pitch?: UfPitch | null;
 }
 
+/** UTAU Format Data (UfData) structure, the intermediate representation
+ *  produced by utaformatix-ts parsers and consumed by ufDataToScore. */
 export interface UfData {
+  /** Format version number. */
   formatVersion: number;
+  /** Project data containing tracks, tempos, and time signature. */
   project: {
+    /** Project name. */
     name: string;
+    /** Track list (typically 1 track per voice). */
     tracks: UfTrack[];
+    /** Tempo events (ordered by tick). */
     tempos: { tickPosition: number; bpm: number }[];
+    /** Measure prefix (leading silence in beats). */
     measurePrefix: number;
   };
 }
 
+/** Options for importing a score file. */
 export interface ImportOptions {
+  /** Index of the track to import (0-based). Default 0. */
   trackIndex?: number;
+  /** Whether to import pitch-bend data. Default true. */
   pitch?: boolean;
 }
 
@@ -72,6 +83,9 @@ function splitPitchPerNote(notes: Note[], trackPitch: UfPitch): void {
   }
 }
 
+/** Convert a UfData object (from utaformatix-ts) into a Score suitable for
+ *  the renderer. Extracts the specified track, tempos, and (optionally)
+ *  pitch-bend data. */
 export function ufDataToScore(data: UfData, options: ImportOptions = {}): Score {
   const { trackIndex = 0, pitch = true } = options;
   const project = data.project;
@@ -128,6 +142,9 @@ function extFromFile(name: string): string {
   return name.slice(dot + 1).toLowerCase();
 }
 
+/** Import a score from a File object (e.g. from a file input). Supports
+ *  UST, USTX, VPR, VSQX, VSQ, SVP, MIDI, MusicXML, PPSF, S5P, TSSLN, CCS,
+ *  DV, and UFData formats via utaformatix-ts (lazily loaded). */
 export async function importScoreFromFile(file: File, options: ImportOptions = {}): Promise<Score> {
   const ext = extFromFile(file.name);
   await lazyInit();
@@ -137,6 +154,8 @@ export async function importScoreFromFile(file: File, options: ImportOptions = {
   return ufDataToScore(data, options);
 }
 
+/** Import a score from raw bytes. `filename` must include the extension to
+ *  determine the format. Same format support as `importScoreFromFile`. */
 export async function importScoreFromBytes(buf: Uint8Array, filename: string, options: ImportOptions = {}): Promise<Score> {
   const ext = extFromFile(filename);
   await lazyInit();

@@ -7,6 +7,13 @@ function ticksToDuration(tickLen: number, tempo: number, resolution: number, sam
   return tickLen * (60 / (tempo * resolution)) * sampleRate;
 }
 
+/** Stream a Score as an async generator of AudioChunks, one note at a time.
+ *  Audio is rendered lazily as each chunk is produced just-in-time, allowing
+ *  interleaved playback via StreamPlayer.
+ *
+ *  `voiceInput` can be a registered voice name (string) or an inline
+ *  VoiceConfig object. `langId` selects the language module ("jp", "en",
+ *  "zh", or a custom registered language). */
 export async function* streamScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): AsyncGenerator<AudioChunk> {
   const lang = getLanguage(langId ?? "jp");
   const voice = typeof voiceInput === "object" ? voiceInput : getVoice(voiceInput ?? "female");
@@ -118,12 +125,18 @@ function computeAccentOffsets(notes: Note[], lang: LanguageModule): (number | un
   return offsets;
 }
 
+/** Render an entire Score into an array of AudioChunks (one per note).
+ *  Convenience wrapper around streamScore that collects all chunks into
+ *  memory. */
 export async function renderScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): Promise<AudioChunk[]> {
   const chunks: AudioChunk[] = [];
   for await (const chunk of streamScore(score, voiceInput, langId)) chunks.push(chunk);
   return chunks;
 }
 
+/** Mix multiple AudioChunks into a single continuous AudioChunk by summing
+ *  overlapping samples. Chunk start positions are preserved. Returns a new
+ *  chunk that spans the full extent of all inputs. */
 export function mixChunks(chunks: AudioChunk[]): AudioChunk {
   if (!chunks.length) return { data: [new Float32Array(0), new Float32Array(0)], sampleRate: 44100, startSample: 0, channels: 2 };
   const sr = chunks[0].sampleRate,

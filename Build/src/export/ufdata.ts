@@ -1,8 +1,13 @@
 import type { Score } from "../core/types";
 
+/** Options for exporting a score to a file format. */
 export interface ExportOptions {
+  /** Target format extension (e.g. "ustx", "vsqx", "mid", "ufdata").
+   *  Default "ustx". */
   format?: string;
+  /** Project name used in the exported file metadata. Default "Untitled". */
   projectName?: string;
+  /** Whether to include pitch-bend data in the export. Default true. */
   pitch?: boolean;
 }
 
@@ -52,6 +57,8 @@ function buildTrackPitch(notes: Score["notes"], resolution: number): { ticks: nu
   return { ticks: mergedTicks, values: mergedValues };
 }
 
+/** Convert a Score into a UfData intermediate representation, suitable for
+ *  serialisation to any utaformatix-ts supported format. */
 export function scoreToUfData(score: Score, options: ExportOptions = {}) {
   const { projectName = "Untitled" } = options;
 
@@ -107,6 +114,8 @@ async function lazyInit(): Promise<void> {
   _generators = gens;
 }
 
+/** Export a Score to a Uint8Array in the requested format. Lazily loads the
+ *  utaformatix-ts generator for the target format. */
 export async function exportScoreToBytes(score: Score, options: ExportOptions = {}): Promise<Uint8Array> {
   const fmt = (options.format ?? "ustx").toLowerCase();
   const ufData = scoreToUfData(score, options);
@@ -125,14 +134,18 @@ export async function exportScoreToBytes(score: Score, options: ExportOptions = 
   return gen(ufData, { pitch: options.pitch ?? true });
 }
 
+/** Export a Score to a Blob in the requested format. */
 export function exportScoreToBlob(score: Score, options: ExportOptions = {}): Promise<Blob> {
   return exportScoreToBytes(score, options).then((bytes) => new Blob([new Uint8Array(bytes)]));
 }
 
+/** Export a Score to a blob URL (object URL) for in-page use or download. */
 export function exportScoreToUrl(score: Score, options: ExportOptions = {}): Promise<string> {
   return exportScoreToBlob(score, options).then((blob) => URL.createObjectURL(blob));
 }
 
+/** Export and trigger a browser download of the score file.
+ *  Works only in browser environments (creates a download link and clicks it). */
 export function downloadScore(score: Score, options: ExportOptions = {}): Promise<void> {
   const fmt = options.format ?? "ustx";
   const filename = `${options.projectName ?? "Untitled"}.${fmt}`;

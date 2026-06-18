@@ -1,32 +1,45 @@
 import type { AudioChunk } from "../core/types";
 
+/** Playback state of a StreamPlayer. */
 export type PlayerState = "idle" | "playing" | "paused";
 
+/** Events emitted by StreamPlayer during playback. Subscribe via `on()`. */
 export type PlayerEvent =
   | {
+      /** Playback state has changed. */
       type: "stateChange";
       state: PlayerState;
     }
   | {
+      /** Periodic progress update during playback. */
       type: "progress";
+      /** Number of samples scheduled so far. */
       renderedSamples: number;
+      /** Total samples in the full stream (may be 0 if unknown). */
       totalSamples: number;
+      /** Seconds of audio ahead of the current playhead. */
       bufferAhead: number;
     }
   | {
+      /** Stream has been fully rendered and played. */
       type: "done";
     }
   | {
+      /** Buffer fell below the safe threshold (may cause audio dropout). */
       type: "bufferUnderrun";
       bufferAhead: number;
     }
   | {
+      /** An error occurred during rendering or playback. */
       type: "error";
       error: Error;
     };
 
+/** Options for StreamPlayer.play(). */
 export interface PlayOptions {
+  /** Playback volume (0--1). */
   volume?: number;
+  /** Output sample rate. Defaults to the AudioContext default. */
   sampleRate?: number;
   /** Seconds of audio to pre-buffer before starting playback. Default 1.0. */
   preBufferThreshold?: number;
@@ -39,6 +52,11 @@ interface PoolEntry {
 
 const BATCH_TARGET_SEC = 0.5;
 
+/** Streaming audio player that consumes an AsyncGenerator of AudioChunks
+ *  and schedules them against the Web Audio API clock. Uses batching to
+ *  reduce scheduling overhead and a buffer pool to minimise GC pressure.
+ *
+ *  Emits PlayerEvents for state changes, progress, and errors. */
 export class StreamPlayer {
   private ctx: AudioContext | null = null;
   private state: PlayerState = "idle";
@@ -57,14 +75,17 @@ export class StreamPlayer {
   private currentBatchStartSample = 0;
   private currentBatchDuration = 0;
 
+  /** Set the output volume (0--1). */
   setVolume(v: number): void {
     if (this.gainNode) this.gainNode.gain.value = v;
   }
 
+  /** Current player state. */
   get currentState(): PlayerState {
     return this.state;
   }
 
+  /** Subscribe to player events. Returns an unsubscribe function. */
   on(cb: (event: PlayerEvent) => void): () => void {
     this.listeners.push(cb);
     return () => {
@@ -163,6 +184,10 @@ export class StreamPlayer {
     }
   }
 
+  /** Start playback of an AudioChunk stream. Pre-buffers `preBufferThreshold`
+   *  seconds before allowing audio to reach the output, then schedules chunks
+   *  in batches against the AudioContext clock. Stops any current playback
+   *  first. */
   async play(stream: AsyncGenerator<AudioChunk>, volume = 0.8, sampleRate?: number, options?: PlayOptions): Promise<void> {
     this.stop();
     this.preBufferThreshold = options?.preBufferThreshold ?? 1.0;
@@ -241,6 +266,8 @@ export class StreamPlayer {
     this.currentBatchDuration = 0;
   }
 
+  /** Pause playback. The AudioContext is suspended and can be resumed via
+   *  `resume()`. */
   pause(): void {
     if (this.state !== "playing" || !this.ctx) return;
     this.ctx.suspend();
@@ -248,6 +275,7 @@ export class StreamPlayer {
     this.emit({ type: "stateChange", state: "paused" });
   }
 
+  /** Resume playback after a pause. */
   resume(): void {
     if (this.state !== "paused" || !this.ctx) return;
     this.ctx.resume();
@@ -257,6 +285,8 @@ export class StreamPlayer {
 
   private fadeTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Stop playback immediately (with a 50ms fade-out to avoid click) and
+   *  close the underlying AudioContext. */
   stop(): void {
     this.abortController?.abort();
     this.abortController = null;

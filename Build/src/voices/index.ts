@@ -1,5 +1,7 @@
 import type { VoiceConfig } from "../core/types";
 
+/** Default male voice preset. Lower OQ, moderate SQ, tight vibrato.
+ *  Formant scale 1.0 (no adjustment). */
 export const maleVoice: VoiceConfig = {
   name: "Male",
   sampleRate: 44100,
@@ -9,6 +11,8 @@ export const maleVoice: VoiceConfig = {
   vibrato: { rate: 5.5, depth: 30, attack: 0.15 },
 };
 
+/** Default female voice preset. Higher OQ, faster SQ, brighter formant
+ *  scale (1.18), wider vibrato. */
 export const femaleVoice: VoiceConfig = {
   name: "Female",
   sampleRate: 44100,
@@ -18,6 +22,9 @@ export const femaleVoice: VoiceConfig = {
   vibrato: { rate: 6.0, depth: 40, attack: 0.1 },
 };
 
+/** Build a VoiceConfig from partial overrides. Missing fields fall through
+ *  to sensible defaults (neutral voice with medium breathiness, moderate
+ *  vibrato). */
 export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
   return {
     name: "Custom",
@@ -38,19 +45,35 @@ export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
   };
 }
 
+/** Scale a voice along perceptual dimensions. Each parameter maps a [-1, 1]
+ *  or [0, 1] input to the underlying GlottalConfig / FormantConfig fields.
+ *  This is a high-level convenience, you should hand-tune the raw configs for precise
+ *  control. */
 export function scaleVoice(
   voice: VoiceConfig,
   params: {
+    /** Gender shift: -1 = more masculine, 1 = more feminine (formant scale
+     *  and SQ). */
     gender?: number;
+    /** Breathiness: 0 = clean, 1 = very breathy (OQ, aspiration). */
     breathiness?: number;
+    /** Vocal tension: 0 = relaxed, 1 = pressed (tenseness). */
     tension?: number;
+    /** Spectral brightness: 0 = dark, 1 = bright (formant bandwidth). */
     brightness?: number;
+    /** Vibrato amount: 0 = none, 1 = full (multiplied against voice depth). */
     vibratoAmount?: number;
+    /** Direct open-quotient override (0.2--0.9). */
     oq?: number;
+    /** Direct speed-quotient override (0.3--3.0). */
     sq?: number;
+    /** Direct formant scale override. */
     fScale?: number;
+    /** Direct formant shift override (semitones). */
     fShift?: number;
+    /** Direct vibrato rate override (Hz). */
     vRate?: number;
+    /** Direct vibrato attack override (seconds). */
     vAttack?: number;
   },
 ): VoiceConfig {
@@ -95,10 +118,13 @@ const registry = new Map<string, VoiceConfig>([
   ["female", femaleVoice],
 ]);
 
+/** Look up a registered voice config by name (case-insensitive). */
 export function getVoice(name: string): VoiceConfig | undefined {
   return registry.get(name.toLowerCase());
 }
 
+/** Register a custom voice config under a name for later lookup via
+ *  `getVoice`. Overwrites any existing entry with the same name. */
 export function registerVoice(name: string, config: VoiceConfig): void {
   registry.set(name.toLowerCase(), config);
 }

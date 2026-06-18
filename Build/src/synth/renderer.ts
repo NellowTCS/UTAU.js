@@ -89,6 +89,16 @@ function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number
   return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
 }
 
+/** Render a single note into an AudioChunk. Returns the audio data and the
+ *  final formant targets of the last phoneme (for cross-note formant
+ *  continuity).
+ *
+ *  Internally: lyric -> phoneme symbols (via lang.lyricToPhonemes) ->
+ *  phoneme lookup -> LF glottal pulse -> formant cascade -> noise mix ->
+ *  amplitude envelope -> normalisation.
+ *
+ *  `prevFormants` provides the ending formant targets from the previous
+ *  note for smooth formant transitions across note boundaries. */
 export function renderNote(
   note: Note,
   voice: VoiceConfig,

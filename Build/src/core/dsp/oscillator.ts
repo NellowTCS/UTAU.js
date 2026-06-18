@@ -1,5 +1,12 @@
 import type { GlottalSourceParams } from "../types";
 
+/** Liljencrants-Fant (LF) glottal pulse source with jitter, shimmer,
+ *  aspiration noise, and DC blocking. Stateful as it creates one instance per
+ *  voice to maintain phase continuity across a phrase.
+ *
+ *  The LF model parameterises the glottal flow derivative as a piecewise
+ *  function: sinusoidal opening, exponential+sinusoidal return phase, and
+ *  optional closed phase.  See Fant (1986), Liljencrants (1985). */
 export class LFGlottalSource {
   private phase = 0;
   private dcX = 0;
@@ -9,6 +16,8 @@ export class LFGlottalSource {
   private noiseLP = 0;
   private shimmerAmp = 1;
 
+  /** Reset all internal state (phase, DC blocker, jitter LFO). Call when
+   *  starting a new phrase to avoid discontinuity clicks. */
   reset(): void {
     this.phase = 0;
     this.dcX = 0;
@@ -19,6 +28,9 @@ export class LFGlottalSource {
     this.shimmerAmp = 1;
   }
 
+  /** Generate the next glottal pulse sample given the current parameters.
+   *  Applies jitter (cycle-to-cycle F0 variation), shimmer (amplitude
+   *  variation), aspiration noise (low-passed), and DC blocking. */
   nextSample(params: GlottalSourceParams): number {
     const { f0, sampleRate, openQuotient, speedQuotient, tenseness, aspiration, power, jitter = 0 } = params;
     if (this.phase === 0 || this.phase >= this.jitterPeriod) {
@@ -71,6 +83,8 @@ export class LFGlottalSource {
     return centeredSample;
   }
 
+  /** Generate a fixed-length buffer of glottal pulses. Convenience wrapper
+   *  around repeated `nextSample` calls. */
   generate(params: GlottalSourceParams, numSamples: number): Float32Array {
     const out = new Float32Array(numSamples);
     for (let i = 0; i < numSamples; i++) out[i] = this.nextSample(params);

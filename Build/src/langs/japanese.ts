@@ -527,6 +527,9 @@ function resolveAccents(lyrics: string[]): (number | undefined)[] {
   return result;
 }
 
+/** Japanese language module with IPA-like phoneme inventory, hiragana/romaji
+ *  conversion, and EDICT2-based kanji G2P. Handles pitch-accent resolution
+ *  for prosody generation. */
 export const japanese: LanguageModule = {
   id: "jp",
   name: "Japanese",

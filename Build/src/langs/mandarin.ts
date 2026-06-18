@@ -494,6 +494,11 @@ function pinyinToPhonemes(syllable: string): string[] {
   return initial ? [initial, ...finalPhonemes] : finalPhonemes;
 }
 
+/** Mandarin Chinese (Putonghua) language module with pinyin-based phoneme
+ *  inventory and full syllable decomposition (initial + final, including
+ *  y/w spelling changes, apical vowels, and diphthong/triphthong codas).
+ *  Tone markers are stripped from pinyin input and pitch contour is handled
+ *  by the synthesis layer via note-level pitch bend. */
 export const mandarin: LanguageModule = {
   id: "zh",
   name: "Mandarin Chinese",

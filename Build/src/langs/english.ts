@@ -444,6 +444,9 @@ const enPhonemes: PhonemeDef[] = [
 
 const g2p = g2pData as Record<string, string[]>;
 
+/** English language module with ARPAbet phoneme inventory and CMUDict-based
+ *  G2P. Handles letter-to-phoneme conversion via a compressed CMU Pronouncing
+ *  Dictionary lookup, with a character-level fallback for unknown words. */
 export const english: LanguageModule = {
   id: "en",
   name: "English",

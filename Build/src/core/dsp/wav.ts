@@ -1,5 +1,8 @@
 import type { AudioChunk } from "../types";
 
+/** Encode one or more AudioChunks into a 16-bit PCM WAV file. Chunks are
+ *  mixed (summed) into a single interleaved buffer, then normalised and
+ *  written as a standard RIFF/WAVE blob. */
 export function encodeWav(chunks: AudioChunk[], gain = 1): ArrayBuffer {
   const sr = chunks[0]?.sampleRate ?? 44100;
   const ch = chunks[0]?.channels ?? 1;

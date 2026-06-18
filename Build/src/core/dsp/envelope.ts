@@ -1,3 +1,6 @@
+/** Apply a smooth (smoothstep) amplitude attack/release envelope to a buffer.
+ *  Modifies the buffer in place. Attack is applied from the start, release
+ *  from the end. */
 export function applyAmplitudeEnvelope(buffer: Float32Array, attackSamples: number, releaseSamples: number): void {
   const len = buffer.length;
   for (let i = 0; i < attackSamples && i < len; i++) {
@@ -10,6 +13,8 @@ export function applyAmplitudeEnvelope(buffer: Float32Array, attackSamples: numb
   }
 }
 
+/** Additively mix a source buffer into a target buffer at a given sample
+ *  offset with optional gain. Modifies target in place. */
 export function mixBuffers(target: Float32Array, source: Float32Array, targetOffset: number, gain = 1): void {
   for (let i = 0; i < source.length; i++) {
     const idx = targetOffset + i;
