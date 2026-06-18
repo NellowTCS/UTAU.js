@@ -9,7 +9,7 @@ import type { PhonemeDef, LanguageModule } from "../core/types";
 //   Long Vowels: Formant Displacement Effect Revisited". Proc. ICPhS 2019,
 //   Melbourne, pp. 720–724.
 //   https://www.internationalphoneticassociation.org/icphs-proceedings/ICPhS2019/papers/ICPhS_720.pdf
-//   Table 3 — short vowel midpoint averages for male speakers:
+//   Table 3 - short vowel midpoint averages for male speakers:
 //     /i/ F1=301, F2=2154  /e/ F1=443, F2=1947  /a/ F1=687, F2=1283
 //     /o/ F1=462, F2=949   /u/ F1=348, F2=1435
 //
@@ -18,7 +18,7 @@ import type { PhonemeDef, LanguageModule } from "../core/types";
 //   Kitamura, T., Takemoto, H., Adachi, S., & Honda, K. (2009). "Transfer
 //   functions of solid vocal-tract models constructed from ATR MRI database
 //   of Japanese vowel production". Acoust. Sci. & Tech. 30(4), 288–298.
-//   Table 4 — standalone audio recordings.
+//   Table 4 - standalone audio recordings.
 //   https://doi.org/10.1250/ast.30.288
 //   /a/ F3=2672  /e/ F3=2391  /i/ F3~3000 (extrapolated)  /o/ F3=2414  /u/ F3=2133
 //

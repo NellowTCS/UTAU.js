@@ -178,6 +178,8 @@ export function renderNote(
   let phSegStart = 0;
   let overallPeak = 1e-10;
   let lastFormantUpdateSample = -FORMANT_UPDATE_INTERVAL; // force update on first sample
+  const aspirationLpPole = Math.exp((-2 * Math.PI * 4000) / sr);
+  let aspirationLpState = 0;
 
   const parallelFilters: FormantFilter[] = Array.from({ length: 3 }, () => new FormantFilter());
   for (const pf of parallelFilters) pf.setPassthrough();
@@ -196,6 +198,8 @@ export function renderNote(
       cascade.reset();
       const noiseTargets = cp.noise?.formantShaping ?? [];
       for (let fi = 0; fi < parallelFilters.length; fi++) {
+        // Reset parallel filter state too
+        parallelFilters[fi].reset();
         if (fi < noiseTargets.length) {
           const at = applyVoice([noiseTargets[fi]])[0];
           parallelFilters[fi].setResonator(at.f, at.bw, sr);
@@ -261,7 +265,9 @@ export function renderNote(
       noiseSignal *= cp.noise.amplitude * noiseEnv;
     }
     if (cp.type === "vowel" || cp.type === "diphthong") {
-      glottalSignal += nSample * voice.glottal.aspiration * 0.3 * noiseEnv;
+      // Low-pass the aspiration noise so it stays in the natural band
+      aspirationLpState = aspirationLpState * aspirationLpPole + nSample * (1 - aspirationLpPole);
+      glottalSignal += aspirationLpState * voice.glottal.aspiration * 0.3 * noiseEnv;
     }
 
     const phEnv = phEnvelopes[pi];

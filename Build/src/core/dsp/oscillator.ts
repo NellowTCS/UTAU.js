@@ -50,7 +50,7 @@ export class LFGlottalSource {
       // The sin term makes the slope match the open phase at t=te (C¹
       // continuity) and reach 0 at t=tc, killing the click at every pulse
       // boundary. Without it, the exponential alone starts at -1 with
-      // non-zero slope → audible click on every glottal closure.
+      // non-zero slope -> audible click on every glottal closure.
       sample = -Math.exp(-epsilon * x * period) * Math.sin(Math.PI * x);
     } else {
       sample = 0;
