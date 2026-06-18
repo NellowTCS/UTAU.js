@@ -1,0 +1,1740 @@
+<!--
+  ---------------------------------------------------------------
+  docmd : the zero-config documentation engine.
+  @website https://docmd.io
+  [docmd-source] - Please do not remove this header.
+  ---------------------------------------------------------------
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="generator" content="docmd v0.5.x">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>/**
+ * --------------------------------------------------------------------
+ * docmd : the zero-config documentation engine.
+ *
+ * @package     @docmd/core (and ecosystem)
+ * @website     https://docmd.io
+ * @repository  https://github.com/docmd-io/docmd
+ * @license     MIT
+ * @copyright   Copyright (c) 2025-present docmd.io
+ *
+ * [docmd-source] - Please do not remove this header.
+ * --------------------------------------------------------------------
+ */
+
+(function () {
+  try {
+    // 1. Determine Theme
+    var localValue = localStorage.getItem('docmd-theme');
+    var configValue = window.DOCMD_DEFAULT_MODE || 'light';
+    var theme = localValue ? localValue : configValue;
+
+    if (theme === 'system') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    // 2. Apply to Root
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // 3. Highlight.js Toggle Strategy
+    var lightLink = document.getElementById('hljs-light');
+    var darkLink = document.getElementById('hljs-dark');
+
+    if (lightLink && darkLink) {
+      if (theme === 'dark') {
+        lightLink.disabled = true;
+        darkLink.disabled = false;
+      } else {
+        lightLink.disabled = false;
+        darkLink.disabled = true;
+      }
+    }
+
+    document.documentElement.style.visibility = "visible";
+  } catch (e) {
+    document.documentElement.style.visibility = "visible";
+    console.error('Theme init failed', e);
+  }
+})();</script>
+    <style>
+      html {
+        visibility: hidden;
+      }
+    </style>
+    
+    <script>
+      var root = "../../";
+      if (root && !root.endsWith('/')) root += '/';
+      if (root === '') root = './';
+      window.DOCMD_ROOT = root;
+
+      var siteRoot = "../../";
+      if (siteRoot && !siteRoot.endsWith('/')) siteRoot += '/';
+      if (siteRoot === '') siteRoot = './';
+      window.DOCMD_SITE_ROOT = siteRoot;
+
+      window.DOCMD_APPEARANCE = "system";
+      window.DOCMD_VERSION_ROOT = "/";
+      window.DOCMD_BASE = "/";
+      window.DOCMD_LOCALE = "";
+      window.DOCMD_DEFAULT_LOCALE = "";
+    </script>
+    <title>
+      VoiceConfig Reference : UTAU.js
+    </title>
+    
+    <link rel="stylesheet" href="../../assets/css/docmd-main.css?v=mqj2yply">
+    
+    <link rel="stylesheet" href="../../assets/css/docmd-highlight-light.css?v=mqj2yply" id="hljs-light" >
+    <link rel="stylesheet" href="../../assets/css/docmd-highlight-dark.css?v=mqj2yply" id="hljs-dark" disabled>
+    
+    
+<meta name="description" content="Complete reference for all VoiceConfig parameters and their perceptual effects">
+<link rel="canonical" href="https://nellowtcs.me/UTAU.js/docs/api/voice-config/">
+<meta property="og:title" content="VoiceConfig Reference - UTAU.js">
+<meta property="og:description" content="Complete reference for all VoiceConfig parameters and their perceptual effects">
+<meta property="og:url" content="https://nellowtcs.me/UTAU.js/docs/api/voice-config/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="VoiceConfig Reference - UTAU.js">
+<meta name="twitter:description" content="Complete reference for all VoiceConfig parameters and their perceptual effects">
+
+
+
+<link rel="stylesheet" href="../../assets/css/docmd-theme-ruby.css?v=mqj2yply" >
+<link rel="stylesheet" href="../../assets/css/docmd-git.css?v=mqj2yply" >
+<link rel="stylesheet" href="../../assets/css/docmd-openapi.css?v=mqj2yply" >
+
+    
+      <link rel="stylesheet" href="../../assets/css/theme.css?v=mqj2yply">
+    
+    <script>/**
+ * --------------------------------------------------------------------
+ * docmd : the zero-config documentation engine.
+ *
+ * @package     @docmd/core (and ecosystem)
+ * @website     https://docmd.io
+ * @repository  https://github.com/docmd-io/docmd
+ * @license     MIT
+ * @copyright   Copyright (c) 2025-present docmd.io
+ *
+ * [docmd-source] - Please do not remove this header.
+ * --------------------------------------------------------------------
+ */
+
+(function () {
+  try {
+    // 1. Determine Theme
+    var localValue = localStorage.getItem('docmd-theme');
+    var configValue = window.DOCMD_DEFAULT_MODE || 'light';
+    var theme = localValue ? localValue : configValue;
+
+    if (theme === 'system') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    // 2. Apply to Root
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // 3. Highlight.js Toggle Strategy
+    var lightLink = document.getElementById('hljs-light');
+    var darkLink = document.getElementById('hljs-dark');
+
+    if (lightLink && darkLink) {
+      if (theme === 'dark') {
+        lightLink.disabled = true;
+        darkLink.disabled = false;
+      } else {
+        lightLink.disabled = false;
+        darkLink.disabled = true;
+      }
+    }
+
+    document.documentElement.style.visibility = "visible";
+  } catch (e) {
+    document.documentElement.style.visibility = "visible";
+    console.error('Theme init failed', e);
+  }
+})();</script>
+  </head>
+  <body
+    class="sidebar-collapsible"
+    data-default-collapsed="false"
+    data-copy-code-enabled="true" data-spa-enabled="true" data-source-file="docs/api/voice-config.md">
+
+    <a href="#main-content" class="skip-link">skipToContent</a>
+
+    
+    
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          
+            <h1><a href="../../">
+                UTAU.js
+              </a></h1>
+          
+          <span class="mobile-view sidebar-menu-button float-right">
+            
+<svg class="lucide-icon icon-menu " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-menu"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M4 5h16" />
+  <path d="M4 12h16" />
+  <path d="M4 19h16" />
+</svg>
+
+          </span>
+        </div>
+        <div class="sidebar-top-group">
+          
+          
+          
+          
+        </div>
+        
+
+<nav class="sidebar-nav" aria-label="mainNavigation">
+  <ul>
+    
+      <li class="" >
+      
+        <a href="../../" class=" "
+          >
+           
+<svg class="lucide-icon icon-home " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-house"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Home
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="expanded nav-group" >
+      
+        <span class="nav-label nav-group">
+           
+<svg class="lucide-icon icon-rocket " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-rocket"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" />
+  <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" />
+  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Getting Started
+          </span>
+          
+        </span>
+        
+
+        
+          <ul class="submenu">
+            
+      <li class="" >
+      
+        <a href="../../getting-started/quickstart/" class=" "
+          >
+           
+<svg class="lucide-icon icon-play " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-play"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Quick Start
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../getting-started/installation/" class=" "
+          >
+           
+<svg class="lucide-icon icon-download " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-download"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 15V3" />
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+  <path d="m7 10 5 5 5-5" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Installation
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../getting-started/concepts/" class=" "
+          >
+           
+<svg class="lucide-icon icon-book " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-book"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Core Concepts
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+          </ul>
+        
+      </li>
+    
+      <li class="expanded nav-group" >
+      
+        <span class="nav-label nav-group">
+           
+<svg class="lucide-icon icon-book-open " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-book-open"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 7v14" />
+  <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Guide
+          </span>
+          
+        </span>
+        
+
+        
+          <ul class="submenu">
+            
+      <li class="" >
+      
+        <a href="../../guide/architecture/" class=" "
+          >
+           
+<svg class="lucide-icon icon-box " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-box"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+  <path d="m3.3 7 8.7 5 8.7-5" />
+  <path d="M12 22V12" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Architecture
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../guide/renderer/" class=" "
+          >
+           
+<svg class="lucide-icon icon-cpu " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-cpu"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 20v2" />
+  <path d="M12 2v2" />
+  <path d="M17 20v2" />
+  <path d="M17 2v2" />
+  <path d="M2 12h2" />
+  <path d="M2 17h2" />
+  <path d="M2 7h2" />
+  <path d="M20 12h2" />
+  <path d="M20 17h2" />
+  <path d="M20 7h2" />
+  <path d="M7 20v2" />
+  <path d="M7 2v2" />
+  <rect x="4" y="4" width="16" height="16" rx="2" />
+  <rect x="8" y="8" width="8" height="8" rx="1" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Renderer
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../guide/languages/" class=" "
+          >
+           
+<svg class="lucide-icon icon-globe " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-globe"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+  <path d="M2 12h20" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Languages
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+          </ul>
+        
+      </li>
+    
+      <li class="active-parent expanded nav-group" >
+      
+        <a href="../../api/" class=" nav-group"
+          >
+           
+<svg class="lucide-icon icon-code " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-code"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m16 18 6-6-6-6" />
+  <path d="m8 6-6 6 6 6" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            API Reference
+            </span>
+          
+          
+        </a>
+        
+
+        
+          <ul class="submenu">
+            
+      <li class="active" >
+      
+        <a href="../../api/voice-config/" class="active "
+          >
+           
+<svg class="lucide-icon icon-sliders " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-sliders-vertical"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 8h4" />
+  <path d="M12 21v-9" />
+  <path d="M12 8V3" />
+  <path d="M17 16h4" />
+  <path d="M19 12V3" />
+  <path d="M19 21v-5" />
+  <path d="M3 14h4" />
+  <path d="M5 10V3" />
+  <path d="M5 21v-7" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            VoiceConfig
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../api/dsp/" class=" "
+          >
+           
+<svg class="lucide-icon icon-audio-waveform " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-audio-waveform"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            DSP Primitives
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../api/import-export/" class=" "
+          >
+           
+<svg class="lucide-icon icon-file-up " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-file-up"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
+  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+  <path d="M12 12v6" />
+  <path d="m15 15-3-3-3 3" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Import / Export
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+          </ul>
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="https://github.com/NellowTCS/UTAU.js" class=" "
+          target=&quot;_blank&quot; rel=&quot;noopener&quot;>
+           
+<svg class="lucide-icon icon-github " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-github"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+  <path d="M9 18c-4.51 2-5-2-7-2" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            GitHub
+            </span>
+          
+           
+<svg class="lucide-icon icon-external-link nav-external-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-external-link"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 3h6v6" />
+  <path d="M10 14 21 3" />
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+</svg>
+
+          
+        </a>
+        
+
+        
+      </li>
+    
+  </ul>
+</nav>
+        <div class="sidebar-bottom-group mt-auto">
+          
+          
+          
+          
+        </div>
+      </aside>
+      
+      <div class="main-content-wrapper">
+        
+        
+          <header class="page-header">
+            <div class="header-left">
+              
+                <button id="sidebar-toggle-button" class="sidebar-toggle-button"
+                  aria-label="toggleSidebar">
+                  
+<svg class="lucide-icon icon-chevron-left " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-chevron-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 18-6-6 6-6" />
+</svg>
+
+                </button>
+              
+              <div class="header-titles-wrapper">
+                <span class="header-title">
+                  VoiceConfig Reference
+                </span>
+              </div>
+            </div>
+            <div class="header-right">
+              
+                
+
+
+<div class="docmd-options-menu">
+    
+    <button class="docmd-search-trigger" aria-label="search">
+        
+<svg class="lucide-icon icon-search " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-search"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m21 21-4.34-4.34" />
+  <circle cx="11" cy="11" r="8" />
+</svg>
+
+        <span class="search-label">search</span>
+        <span class="search-keys"><kbd class="docmd-kbd">⌘</kbd><kbd class="docmd-kbd">K</kbd></span>
+    </button>
+    
+
+    
+
+    
+
+    
+    <button class="theme-toggle-button" aria-label="toggleTheme">
+        
+<svg class="lucide-icon icon-sun icon-sun" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-sun"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="4" />
+  <path d="M12 2v2" />
+  <path d="M12 20v2" />
+  <path d="m4.93 4.93 1.41 1.41" />
+  <path d="m17.66 17.66 1.41 1.41" />
+  <path d="M2 12h2" />
+  <path d="M20 12h2" />
+  <path d="m6.34 17.66-1.41 1.41" />
+  <path d="m19.07 4.93-1.41 1.41" />
+</svg>
+ 
+<svg class="lucide-icon icon-moon icon-moon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-moon"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+</svg>
+
+    </button>
+    
+
+    
+</div>
+
+              
+            </div>
+          </header>
+        
+        <div class="content-theme-cover">
+          <main class="content-area" id="main-content">
+            <div class="content-layout">
+              <div class="main-content">
+                <div class="docmd-breadcrumbs-row">
+                  <div id="docmd-raw-markdown" data-content="---%0Atitle%3A%20%22VoiceConfig%20Reference%22%0Adescription%3A%20%22Complete%20reference%20for%20all%20VoiceConfig%20parameters%20and%20their%20perceptual%20effects%22%0A---%0A%0A%23%23%20Overview%0A%0A%60VoiceConfig%60%20is%20the%20central%20configuration%20object%20passed%20to%20every%20render%20call.%20It%20bundles%20glottal%20source%20parameters%2C%20formant%20transformations%2C%20vibrato%2C%20and%20output%20format%20settings.%0A%0A%60%60%60typescript%0Ainterface%20VoiceConfig%20%7B%0A%20%20name%3A%20string%3B%0A%20%20glottal%3A%20GlottalConfig%3B%0A%20%20formant%3A%20FormantConfig%3B%0A%20%20vibrato%3A%20VibratoConfig%3B%0A%20%20sampleRate%3A%20number%3B%0A%20%20channels%3A%201%20%7C%202%3B%0A%7D%0A%60%60%60%0A%0A%23%23%20GlottalConfig%20(Glottal%20Source)%0A%0AThe%20glottal%20source%20generates%20the%20raw%20pulse%20train.%20Its%20parameters%20control%20the%20shape%20and%20stability%20of%20the%20vocal-fold%20oscillation.%0A%0A%60%60%60typescript%0Ainterface%20GlottalConfig%20%7B%0A%20%20openQuotient%3A%20number%3B%20%20%20%2F%2F%200.2%20-%200.9%0A%20%20speedQuotient%3A%20number%3B%20%20%2F%2F%200.3%20-%203.0%0A%20%20tenseness%3A%20number%3B%20%20%20%20%20%20%2F%2F%200%20-%201%0A%20%20aspiration%3A%20number%3B%20%20%20%20%20%2F%2F%200%20-%200.3%0A%20%20power%3A%20number%3B%20%20%20%20%20%20%20%20%20%20%2F%2F%200%20-%201%0A%20%20jitter%3F%3A%20number%3B%20%20%20%20%20%20%20%20%2F%2F%200%20-%200.05%0A%7D%0A%60%60%60%0A%0A%23%23%23%20openQuotient%0A%0AFraction%20of%20the%20glottal%20cycle%20during%20which%20the%20vocal%20folds%20are%20open.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C-----------------------------------------%7C%0A%7C%20~0.3%20%20%7C%20Pressed%2C%20tense%20voice%20(short%20open%20phase)%20%7C%0A%7C%20~0.5%20%20%7C%20Neutral%2C%20modal%20voice%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.7%20%20%7C%20Breathy%2C%20soft%20voice%20(long%20open%20phase)%20%20%20%7C%0A%7C%20%3E0.8%20%20%7C%20Very%20breathy%2C%20almost%20whisper-like%20%20%20%20%20%20%20%7C%0A%0AFemale%20voices%20typically%20use%20higher%20OQ%20(~0.52)%20than%20male%20voices%20(~0.4).%0A%0A%23%23%23%20speedQuotient%0A%0ARatio%20of%20the%20glottal%20opening%20duration%20to%20closing%20duration.%20Controls%20the%20skew%20of%20the%20glottal%20pulse.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C---------------------------------------%7C%0A%7C%20~0.5%20%20%7C%20Slow%20closing%2C%20darker%20timbre%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~1.0%20%20%7C%20Neutral%20balance%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~2.0%20%20%7C%20Fast%20closing%2C%20brighter%2C%20more%20%22twangy%22%20%7C%0A%7C%20%3E2.5%20%20%7C%20Very%20sharp%20closure%2C%20buzzy%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0A%23%23%23%20tenseness%0A%0ASpectral%20tilt%20control.%20Higher%20values%20attenuate%20the%20high-frequency%20content%20of%20the%20glottal%20source.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C---------------------------------------%7C%0A%7C%20~0.2%20%20%7C%20Very%20bright%2C%20thin%20(low%20spectral%20tilt)%20%7C%0A%7C%20~0.5%20%20%7C%20Neutral%20balance%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.7%20%20%7C%20Dark%2C%20warm%20(higher%20spectral%20tilt)%20%20%20%20%20%7C%0A%7C%20%3E0.8%20%20%7C%20Very%20dark%2C%20muffled%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0A%23%23%23%20aspiration%0A%0AAmount%20of%20turbulence%20noise%20mixed%20into%20the%20glottal%20source.%20Simulates%20incomplete%20glottal%20closure.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C----------------------------------------------%7C%0A%7C%200%20%20%20%20%20%7C%20Clean%2C%20no%20audible%20aspiration%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.05%20%7C%20Slight%20breathiness%20(natural%20for%20most%20voices)%20%7C%0A%7C%20~0.15%20%7C%20Noticeably%20breathy%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20%3E0.25%20%7C%20Very%20breathy%2C%20significant%20noise%20floor%20%20%20%20%20%20%20%20%7C%0A%0AThe%20aspiration%20noise%20is%20low-passed%20at%20~4%20kHz%20to%20stay%20in%20the%20natural%20band.%0A%0A%23%23%23%20power%0A%0AOverall%20gain%20multiplier%20for%20the%20glottal%20pulse%20before%20formant%20filtering.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%7C%0A%7C-------%7C-------------------%7C%0A%7C%20~0.5%20%20%7C%20Quiet%2C%20soft%20%20%20%20%20%20%20%7C%0A%7C%20~0.7%20%20%7C%20Moderate%20volume%20%20%20%7C%0A%7C%20~0.9%20%20%7C%20Loud%2C%20full%20%20%20%20%20%20%20%20%7C%0A%0APower%20interacts%20with%20the%20post-render%20normalisation%3A%20higher%20power%20produces%20a%20higher%20peak%2C%20which%20is%20then%20scaled%20back%20by%20the%20gain%20limiter.%0A%0A%23%23%23%20jitter%0A%0ARandom%20cycle-to-cycle%20variation%20in%20fundamental%20frequency%20and%20amplitude.%20Adds%20natural%20instability.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C---------------------------------------------------%7C%0A%7C%200%20%20%20%20%20%7C%20Perfectly%20stable%20(robotic)%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.01%20%7C%20Very%20slight%20natural%20variation%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.02%20%7C%20Noticeable%20roughness%20(typical%20for%20natural%20voices)%20%7C%0A%7C%20%3E0.03%20%7C%20Rough%2C%20hoarse%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0ABoth%20F0%20jitter%20(frequency%20variation)%20and%20shimmer%20(amplitude%20variation)%20scale%20with%20this%20parameter.%0A%0A%23%23%20FormantConfig%20(Vocal%20Tract)%0A%0AThe%20formant%20config%20applies%20a%20global%20transformation%20to%20all%20phoneme%20formant%20targets.%20This%20is%20equivalent%20to%20changing%20the%20size%20or%20shape%20of%20the%20vocal%20tract.%0A%0A%60%60%60typescript%0Ainterface%20FormantConfig%20%7B%0A%20%20scale%3A%20number%3B%20%20%20%20%20%20%2F%2F%200.5%20-%202.0%20(typically%200.8%20-%201.2)%0A%20%20shift%3A%20number%3B%20%20%20%20%20%20%2F%2F%20-12%20-%20%2B12%20semitones%0A%20%20bandwidth%3A%20number%3B%20%20%2F%2F%200.5%20-%202.0%0A%7D%0A%60%60%60%0A%0A%23%23%23%20scale%0A%0AMultiplicative%20scale%20factor%20on%20all%20formant%20centre%20frequencies.%20Simulates%20vocal-tract%20length%20scaling.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C------------------------------------------------%7C%0A%7C%20~0.8%20%20%7C%20Larger%20vocal%20tract%2C%20darker%2C%20%22more%20masculine%22%20%20%20%7C%0A%7C%201.0%20%20%20%7C%20Neutral%20(no%20change)%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~1.2%20%20%7C%20Smaller%20vocal%20tract%2C%20brighter%2C%20%22more%20feminine%22%20%7C%0A%7C%20~1.5%20%20%7C%20Very%20small%20vocal%20tract%2C%20%22child-like%22%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0AA%20scale%20of%201.18%20is%20used%20by%20the%20female%20voice%20preset%20to%20produce%20the%20typical%20female%20formant%20shift.%0A%0A%23%23%23%20shift%0A%0AAdditive%20formant%20shift%20in%20semitones%2C%20applied%20after%20scaling.%20Finer%20control%20than%20scale.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%7C%0A%7C-------%7C----------------------%7C%0A%7C%20-6%20%20%20%20%7C%20Darker%2C%20more%20muffled%20%7C%0A%7C%200%20%20%20%20%20%7C%20Neutral%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20%2B6%20%20%20%20%7C%20Brighter%2C%20more%20nasal%20%7C%0A%0A%23%23%23%20bandwidth%0A%0AMultiplier%20on%20all%20formant%20bandwidths.%20Controls%20the%20width%20of%20resonant%20peaks.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C--------------------------------------%7C%0A%7C%20~0.6%20%20%7C%20Narrow%20resonances%2C%20ringing%2C%20%22twangy%22%20%7C%0A%7C%201.0%20%20%20%7C%20Neutral%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~1.5%20%20%7C%20Wide%20resonances%2C%20muffled%2C%20soft%20%20%20%20%20%20%20%7C%0A%7C%20%3E2.0%20%20%7C%20Very%20wide%2C%20formants%20blur%20together%20%20%20%20%7C%0A%0A%23%23%20VibratoConfig%20(Pitch%20Modulation)%0A%0A%60%60%60typescript%0Ainterface%20VibratoConfig%20%7B%0A%20%20rate%3A%20number%3B%20%20%20%20%2F%2F%20Hz%20(typically%204%20-%207)%0A%20%20depth%3A%20number%3B%20%20%20%2F%2F%20cents%20(typically%2010%20-%2080)%0A%20%20attack%3A%20number%3B%20%20%2F%2F%20seconds%20(0%20-%202)%0A%7D%0A%60%60%60%0A%0A%23%23%23%20rate%0A%0AFrequency%20of%20the%20vibrato%20oscillation%20in%20Hz%20(cycles%20per%20second).%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C--------------------------------%7C%0A%7C%20~4%20%20%20%20%7C%20Slow%2C%20wide%20vibrato%20(classical)%20%7C%0A%7C%20~5.5%20%20%7C%20Moderate%20vibrato%20(male%20pop)%20%20%20%20%7C%0A%7C%20~6%20%20%20%20%7C%20Moderate%20vibrato%20(female%20pop)%20%20%7C%0A%7C%20%3E7%20%20%20%20%7C%20Fast%2C%20tremolo-like%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0A%23%23%23%20depth%0A%0APeak-to-peak%20depth%20of%20the%20pitch%20modulation%20in%20cents%20(100%20cents%20%3D%201%20semitone).%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C---------------------------------%7C%0A%7C%20~10%20%20%20%7C%20Very%20subtle%2C%20barely%20perceptible%20%7C%0A%7C%20~30%20%20%20%7C%20Moderate%20vibrato%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~50%20%20%20%7C%20Wide%2C%20expressive%20vibrato%20%20%20%20%20%20%20%20%7C%0A%7C%20%3E80%20%20%20%7C%20Extreme%2C%20wobbling%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0A%23%23%23%20attack%0A%0ATime%20in%20seconds%20for%20the%20vibrato%20to%20reach%20full%20depth%20after%20the%20note%20onset.%0A%0A%7C%20Value%20%7C%20Perceptual%20Effect%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------%7C------------------------------------%7C%0A%7C%200%20%20%20%20%20%7C%20Vibrato%20starts%20instantly%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.1%20%20%7C%20Quick%20onset%20(pop%20style)%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20~0.3%20%20%7C%20Gradual%20onset%20(classical%20style)%20%20%20%20%7C%0A%7C%20%3E0.5%20%20%7C%20Late%20vibrato%2C%20note%20starts%20straight%20%7C%0A%0A%23%23%20Output%20Format%0A%0A%60%60%60typescript%0AsampleRate%3A%20number%3B%20%20%2F%2F%2022050%20-%2096000%20(typical%3A%2044100)%0Achannels%3A%201%20%7C%202%3B%20%20%20%20%20%2F%2F%201%20%3D%20mono%2C%202%20%3D%20stereo%0A%60%60%60%0A%0A%23%23%23%20sampleRate%0A%0AOutput%20sample%20rate%20in%20Hz.%2044100%20is%20the%20standard%20CD%20quality.%20Lower%20rates%20(22050)%20save%20CPU%20at%20the%20cost%20of%20high-frequency%20content.%0A%0A%23%23%23%20channels%0A%0A-%20**1**%3A%20Mono%20output%20(single%20Float32Array%20per%20chunk)%0A-%20**2**%3A%20Stereo%20output%20(identical%20data%20in%20both%20channels)%0A%0A%23%23%20Voice%20Presets%0A%0AThe%20library%20ships%20with%20two%20built-in%20presets%3A%0A%0A%23%23%23%20Male%20Voice%0A%0A%60%60%60typescript%0A%7B%0A%20%20glottal%3A%20%7B%20openQuotient%3A%200.4%2C%20speedQuotient%3A%200.65%2C%20tenseness%3A%200.65%2C%20aspiration%3A%200.05%2C%20power%3A%200.75%2C%20jitter%3A%200.01%20%7D%2C%0A%20%20formant%3A%20%7B%20scale%3A%201.0%2C%20shift%3A%200%2C%20bandwidth%3A%201.0%20%7D%2C%0A%20%20vibrato%3A%20%7B%20rate%3A%205.5%2C%20depth%3A%2030%2C%20attack%3A%200.15%20%7D%2C%0A%7D%0A%60%60%60%0A%0A%23%23%23%20Female%20Voice%0A%0A%60%60%60typescript%0A%7B%0A%20%20glottal%3A%20%7B%20openQuotient%3A%200.52%2C%20speedQuotient%3A%201.1%2C%20tenseness%3A%200.48%2C%20aspiration%3A%200.08%2C%20power%3A%200.65%2C%20jitter%3A%200.02%20%7D%2C%0A%20%20formant%3A%20%7B%20scale%3A%201.18%2C%20shift%3A%200%2C%20bandwidth%3A%201.0%20%7D%2C%0A%20%20vibrato%3A%20%7B%20rate%3A%206.0%2C%20depth%3A%2040%2C%20attack%3A%200.1%20%7D%2C%0A%7D%0A%60%60%60%0A%0A%23%23%20Perceptual%20Scaling%0A%0AThe%20%60scaleVoice()%60%20function%20maps%20high-level%20perceptual%20controls%20to%20the%20underlying%20parameters%3A%0A%0A%60%60%60typescript%0Aconst%20adjusted%20%3D%20scaleVoice(femaleVoice%2C%20%7B%0A%20%20gender%3A%200.3%2C%20%20%20%20%20%20%20%20%2F%2F%20More%20feminine%20(formant%20scale%20%2B%20SQ)%0A%20%20breathiness%3A%200.4%2C%20%20%20%2F%2F%20Increase%20OQ%20%2B%20aspiration%0A%20%20tension%3A%200.6%2C%20%20%20%20%20%20%20%2F%2F%20Increase%20tenseness%0A%20%20brightness%3A%200.7%2C%20%20%20%20%2F%2F%20Reduce%20formant%20bandwidth%0A%20%20vibratoAmount%3A%200.8%2C%20%2F%2F%20Scale%20vibrato%20depth%0A%7D)%3B%0A%60%60%60%0A%0A%23%23%20Building%20Custom%20Voices%0A%0AUse%20%60buildVoice()%60%20with%20partial%20overrides%20for%20a%20neutral%20starting%20point%3A%0A%0A%60%60%60typescript%0Aconst%20myVoice%20%3D%20buildVoice(%7B%0A%20%20name%3A%20%22Custom%22%2C%0A%20%20sampleRate%3A%2048000%2C%0A%20%20glottal%3A%20%7B%20openQuotient%3A%200.6%2C%20aspiration%3A%200.1%20%7D%2C%0A%7D)%3B%0A%60%60%60%0A%0AAll%20unspecified%20fields%20fall%20through%20to%20neutral%20defaults.%0A" style="display: none;"></div>
+                  
+                    <nav aria-label="breadcrumb" class="docmd-breadcrumbs">
+                      <ol>
+                        
+                        
+                          <li class="breadcrumb-item " >
+                            
+                              <a href="../../api/">API Reference</a>
+                            
+                            
+                              <span class="breadcrumb-separator">
+<svg class="lucide-icon icon-chevron-right " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg>
+</span>
+                            
+                          </li>
+                        
+                          <li class="breadcrumb-item active" aria-current=&quot;page&quot;>
+                            
+                              <span>VoiceConfig</span>
+                            
+                            
+                          </li>
+                        
+                      </ol>
+                    </nav>
+                  
+
+                  
+                    <div class="docmd-copy-widgets">
+                      
+                        <button class="docmd-copy-btn docmd-copy-raw-btn" data-copied="copiedToClipboard" title="copyMarkdown" aria-label="copyMarkdown">
+                          <span class="docmd-btn-icon">
+<svg class="lucide-icon icon-copy " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-copy"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+</svg>
+</span>
+                        </button>
+                      
+                      
+                        <button class="docmd-copy-btn docmd-copy-context-btn" data-copied="copiedToClipboard" title="copyContext">
+                          <span class="docmd-btn-icon">
+<svg class="lucide-icon icon-message-square " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-message-square"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+</svg>
+</span>
+                          <span class="docmd-btn-text">copyContext</span>
+                        </button>
+                      
+                    </div>
+                  
+                </div>
+                
+                <h2 id="overview" class="docmd-heading"><a href="#overview" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Overview</h2>
+<p><code>VoiceConfig</code> is the central configuration object passed to every render call. It bundles glottal source parameters, formant transformations, vibrato, and output format settings.</p>
+<pre class="hljs"><code><span class="hljs-keyword">interface</span> VoiceConfig {
+  name<span class="hljs-punctuation">:</span> string;
+  glottal<span class="hljs-punctuation">:</span> GlottalConfig;
+  formant<span class="hljs-punctuation">:</span> FormantConfig;
+  vibrato<span class="hljs-punctuation">:</span> VibratoConfig;
+  sampleRate<span class="hljs-punctuation">:</span> number;
+  channels<span class="hljs-punctuation">:</span> <span class="hljs-number">1</span> <span class="hljs-punctuation">|</span> <span class="hljs-number">2</span>;
+}
+</code></pre>
+<h2 id="glottalconfig-glottal-source" class="docmd-heading"><a href="#glottalconfig-glottal-source" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>GlottalConfig (Glottal Source)</h2>
+<p>The glottal source generates the raw pulse train. Its parameters control the shape and stability of the vocal-fold oscillation.</p>
+<pre class="hljs"><code><span class="hljs-keyword">interface</span> GlottalConfig {
+  openQuotient<span class="hljs-punctuation">:</span> number;   <span class="hljs-comment">// 0.2 - 0.9</span>
+  speedQuotient<span class="hljs-punctuation">:</span> number;  <span class="hljs-comment">// 0.3 - 3.0</span>
+  tenseness<span class="hljs-punctuation">:</span> number;      <span class="hljs-comment">// 0 - 1</span>
+  aspiration<span class="hljs-punctuation">:</span> number;     <span class="hljs-comment">// 0 - 0.3</span>
+  power<span class="hljs-punctuation">:</span> number;          <span class="hljs-comment">// 0 - 1</span>
+  jitter<span class="hljs-punctuation">?:</span> number;        <span class="hljs-comment">// 0 - 0.05</span>
+}
+</code></pre>
+<h3 id="glottalconfig-glottal-source-openquotient" class="docmd-heading"><a href="#glottalconfig-glottal-source-openquotient" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>openQuotient</h3>
+<p>Fraction of the glottal cycle during which the vocal folds are open.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.3</td>
+<td>Pressed, tense voice (short open phase)</td>
+</tr>
+<tr>
+<td>~0.5</td>
+<td>Neutral, modal voice</td>
+</tr>
+<tr>
+<td>~0.7</td>
+<td>Breathy, soft voice (long open phase)</td>
+</tr>
+<tr>
+<td>&gt;0.8</td>
+<td>Very breathy, almost whisper-like</td>
+</tr>
+</tbody>
+</table>
+</div><p>Female voices typically use higher OQ (~0.52) than male voices (~0.4).</p>
+<h3 id="glottalconfig-glottal-source-speedquotient" class="docmd-heading"><a href="#glottalconfig-glottal-source-speedquotient" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>speedQuotient</h3>
+<p>Ratio of the glottal opening duration to closing duration. Controls the skew of the glottal pulse.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.5</td>
+<td>Slow closing, darker timbre</td>
+</tr>
+<tr>
+<td>~1.0</td>
+<td>Neutral balance</td>
+</tr>
+<tr>
+<td>~2.0</td>
+<td>Fast closing, brighter, more “twangy”</td>
+</tr>
+<tr>
+<td>&gt;2.5</td>
+<td>Very sharp closure, buzzy</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="glottalconfig-glottal-source-tenseness" class="docmd-heading"><a href="#glottalconfig-glottal-source-tenseness" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>tenseness</h3>
+<p>Spectral tilt control. Higher values attenuate the high-frequency content of the glottal source.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.2</td>
+<td>Very bright, thin (low spectral tilt)</td>
+</tr>
+<tr>
+<td>~0.5</td>
+<td>Neutral balance</td>
+</tr>
+<tr>
+<td>~0.7</td>
+<td>Dark, warm (higher spectral tilt)</td>
+</tr>
+<tr>
+<td>&gt;0.8</td>
+<td>Very dark, muffled</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="glottalconfig-glottal-source-aspiration" class="docmd-heading"><a href="#glottalconfig-glottal-source-aspiration" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>aspiration</h3>
+<p>Amount of turbulence noise mixed into the glottal source. Simulates incomplete glottal closure.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Clean, no audible aspiration</td>
+</tr>
+<tr>
+<td>~0.05</td>
+<td>Slight breathiness (natural for most voices)</td>
+</tr>
+<tr>
+<td>~0.15</td>
+<td>Noticeably breathy</td>
+</tr>
+<tr>
+<td>&gt;0.25</td>
+<td>Very breathy, significant noise floor</td>
+</tr>
+</tbody>
+</table>
+</div><p>The aspiration noise is low-passed at ~4 kHz to stay in the natural band.</p>
+<h3 id="glottalconfig-glottal-source-power" class="docmd-heading"><a href="#glottalconfig-glottal-source-power" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>power</h3>
+<p>Overall gain multiplier for the glottal pulse before formant filtering.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.5</td>
+<td>Quiet, soft</td>
+</tr>
+<tr>
+<td>~0.7</td>
+<td>Moderate volume</td>
+</tr>
+<tr>
+<td>~0.9</td>
+<td>Loud, full</td>
+</tr>
+</tbody>
+</table>
+</div><p>Power interacts with the post-render normalisation: higher power produces a higher peak, which is then scaled back by the gain limiter.</p>
+<h3 id="glottalconfig-glottal-source-jitter" class="docmd-heading"><a href="#glottalconfig-glottal-source-jitter" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>jitter</h3>
+<p>Random cycle-to-cycle variation in fundamental frequency and amplitude. Adds natural instability.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Perfectly stable (robotic)</td>
+</tr>
+<tr>
+<td>~0.01</td>
+<td>Very slight natural variation</td>
+</tr>
+<tr>
+<td>~0.02</td>
+<td>Noticeable roughness (typical for natural voices)</td>
+</tr>
+<tr>
+<td>&gt;0.03</td>
+<td>Rough, hoarse</td>
+</tr>
+</tbody>
+</table>
+</div><p>Both F0 jitter (frequency variation) and shimmer (amplitude variation) scale with this parameter.</p>
+<h2 id="formantconfig-vocal-tract" class="docmd-heading"><a href="#formantconfig-vocal-tract" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>FormantConfig (Vocal Tract)</h2>
+<p>The formant config applies a global transformation to all phoneme formant targets. This is equivalent to changing the size or shape of the vocal tract.</p>
+<pre class="hljs"><code><span class="hljs-keyword">interface</span> FormantConfig {
+  scale<span class="hljs-punctuation">:</span> number;      <span class="hljs-comment">// 0.5 - 2.0 (typically 0.8 - 1.2)</span>
+  shift<span class="hljs-punctuation">:</span> number;      <span class="hljs-comment">// -12 - +12 semitones</span>
+  bandwidth<span class="hljs-punctuation">:</span> number;  <span class="hljs-comment">// 0.5 - 2.0</span>
+}
+</code></pre>
+<h3 id="formantconfig-vocal-tract-scale" class="docmd-heading"><a href="#formantconfig-vocal-tract-scale" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>scale</h3>
+<p>Multiplicative scale factor on all formant centre frequencies. Simulates vocal-tract length scaling.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.8</td>
+<td>Larger vocal tract, darker, “more masculine”</td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Neutral (no change)</td>
+</tr>
+<tr>
+<td>~1.2</td>
+<td>Smaller vocal tract, brighter, “more feminine”</td>
+</tr>
+<tr>
+<td>~1.5</td>
+<td>Very small vocal tract, “child-like”</td>
+</tr>
+</tbody>
+</table>
+</div><p>A scale of 1.18 is used by the female voice preset to produce the typical female formant shift.</p>
+<h3 id="formantconfig-vocal-tract-shift" class="docmd-heading"><a href="#formantconfig-vocal-tract-shift" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>shift</h3>
+<p>Additive formant shift in semitones, applied after scaling. Finer control than scale.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-6</td>
+<td>Darker, more muffled</td>
+</tr>
+<tr>
+<td>0</td>
+<td>Neutral</td>
+</tr>
+<tr>
+<td>+6</td>
+<td>Brighter, more nasal</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="formantconfig-vocal-tract-bandwidth" class="docmd-heading"><a href="#formantconfig-vocal-tract-bandwidth" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>bandwidth</h3>
+<p>Multiplier on all formant bandwidths. Controls the width of resonant peaks.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~0.6</td>
+<td>Narrow resonances, ringing, “twangy”</td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>Neutral</td>
+</tr>
+<tr>
+<td>~1.5</td>
+<td>Wide resonances, muffled, soft</td>
+</tr>
+<tr>
+<td>&gt;2.0</td>
+<td>Very wide, formants blur together</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="vibratoconfig-pitch-modulation" class="docmd-heading"><a href="#vibratoconfig-pitch-modulation" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>VibratoConfig (Pitch Modulation)</h2>
+<pre class="hljs"><code><span class="hljs-keyword">interface</span> VibratoConfig {
+  rate<span class="hljs-punctuation">:</span> number;    <span class="hljs-comment">// Hz (typically 4 - 7)</span>
+  depth<span class="hljs-punctuation">:</span> number;   <span class="hljs-comment">// cents (typically 10 - 80)</span>
+  attack<span class="hljs-punctuation">:</span> number;  <span class="hljs-comment">// seconds (0 - 2)</span>
+}
+</code></pre>
+<h3 id="vibratoconfig-pitch-modulation-rate" class="docmd-heading"><a href="#vibratoconfig-pitch-modulation-rate" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>rate</h3>
+<p>Frequency of the vibrato oscillation in Hz (cycles per second).</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~4</td>
+<td>Slow, wide vibrato (classical)</td>
+</tr>
+<tr>
+<td>~5.5</td>
+<td>Moderate vibrato (male pop)</td>
+</tr>
+<tr>
+<td>~6</td>
+<td>Moderate vibrato (female pop)</td>
+</tr>
+<tr>
+<td>&gt;7</td>
+<td>Fast, tremolo-like</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="vibratoconfig-pitch-modulation-depth" class="docmd-heading"><a href="#vibratoconfig-pitch-modulation-depth" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>depth</h3>
+<p>Peak-to-peak depth of the pitch modulation in cents (100 cents = 1 semitone).</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~10</td>
+<td>Very subtle, barely perceptible</td>
+</tr>
+<tr>
+<td>~30</td>
+<td>Moderate vibrato</td>
+</tr>
+<tr>
+<td>~50</td>
+<td>Wide, expressive vibrato</td>
+</tr>
+<tr>
+<td>&gt;80</td>
+<td>Extreme, wobbling</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="vibratoconfig-pitch-modulation-attack" class="docmd-heading"><a href="#vibratoconfig-pitch-modulation-attack" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>attack</h3>
+<p>Time in seconds for the vibrato to reach full depth after the note onset.</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Perceptual Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Vibrato starts instantly</td>
+</tr>
+<tr>
+<td>~0.1</td>
+<td>Quick onset (pop style)</td>
+</tr>
+<tr>
+<td>~0.3</td>
+<td>Gradual onset (classical style)</td>
+</tr>
+<tr>
+<td>&gt;0.5</td>
+<td>Late vibrato, note starts straight</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="output-format" class="docmd-heading"><a href="#output-format" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Output Format</h2>
+<pre class="hljs"><code>sampleRate<span class="hljs-punctuation">:</span> number;  <span class="hljs-comment">// 22050 - 96000 (typical: 44100)</span>
+channels<span class="hljs-punctuation">:</span> <span class="hljs-number">1</span> <span class="hljs-punctuation">|</span> <span class="hljs-number">2</span>;     <span class="hljs-comment">// 1 = mono, 2 = stereo</span>
+</code></pre>
+<h3 id="output-format-samplerate" class="docmd-heading"><a href="#output-format-samplerate" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>sampleRate</h3>
+<p>Output sample rate in Hz. 44100 is the standard CD quality. Lower rates (22050) save CPU at the cost of high-frequency content.</p>
+<h3 id="output-format-channels" class="docmd-heading"><a href="#output-format-channels" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>channels</h3>
+<ul>
+<li><strong>1</strong>: Mono output (single Float32Array per chunk)</li>
+<li><strong>2</strong>: Stereo output (identical data in both channels)</li>
+</ul>
+<h2 id="voice-presets" class="docmd-heading"><a href="#voice-presets" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Voice Presets</h2>
+<p>The library ships with two built-in presets:</p>
+<h3 id="voice-presets-male-voice" class="docmd-heading"><a href="#voice-presets-male-voice" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Male Voice</h3>
+<pre class="hljs"><code>{
+  glottal<span class="hljs-punctuation">:</span> { openQuotient<span class="hljs-punctuation">:</span> <span class="hljs-number">0.4</span>, speedQuotient<span class="hljs-punctuation">:</span> <span class="hljs-number">0.65</span>, tenseness<span class="hljs-punctuation">:</span> <span class="hljs-number">0.65</span>, aspiration<span class="hljs-punctuation">:</span> <span class="hljs-number">0.05</span>, power<span class="hljs-punctuation">:</span> <span class="hljs-number">0.75</span>, jitter<span class="hljs-punctuation">:</span> <span class="hljs-number">0.01</span> },
+  formant<span class="hljs-punctuation">:</span> { scale<span class="hljs-punctuation">:</span> <span class="hljs-number">1.0</span>, shift<span class="hljs-punctuation">:</span> <span class="hljs-number">0</span>, bandwidth<span class="hljs-punctuation">:</span> <span class="hljs-number">1.0</span> },
+  vibrato<span class="hljs-punctuation">:</span> { rate<span class="hljs-punctuation">:</span> <span class="hljs-number">5.5</span>, depth<span class="hljs-punctuation">:</span> <span class="hljs-number">30</span>, attack<span class="hljs-punctuation">:</span> <span class="hljs-number">0.15</span> },
+}
+</code></pre>
+<h3 id="voice-presets-female-voice" class="docmd-heading"><a href="#voice-presets-female-voice" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Female Voice</h3>
+<pre class="hljs"><code>{
+  glottal<span class="hljs-punctuation">:</span> { openQuotient<span class="hljs-punctuation">:</span> <span class="hljs-number">0.52</span>, speedQuotient<span class="hljs-punctuation">:</span> <span class="hljs-number">1.1</span>, tenseness<span class="hljs-punctuation">:</span> <span class="hljs-number">0.48</span>, aspiration<span class="hljs-punctuation">:</span> <span class="hljs-number">0.08</span>, power<span class="hljs-punctuation">:</span> <span class="hljs-number">0.65</span>, jitter<span class="hljs-punctuation">:</span> <span class="hljs-number">0.02</span> },
+  formant<span class="hljs-punctuation">:</span> { scale<span class="hljs-punctuation">:</span> <span class="hljs-number">1.18</span>, shift<span class="hljs-punctuation">:</span> <span class="hljs-number">0</span>, bandwidth<span class="hljs-punctuation">:</span> <span class="hljs-number">1.0</span> },
+  vibrato<span class="hljs-punctuation">:</span> { rate<span class="hljs-punctuation">:</span> <span class="hljs-number">6.0</span>, depth<span class="hljs-punctuation">:</span> <span class="hljs-number">40</span>, attack<span class="hljs-punctuation">:</span> <span class="hljs-number">0.1</span> },
+}
+</code></pre>
+<h2 id="perceptual-scaling" class="docmd-heading"><a href="#perceptual-scaling" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Perceptual Scaling</h2>
+<p>The <code>scaleVoice()</code> function maps high-level perceptual controls to the underlying parameters:</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> adjusted <span class="hljs-punctuation">=</span> <span class="hljs-title function_">scaleVoice</span>(femaleVoice, {
+  gender<span class="hljs-punctuation">:</span> <span class="hljs-number">0.3</span>,        <span class="hljs-comment">// More feminine (formant scale + SQ)</span>
+  breathiness<span class="hljs-punctuation">:</span> <span class="hljs-number">0.4</span>,   <span class="hljs-comment">// Increase OQ + aspiration</span>
+  tension<span class="hljs-punctuation">:</span> <span class="hljs-number">0.6</span>,       <span class="hljs-comment">// Increase tenseness</span>
+  brightness<span class="hljs-punctuation">:</span> <span class="hljs-number">0.7</span>,    <span class="hljs-comment">// Reduce formant bandwidth</span>
+  vibratoAmount<span class="hljs-punctuation">:</span> <span class="hljs-number">0.8</span>, <span class="hljs-comment">// Scale vibrato depth</span>
+});
+</code></pre>
+<h2 id="building-custom-voices" class="docmd-heading"><a href="#building-custom-voices" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Building Custom Voices</h2>
+<p>Use <code>buildVoice()</code> with partial overrides for a neutral starting point:</p>
+<pre class="hljs"><code><span class="hljs-keyword">const</span> myVoice <span class="hljs-punctuation">=</span> <span class="hljs-title function_">buildVoice</span>({
+  name<span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Custom&quot;</span>,
+  sampleRate<span class="hljs-punctuation">:</span> <span class="hljs-number">48000</span>,
+  glottal<span class="hljs-punctuation">:</span> { openQuotient<span class="hljs-punctuation">:</span> <span class="hljs-number">0.6</span>, aspiration<span class="hljs-punctuation">:</span> <span class="hljs-number">0.1</span> },
+});
+</code></pre>
+<p>All unspecified fields fall through to neutral defaults.</p>
+
+                
+                  <div class="page-navigation">
+                    
+                      <a href="../../api/" class="prev-page">
+                        
+<svg class="lucide-icon icon-arrow-left page-nav-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-arrow-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" />
+</svg>
+
+                        <span><small>previous</small><strong>
+                            API Reference
+                          </strong></span>
+                      </a>
+                    
+                    
+                      <a href="../../api/dsp/" class="next-page">
+                        <span><small>next</small>
+                          <strong>
+                            DSP Primitives
+                          </strong></span>
+                        
+<svg class="lucide-icon icon-arrow-right page-nav-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-arrow-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="m12 5 7 7-7 7" />
+</svg>
+
+                      </a>
+                    
+                  </div>
+                
+              </div>
+              <div class="toc-sidebar">
+                
+
+
+  <div class="toc-container">
+    <h2 class="toc-title">onThisPage<span class="mobile-view toc-menu-button float-right">
+<svg class="lucide-icon icon-chevron-down " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-chevron-down"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m6 9 6 6 6-6" />
+</svg>
+</span></h2>
+    <ul class="toc-list">
+      
+        <li class="toc-item toc-level-2">
+          <a href="#overview" class="toc-link">Overview</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#glottalconfig-glottal-source" class="toc-link">GlottalConfig (Glottal Source)</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#glottalconfig-glottal-source-openquotient" class="toc-link">openQuotient</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#glottalconfig-glottal-source-speedquotient" class="toc-link">speedQuotient</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#glottalconfig-glottal-source-tenseness" class="toc-link">tenseness</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#glottalconfig-glottal-source-aspiration" class="toc-link">aspiration</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#glottalconfig-glottal-source-power" class="toc-link">power</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#glottalconfig-glottal-source-jitter" class="toc-link">jitter</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#formantconfig-vocal-tract" class="toc-link">FormantConfig (Vocal Tract)</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#formantconfig-vocal-tract-scale" class="toc-link">scale</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#formantconfig-vocal-tract-shift" class="toc-link">shift</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#formantconfig-vocal-tract-bandwidth" class="toc-link">bandwidth</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#vibratoconfig-pitch-modulation" class="toc-link">VibratoConfig (Pitch Modulation)</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#vibratoconfig-pitch-modulation-rate" class="toc-link">rate</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#vibratoconfig-pitch-modulation-depth" class="toc-link">depth</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#vibratoconfig-pitch-modulation-attack" class="toc-link">attack</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#output-format" class="toc-link">Output Format</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#output-format-samplerate" class="toc-link">sampleRate</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#output-format-channels" class="toc-link">channels</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#voice-presets" class="toc-link">Voice Presets</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#voice-presets-male-voice" class="toc-link">Male Voice</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#voice-presets-female-voice" class="toc-link">Female Voice</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#perceptual-scaling" class="toc-link">Perceptual Scaling</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#building-custom-voices" class="toc-link">Building Custom Voices</a>
+        </li>
+      
+    </ul>
+  </div>
+
+              </div>
+            </div>
+            <div class="page-footer-actions">
+              
+              
+                <span class="git-last-updated" data-timestamp="1781761736000">
+                  <svg class="git-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span class="git-label">Last updated:</span>
+                  <span class="git-time" data-timestamp="1781761736000"></span>
+                  
+                  <div class="git-commit-tooltip" role="tooltip">
+                    <div class="git-tooltip-title">Recent commits</div>
+                    <ul class="git-commit-list">
+                      
+                        <li class="git-commit-item">
+                          <div class="git-commit-avatar" title="NellowTCS">
+                            
+                              <img src="https://www.gravatar.com/avatar/baecf29c7bedbb00a8d5bd5984799c55?d=mp&amp;s=64" alt="NellowTCS">
+                            
+                          </div>
+                          <div class="git-commit-details">
+                            <div class="git-commit-message" title="Oooops guess who forgot to uncomment some code">Oooops guess who forgot to uncomment ...</div>
+                            <div class="git-commit-meta">
+                              <span class="git-commit-author">NellowTCS</span>
+                              <span class="git-commit-date" data-timestamp="1781761736000"></span>
+                            </div>
+                          </div>
+                        </li>
+                      
+                    </ul>
+                  </div>
+                  
+                </span>
+              
+              <span class="git-spacer"></span>
+              
+                <a href="https://github.com/NellowTCS/UTAU.js/edit/main/Docs/docs/api/voice-config.md" target="_blank" rel="noopener noreferrer" class="edit-link">
+                  
+<svg class="lucide-icon icon-pencil " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-pencil"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" />
+</svg>
+
+                  Edit this page
+                </a>
+              
+            </div>
+          </main>
+          
+
+
+<footer class="footer-complete">
+  <div class="footer-complete-top">
+      <div class="footer-brand">
+          
+            <span class="footer-title">UTAU.js</span>
+          
+          
+            <p class="footer-desc">A speech-synthesis library for singing voice synthesis in the browser.</p>
+          
+        </div>
+        
+          <div class="footer-columns">
+            
+              <div class="footer-column">
+                <span class="footer-column-title">Resources</span>
+                <ul>
+                  
+                    <li><a href="../../getting-started/quickstart/" >Getting Started</a></li>
+                  
+                    <li><a href="../../api/" >API Reference</a></li>
+                  
+                    <li><a href="../../api/voice-config/" >Voice Config</a></li>
+                  
+                </ul>
+              </div>
+            
+              <div class="footer-column">
+                <span class="footer-column-title">Community</span>
+                <ul>
+                  
+                    <li><a href="https://github.com/NellowTCS/UTAU.js" >GitHub</a></li>
+                  
+                    <li><a href="https://github.com/NellowTCS/UTAU.js/issues" >Issues</a></li>
+                  
+                    <li><a href="https://github.com/NellowTCS/UTAU.js/discussions" >Discussions</a></li>
+                  
+                </ul>
+              </div>
+            
+          </div>
+        
+      </div>
+      <div class="footer-complete-bottom">
+        <div class="user-footer">Built with <a href="https://docmd.io">docmd</a>. <a href="https://github.com/NellowTCS/UTAU.js">View on GitHub</a>.</div>
+        
+          <div class="branding-footer">
+            builtWith <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.io" target="_blank" rel="noopener">docmd.</a>
+          </div>
+        
+      </div>
+  </footer>
+
+        </div>
+      </div>
+      
+      <script src="../../assets/js/docmd-main.js?v=mqj2yply"></script>
+      
+      <script src="../../assets/js/docmd-git.js?v=mqj2yply"></script>
+      <script src="../../assets/js/docmd-image-lightbox.js?v=mqj2yply" ></script>
+<script src="https://cdn.jsdelivr.net/npm/minisearch@7.2.0/dist/umd/index.min.js" ></script>
+<script src="../../assets/js/docmd-search.js?v=mqj2yply" ></script>
+<script src="../../assets/js/init-mermaid.js?v=mqj2yply" type="module"></script>
+<script src="../../assets/js/docmd-git.js?v=mqj2yply" type="module"></script>
+
+  <!-- Search Modal (Injected by @docmd/plugin-search) -->
+  <div id="docmd-search-modal" class="docmd-search-modal" style="display: none;" data-semantic="true" data-show-confidence="true" data-show-filters="true"
+       data-search-placeholder="Search documentation..."
+       data-search-no-results="No results found."
+       data-search-error="Failed to load search index."
+       data-search-initial="Type to start searching..."
+       data-search-navigate="to navigate"
+       data-search-escape="to close">
+      <div class="docmd-search-box">
+          <div class="docmd-search-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon icon-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" id="docmd-search-input" placeholder="Search documentation..." autocomplete="off" spellcheck="false">
+              <button onclick="window.closeDocmdSearch()" class="docmd-search-close" aria-label="Close search">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon icon-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+              </button>
+          </div>
+          <div id="docmd-search-results" class="docmd-search-results"></div>
+          <div class="docmd-search-footer">
+              <span><kbd class="docmd-kbd">↑</kbd> <kbd class="docmd-kbd">↓</kbd> to navigate</span>
+              <span><kbd class="docmd-kbd">ESC</kbd> to close</span>
+          </div>
+      </div>
+  </div>
+
+    <script>
+      (function() {
+        var searchDebounceTimer;
+
+        document.addEventListener('click', function(e) {
+          var link = e.target.closest('a');
+          if (!link || !window.gtag) return;
+          
+          var url = link.href;
+          var hostname = window.location.hostname;
+          var isExternal = link.hostname && link.hostname !== hostname;
+          var isDownload = link.hasAttribute('download') || url.match(/\.(pdf|zip|tar|gz|exe|pkg)$/i);
+          
+          if (isExternal) {
+            gtag('event', 'click_external', { 'url': url, 'link_text': link.innerText.trim() });
+          } else if (isDownload) {
+            gtag('event', 'download', { 'file_name': url.split('/').pop(), 'url': url });
+          }
+
+          // TOC tracking
+          if (link.classList.contains('toc-link')) {
+            gtag('event', 'toc_click', { 'target_id': link.getAttribute('href'), 'title': link.innerText.trim() });
+          }
+
+          // Permalink tracking
+          if (link.classList.contains('heading-anchor')) {
+            gtag('event', 'permalink_click', { 'url': url });
+          }
+        });
+
+        
+        // Search Keyword Tracking
+        document.addEventListener('input', function(e) {
+          if (e.target.id === 'docmd-search-input' && window.gtag) {
+            var query = e.target.value.trim();
+            if (query.length < 3) return;
+            
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(function() {
+              gtag('event', 'search', { 'search_term': query });
+            }, 1000);
+          }
+        });
+        
+      })();
+    </script>
+
+<script>window.__git_config={"repo":"https://github.com/NellowTCS/UTAU.js/edit/main/","branch":"main","editLink":true,"lastUpdated":true,"commitHistory":true,"maxCommits":5,"dateFormat":"relative"};window.__git_i18n={"lastUpdated":"Last updated","recentCommits":"Recent commits","viewCommitHistory":"View commit history","editOnGitHub":"Edit on GitHub","editOnGitLab":"Edit on GitLab","editOnBitbucket":"Edit on Bitbucket","editThisPage":"Edit this page","justNow":"just now","minutesAgo":"{n}m ago","hoursAgo":"{n}h ago","daysAgo":"{n}d ago"}</script>
+      
+  </body>
+</html>

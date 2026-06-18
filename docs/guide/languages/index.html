@@ -1,0 +1,1326 @@
+<!--
+  ---------------------------------------------------------------
+  docmd : the zero-config documentation engine.
+  @website https://docmd.io
+  [docmd-source] - Please do not remove this header.
+  ---------------------------------------------------------------
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="generator" content="docmd v0.5.x">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>/**
+ * --------------------------------------------------------------------
+ * docmd : the zero-config documentation engine.
+ *
+ * @package     @docmd/core (and ecosystem)
+ * @website     https://docmd.io
+ * @repository  https://github.com/docmd-io/docmd
+ * @license     MIT
+ * @copyright   Copyright (c) 2025-present docmd.io
+ *
+ * [docmd-source] - Please do not remove this header.
+ * --------------------------------------------------------------------
+ */
+
+(function () {
+  try {
+    // 1. Determine Theme
+    var localValue = localStorage.getItem('docmd-theme');
+    var configValue = window.DOCMD_DEFAULT_MODE || 'light';
+    var theme = localValue ? localValue : configValue;
+
+    if (theme === 'system') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    // 2. Apply to Root
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // 3. Highlight.js Toggle Strategy
+    var lightLink = document.getElementById('hljs-light');
+    var darkLink = document.getElementById('hljs-dark');
+
+    if (lightLink && darkLink) {
+      if (theme === 'dark') {
+        lightLink.disabled = true;
+        darkLink.disabled = false;
+      } else {
+        lightLink.disabled = false;
+        darkLink.disabled = true;
+      }
+    }
+
+    document.documentElement.style.visibility = "visible";
+  } catch (e) {
+    document.documentElement.style.visibility = "visible";
+    console.error('Theme init failed', e);
+  }
+})();</script>
+    <style>
+      html {
+        visibility: hidden;
+      }
+    </style>
+    
+    <script>
+      var root = "../../";
+      if (root && !root.endsWith('/')) root += '/';
+      if (root === '') root = './';
+      window.DOCMD_ROOT = root;
+
+      var siteRoot = "../../";
+      if (siteRoot && !siteRoot.endsWith('/')) siteRoot += '/';
+      if (siteRoot === '') siteRoot = './';
+      window.DOCMD_SITE_ROOT = siteRoot;
+
+      window.DOCMD_APPEARANCE = "system";
+      window.DOCMD_VERSION_ROOT = "/";
+      window.DOCMD_BASE = "/";
+      window.DOCMD_LOCALE = "";
+      window.DOCMD_DEFAULT_LOCALE = "";
+    </script>
+    <title>
+      Languages : UTAU.js
+    </title>
+    
+    <link rel="stylesheet" href="../../assets/css/docmd-main.css?v=mqj2yply">
+    
+    <link rel="stylesheet" href="../../assets/css/docmd-highlight-light.css?v=mqj2yply" id="hljs-light" >
+    <link rel="stylesheet" href="../../assets/css/docmd-highlight-dark.css?v=mqj2yply" id="hljs-dark" disabled>
+    
+    
+<meta name="description" content="Built-in language support and how to add custom languages">
+<link rel="canonical" href="https://nellowtcs.me/UTAU.js/docs/guide/languages/">
+<meta property="og:title" content="Languages - UTAU.js">
+<meta property="og:description" content="Built-in language support and how to add custom languages">
+<meta property="og:url" content="https://nellowtcs.me/UTAU.js/docs/guide/languages/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Languages - UTAU.js">
+<meta name="twitter:description" content="Built-in language support and how to add custom languages">
+
+
+
+<link rel="stylesheet" href="../../assets/css/docmd-theme-ruby.css?v=mqj2yply" >
+<link rel="stylesheet" href="../../assets/css/docmd-git.css?v=mqj2yply" >
+<link rel="stylesheet" href="../../assets/css/docmd-openapi.css?v=mqj2yply" >
+
+    
+      <link rel="stylesheet" href="../../assets/css/theme.css?v=mqj2yply">
+    
+    <script>/**
+ * --------------------------------------------------------------------
+ * docmd : the zero-config documentation engine.
+ *
+ * @package     @docmd/core (and ecosystem)
+ * @website     https://docmd.io
+ * @repository  https://github.com/docmd-io/docmd
+ * @license     MIT
+ * @copyright   Copyright (c) 2025-present docmd.io
+ *
+ * [docmd-source] - Please do not remove this header.
+ * --------------------------------------------------------------------
+ */
+
+(function () {
+  try {
+    // 1. Determine Theme
+    var localValue = localStorage.getItem('docmd-theme');
+    var configValue = window.DOCMD_DEFAULT_MODE || 'light';
+    var theme = localValue ? localValue : configValue;
+
+    if (theme === 'system') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    // 2. Apply to Root
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // 3. Highlight.js Toggle Strategy
+    var lightLink = document.getElementById('hljs-light');
+    var darkLink = document.getElementById('hljs-dark');
+
+    if (lightLink && darkLink) {
+      if (theme === 'dark') {
+        lightLink.disabled = true;
+        darkLink.disabled = false;
+      } else {
+        lightLink.disabled = false;
+        darkLink.disabled = true;
+      }
+    }
+
+    document.documentElement.style.visibility = "visible";
+  } catch (e) {
+    document.documentElement.style.visibility = "visible";
+    console.error('Theme init failed', e);
+  }
+})();</script>
+  </head>
+  <body
+    class="sidebar-collapsible"
+    data-default-collapsed="false"
+    data-copy-code-enabled="true" data-spa-enabled="true" data-source-file="docs/guide/languages.md">
+
+    <a href="#main-content" class="skip-link">skipToContent</a>
+
+    
+    
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          
+            <h1><a href="../../">
+                UTAU.js
+              </a></h1>
+          
+          <span class="mobile-view sidebar-menu-button float-right">
+            
+<svg class="lucide-icon icon-menu " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-menu"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M4 5h16" />
+  <path d="M4 12h16" />
+  <path d="M4 19h16" />
+</svg>
+
+          </span>
+        </div>
+        <div class="sidebar-top-group">
+          
+          
+          
+          
+        </div>
+        
+
+<nav class="sidebar-nav" aria-label="mainNavigation">
+  <ul>
+    
+      <li class="" >
+      
+        <a href="../../" class=" "
+          >
+           
+<svg class="lucide-icon icon-home " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-house"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Home
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="expanded nav-group" >
+      
+        <span class="nav-label nav-group">
+           
+<svg class="lucide-icon icon-rocket " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-rocket"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" />
+  <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" />
+  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Getting Started
+          </span>
+          
+        </span>
+        
+
+        
+          <ul class="submenu">
+            
+      <li class="" >
+      
+        <a href="../../getting-started/quickstart/" class=" "
+          >
+           
+<svg class="lucide-icon icon-play " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-play"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Quick Start
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../getting-started/installation/" class=" "
+          >
+           
+<svg class="lucide-icon icon-download " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-download"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 15V3" />
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+  <path d="m7 10 5 5 5-5" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Installation
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../getting-started/concepts/" class=" "
+          >
+           
+<svg class="lucide-icon icon-book " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-book"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Core Concepts
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+          </ul>
+        
+      </li>
+    
+      <li class="active-parent expanded nav-group" >
+      
+        <span class="nav-label nav-group">
+           
+<svg class="lucide-icon icon-book-open " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-book-open"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 7v14" />
+  <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Guide
+          </span>
+          
+        </span>
+        
+
+        
+          <ul class="submenu">
+            
+      <li class="" >
+      
+        <a href="../../guide/architecture/" class=" "
+          >
+           
+<svg class="lucide-icon icon-box " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-box"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+  <path d="m3.3 7 8.7 5 8.7-5" />
+  <path d="M12 22V12" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Architecture
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../guide/renderer/" class=" "
+          >
+           
+<svg class="lucide-icon icon-cpu " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-cpu"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 20v2" />
+  <path d="M12 2v2" />
+  <path d="M17 20v2" />
+  <path d="M17 2v2" />
+  <path d="M2 12h2" />
+  <path d="M2 17h2" />
+  <path d="M2 7h2" />
+  <path d="M20 12h2" />
+  <path d="M20 17h2" />
+  <path d="M20 7h2" />
+  <path d="M7 20v2" />
+  <path d="M7 2v2" />
+  <rect x="4" y="4" width="16" height="16" rx="2" />
+  <rect x="8" y="8" width="8" height="8" rx="1" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Renderer
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="active" >
+      
+        <a href="../../guide/languages/" class="active "
+          >
+           
+<svg class="lucide-icon icon-globe " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-globe"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+  <path d="M2 12h20" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Languages
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+          </ul>
+        
+      </li>
+    
+      <li class="expanded nav-group" >
+      
+        <a href="../../api/" class=" nav-group"
+          >
+           
+<svg class="lucide-icon icon-code " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-code"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m16 18 6-6-6-6" />
+  <path d="m8 6-6 6 6 6" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            API Reference
+            </span>
+          
+          
+        </a>
+        
+
+        
+          <ul class="submenu">
+            
+      <li class="" >
+      
+        <a href="../../api/voice-config/" class=" "
+          >
+           
+<svg class="lucide-icon icon-sliders " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-sliders-vertical"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 8h4" />
+  <path d="M12 21v-9" />
+  <path d="M12 8V3" />
+  <path d="M17 16h4" />
+  <path d="M19 12V3" />
+  <path d="M19 21v-5" />
+  <path d="M3 14h4" />
+  <path d="M5 10V3" />
+  <path d="M5 21v-7" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            VoiceConfig
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../api/dsp/" class=" "
+          >
+           
+<svg class="lucide-icon icon-audio-waveform " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-audio-waveform"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            DSP Primitives
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="../../api/import-export/" class=" "
+          >
+           
+<svg class="lucide-icon icon-file-up " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-file-up"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
+  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+  <path d="M12 12v6" />
+  <path d="m15 15-3-3-3 3" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            Import / Export
+            </span>
+          
+          
+        </a>
+        
+
+        
+      </li>
+    
+          </ul>
+        
+      </li>
+    
+      <li class="" >
+      
+        <a href="https://github.com/NellowTCS/UTAU.js" class=" "
+          target=&quot;_blank&quot; rel=&quot;noopener&quot;>
+           
+<svg class="lucide-icon icon-github " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-github"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+  <path d="M9 18c-4.51 2-5-2-7-2" />
+</svg>
+
+          
+          <span class="nav-item-title">
+            GitHub
+            </span>
+          
+           
+<svg class="lucide-icon icon-external-link nav-external-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-external-link"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 3h6v6" />
+  <path d="M10 14 21 3" />
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+</svg>
+
+          
+        </a>
+        
+
+        
+      </li>
+    
+  </ul>
+</nav>
+        <div class="sidebar-bottom-group mt-auto">
+          
+          
+          
+          
+        </div>
+      </aside>
+      
+      <div class="main-content-wrapper">
+        
+        
+          <header class="page-header">
+            <div class="header-left">
+              
+                <button id="sidebar-toggle-button" class="sidebar-toggle-button"
+                  aria-label="toggleSidebar">
+                  
+<svg class="lucide-icon icon-chevron-left " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-chevron-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 18-6-6 6-6" />
+</svg>
+
+                </button>
+              
+              <div class="header-titles-wrapper">
+                <span class="header-title">
+                  Languages
+                </span>
+              </div>
+            </div>
+            <div class="header-right">
+              
+                
+
+
+<div class="docmd-options-menu">
+    
+    <button class="docmd-search-trigger" aria-label="search">
+        
+<svg class="lucide-icon icon-search " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-search"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m21 21-4.34-4.34" />
+  <circle cx="11" cy="11" r="8" />
+</svg>
+
+        <span class="search-label">search</span>
+        <span class="search-keys"><kbd class="docmd-kbd">⌘</kbd><kbd class="docmd-kbd">K</kbd></span>
+    </button>
+    
+
+    
+
+    
+
+    
+    <button class="theme-toggle-button" aria-label="toggleTheme">
+        
+<svg class="lucide-icon icon-sun icon-sun" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-sun"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="4" />
+  <path d="M12 2v2" />
+  <path d="M12 20v2" />
+  <path d="m4.93 4.93 1.41 1.41" />
+  <path d="m17.66 17.66 1.41 1.41" />
+  <path d="M2 12h2" />
+  <path d="M20 12h2" />
+  <path d="m6.34 17.66-1.41 1.41" />
+  <path d="m19.07 4.93-1.41 1.41" />
+</svg>
+ 
+<svg class="lucide-icon icon-moon icon-moon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-moon"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+</svg>
+
+    </button>
+    
+
+    
+</div>
+
+              
+            </div>
+          </header>
+        
+        <div class="content-theme-cover">
+          <main class="content-area" id="main-content">
+            <div class="content-layout">
+              <div class="main-content">
+                <div class="docmd-breadcrumbs-row">
+                  <div id="docmd-raw-markdown" data-content="---%0Atitle%3A%20%22Languages%22%0Adescription%3A%20%22Built-in%20language%20support%20and%20how%20to%20add%20custom%20languages%22%0A---%0A%0A%23%23%20Built-in%20Languages%0A%0A%23%23%23%20English%20(en)%0A%0A-%20**Phoneme%20set**%3A%20ARPAbet%20(39%20phonemes%3A%20vowels%2C%20diphthongs%2C%20consonants)%0A-%20**G2P**%3A%20CMU%20Pronouncing%20Dictionary%20(compressed%2C%20~130k%20entries)%0A-%20**Fallback**%3A%20Character-level%20mapping%20for%20unknown%20words%0A-%20**Data%20sources**%3A%20Peterson%20%26%20Barney%201952%20(vowel%20formants)%2C%20Jongman%20et%20al.%202000%20(fricative%20spectra)%2C%20Stevens%201998%20(plosive%2Fnasal%20data)%0A%0A%23%23%23%20Japanese%20(jp)%0A%0A-%20**Phoneme%20set**%3A%20IPA-like%20(vowels%20a%2Fi%2Fu%2Fe%2Fo%2C%20consonants%20including%20moraic%20N)%0A-%20**G2P**%3A%20Hiragana%20and%20romaji%20parsing%20%2B%20EDICT2%20kanji%20lookup%0A-%20**Pitch%20accent**%3A%20Automatic%20accent%20resolution%20for%20prosody%20generation%0A-%20**Data%20sources**%3A%20Yamada%20et%20al.%202019%20(vowel%20formants)%2C%20Kitamura%20et%20al.%202009%20(F3)%2C%20standard%20acoustic-phonetics%20lit%0A%0A%23%23%23%20Mandarin%20(zh)%0A%0A-%20**Phoneme%20set**%3A%20Pinyin-derived%20(6%20vowels%2C%2021%20consonants%20%2B%20apical%20vowels)%0A-%20**G2P**%3A%20Pinyin%20syllable%20decomposition%20with%20y%2Fw%20spelling%20changes%20and%20tone%20stripping%0A-%20**Tone%20handling**%3A%20Tone%20numbers%20(1-5)%20are%20stripped%20from%20pinyin%20input%3B%20pitch%20contour%20is%20expected%20to%20be%20handled%20by%20note-level%20pitch%20bend%20in%20the%20score%0A-%20**Data%20sources**%3A%20Wu%201990%20(standard%20Mandarin%20formant%20values)%2C%20general%20acoustic%20phonetics%0A%0A%23%23%20Using%20Language%20Modules%0A%0A%60%60%60typescript%0Aimport%20%7B%20japanese%2C%20english%2C%20mandarin%2C%20getLanguage%20%7D%20from%20%22utaujs%22%3B%0A%0A%2F%2F%20Direct%20reference%0ArenderScore(score%2C%20voice%2C%20japanese)%3B%20%20%2F%2F%20or%20%22jp%22%0A%0A%2F%2F%20String%20lookup%0Aconst%20lang%20%3D%20getLanguage(%22eng%22)%3B%20%20%2F%2F%20returns%20english%20module%0ArenderScore(score%2C%20voice%2C%20lang)%3B%0A%60%60%60%0A%0A%23%23%20Registering%20a%20Custom%20Language%0A%0AImplement%20the%20%60LanguageModule%60%20interface%20and%20register%20it%3A%0A%0A%60%60%60typescript%0Aimport%20%7B%20registerLanguage%20%7D%20from%20%22utaujs%22%3B%0Aimport%20type%20%7B%20LanguageModule%2C%20PhonemeDef%20%7D%20from%20%22utaujs%22%3B%0A%0Aconst%20myLang%3A%20LanguageModule%20%3D%20%7B%0A%20%20id%3A%20%22custom%22%2C%0A%20%20name%3A%20%22My%20Language%22%2C%0A%20%20phonemes%3A%20new%20Map(%5B%0A%20%20%20%20%5B%22a%22%2C%20%7B%20symbol%3A%20%22a%22%2C%20type%3A%20%22vowel%22%2C%20voiced%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20formants%3A%20%5B%7B%20f%3A%20800%2C%20bw%3A%20100%20%7D%2C%20%7B%20f%3A%201200%2C%20bw%3A%20150%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%20f%3A%202500%2C%20bw%3A%20200%20%7D%2C%20%7B%20f%3A%203500%2C%20bw%3A%20250%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%20f%3A%204500%2C%20bw%3A%20300%20%7D%5D%20%7D%5D%2C%0A%20%20%20%20%2F%2F%20...%20more%20phonemes%0A%20%20%5D)%2C%0A%20%20lyricToPhonemes(lyric%3A%20string)%3A%20string%5B%5D%20%7B%0A%20%20%20%20%2F%2F%20Your%20G2P%20logic%20here%0A%20%20%20%20return%20%5B...lyric%5D.filter(ch%20%3D%3E%20this.phonemes.has(ch))%3B%0A%20%20%7D%2C%0A%7D%3B%0A%0AregisterLanguage(myLang)%3B%0A%0A%2F%2F%20Now%20usable%20via%20%22custom%22%20string%0Aconst%20chunks%20%3D%20await%20renderScore(score%2C%20voice%2C%20%22custom%22)%3B%0A%60%60%60%0A%0A%23%23%20Cross-Language%20Aliasing%0A%0AThe%20alias%20system%20maps%20language-specific%20phoneme%20symbols%20to%20a%20canonical%20IPA-like%20set.%20This%20is%20useful%20when%20a%20voicebank%20recorded%20for%20one%20language%20sings%20lyrics%20in%20another%3A%0A%0A%60%60%60typescript%0Aimport%20%7B%20toCanonical%2C%20sequenceToCanonical%20%7D%20from%20%22utaujs%22%3B%0A%0A%2F%2F%20Map%20a%20single%20phoneme%0AtoCanonical(%22en%22%2C%20%22IY%22)%3B%20%20%20%2F%2F%20-%3E%20%22i%22%0AtoCanonical(%22jp%22%2C%20%22sh%22)%3B%20%20%20%2F%2F%20-%3E%20%22S%22%0A%0A%2F%2F%20Map%20a%20sequence%0AsequenceToCanonical(%22zh%22%2C%20%5B%22zh%22%2C%20%22ir%22%5D)%3B%0A%2F%2F%20-%3E%20%5B%22Z%22%2C%20%22I%22%5D%0A%60%60%60%0A" style="display: none;"></div>
+                  
+                    <nav aria-label="breadcrumb" class="docmd-breadcrumbs">
+                      <ol>
+                        
+                        
+                          <li class="breadcrumb-item " >
+                            
+                              <span>Guide</span>
+                            
+                            
+                              <span class="breadcrumb-separator">
+<svg class="lucide-icon icon-chevron-right " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg>
+</span>
+                            
+                          </li>
+                        
+                          <li class="breadcrumb-item active" aria-current=&quot;page&quot;>
+                            
+                              <span>Languages</span>
+                            
+                            
+                          </li>
+                        
+                      </ol>
+                    </nav>
+                  
+
+                  
+                    <div class="docmd-copy-widgets">
+                      
+                        <button class="docmd-copy-btn docmd-copy-raw-btn" data-copied="copiedToClipboard" title="copyMarkdown" aria-label="copyMarkdown">
+                          <span class="docmd-btn-icon">
+<svg class="lucide-icon icon-copy " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-copy"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+</svg>
+</span>
+                        </button>
+                      
+                      
+                        <button class="docmd-copy-btn docmd-copy-context-btn" data-copied="copiedToClipboard" title="copyContext">
+                          <span class="docmd-btn-icon">
+<svg class="lucide-icon icon-message-square " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-message-square"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+</svg>
+</span>
+                          <span class="docmd-btn-text">copyContext</span>
+                        </button>
+                      
+                    </div>
+                  
+                </div>
+                
+                <h2 id="built-in-languages" class="docmd-heading"><a href="#built-in-languages" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Built-in Languages</h2>
+<h3 id="built-in-languages-english-en" class="docmd-heading"><a href="#built-in-languages-english-en" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>English (en)</h3>
+<ul>
+<li><strong>Phoneme set</strong>: ARPAbet (39 phonemes: vowels, diphthongs, consonants)</li>
+<li><strong>G2P</strong>: CMU Pronouncing Dictionary (compressed, ~130k entries)</li>
+<li><strong>Fallback</strong>: Character-level mapping for unknown words</li>
+<li><strong>Data sources</strong>: Peterson &amp; Barney 1952 (vowel formants), Jongman et al. 2000 (fricative spectra), Stevens 1998 (plosive/nasal data)</li>
+</ul>
+<h3 id="built-in-languages-japanese-jp" class="docmd-heading"><a href="#built-in-languages-japanese-jp" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Japanese (jp)</h3>
+<ul>
+<li><strong>Phoneme set</strong>: IPA-like (vowels a/i/u/e/o, consonants including moraic N)</li>
+<li><strong>G2P</strong>: Hiragana and romaji parsing + EDICT2 kanji lookup</li>
+<li><strong>Pitch accent</strong>: Automatic accent resolution for prosody generation</li>
+<li><strong>Data sources</strong>: Yamada et al. 2019 (vowel formants), Kitamura et al. 2009 (F3), standard acoustic-phonetics lit</li>
+</ul>
+<h3 id="built-in-languages-mandarin-zh" class="docmd-heading"><a href="#built-in-languages-mandarin-zh" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Mandarin (zh)</h3>
+<ul>
+<li><strong>Phoneme set</strong>: Pinyin-derived (6 vowels, 21 consonants + apical vowels)</li>
+<li><strong>G2P</strong>: Pinyin syllable decomposition with y/w spelling changes and tone stripping</li>
+<li><strong>Tone handling</strong>: Tone numbers (1-5) are stripped from pinyin input; pitch contour is expected to be handled by note-level pitch bend in the score</li>
+<li><strong>Data sources</strong>: Wu 1990 (standard Mandarin formant values), general acoustic phonetics</li>
+</ul>
+<h2 id="using-language-modules" class="docmd-heading"><a href="#using-language-modules" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Using Language Modules</h2>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> { japanese, english, mandarin, getLanguage } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utaujs&quot;</span>;
+
+<span class="hljs-comment">// Direct reference</span>
+<span class="hljs-title function_">renderScore</span>(score, voice, japanese);  <span class="hljs-comment">// or &quot;jp&quot;</span>
+
+<span class="hljs-comment">// String lookup</span>
+<span class="hljs-keyword">const</span> lang <span class="hljs-punctuation">=</span> <span class="hljs-title function_">getLanguage</span>(<span class="hljs-string">&quot;eng&quot;</span>);  <span class="hljs-comment">// returns english module</span>
+<span class="hljs-title function_">renderScore</span>(score, voice, lang);
+</code></pre>
+<h2 id="registering-a-custom-language" class="docmd-heading"><a href="#registering-a-custom-language" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Registering a Custom Language</h2>
+<p>Implement the <code>LanguageModule</code> interface and register it:</p>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> { registerLanguage } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utaujs&quot;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-keyword">type</span> { LanguageModule, PhonemeDef } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utaujs&quot;</span>;
+
+<span class="hljs-keyword">const</span> myLang<span class="hljs-punctuation">:</span> LanguageModule <span class="hljs-punctuation">=</span> {
+  <span class="hljs-keyword">id</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;custom&quot;</span>,
+  name<span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;My Language&quot;</span>,
+  phonemes<span class="hljs-punctuation">:</span> <span class="hljs-keyword">new</span> <span class="hljs-title function_">Map</span>([
+    [<span class="hljs-string">&quot;a&quot;</span>, { symbol<span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-keyword">type</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;vowel&quot;</span>, voiced<span class="hljs-punctuation">:</span> <span class="hljs-keyword">true</span>,
+            formants<span class="hljs-punctuation">:</span> [{ f<span class="hljs-punctuation">:</span> <span class="hljs-number">800</span>, bw<span class="hljs-punctuation">:</span> <span class="hljs-number">100</span> }, { f<span class="hljs-punctuation">:</span> <span class="hljs-number">1200</span>, bw<span class="hljs-punctuation">:</span> <span class="hljs-number">150</span> },
+                       { f<span class="hljs-punctuation">:</span> <span class="hljs-number">2500</span>, bw<span class="hljs-punctuation">:</span> <span class="hljs-number">200</span> }, { f<span class="hljs-punctuation">:</span> <span class="hljs-number">3500</span>, bw<span class="hljs-punctuation">:</span> <span class="hljs-number">250</span> },
+                       { f<span class="hljs-punctuation">:</span> <span class="hljs-number">4500</span>, bw<span class="hljs-punctuation">:</span> <span class="hljs-number">300</span> }] }],
+    <span class="hljs-comment">// ... more phonemes</span>
+  ]),
+  <span class="hljs-title function_">lyricToPhonemes</span>(lyric<span class="hljs-punctuation">:</span> string)<span class="hljs-punctuation">:</span> string[] {
+    <span class="hljs-comment">// Your G2P logic here</span>
+    <span class="hljs-keyword">return</span> [...<span class="hljs-attr">lyric</span>].<span class="hljs-title function_">filter</span>(ch <span class="hljs-punctuation">=&gt;</span> <span class="hljs-keyword">this</span>.<span class="hljs-attr">phonemes</span>.<span class="hljs-title function_">has</span>(ch));
+  },
+};
+
+<span class="hljs-title function_">registerLanguage</span>(myLang);
+
+<span class="hljs-comment">// Now usable via &quot;custom&quot; string</span>
+<span class="hljs-keyword">const</span> chunks <span class="hljs-punctuation">=</span> <span class="hljs-keyword">await</span> <span class="hljs-title function_">renderScore</span>(score, voice, <span class="hljs-string">&quot;custom&quot;</span>);
+</code></pre>
+<h2 id="cross-language-aliasing" class="docmd-heading"><a href="#cross-language-aliasing" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Cross-Language Aliasing</h2>
+<p>The alias system maps language-specific phoneme symbols to a canonical IPA-like set. This is useful when a voicebank recorded for one language sings lyrics in another:</p>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> { toCanonical, sequenceToCanonical } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utaujs&quot;</span>;
+
+<span class="hljs-comment">// Map a single phoneme</span>
+<span class="hljs-title function_">toCanonical</span>(<span class="hljs-string">&quot;en&quot;</span>, <span class="hljs-string">&quot;IY&quot;</span>);   <span class="hljs-comment">// -&gt; &quot;i&quot;</span>
+<span class="hljs-title function_">toCanonical</span>(<span class="hljs-string">&quot;jp&quot;</span>, <span class="hljs-string">&quot;sh&quot;</span>);   <span class="hljs-comment">// -&gt; &quot;S&quot;</span>
+
+<span class="hljs-comment">// Map a sequence</span>
+<span class="hljs-title function_">sequenceToCanonical</span>(<span class="hljs-string">&quot;zh&quot;</span>, [<span class="hljs-string">&quot;zh&quot;</span>, <span class="hljs-string">&quot;ir&quot;</span>]);
+<span class="hljs-comment">// -&gt; [&quot;Z&quot;, &quot;I&quot;]</span>
+</code></pre>
+
+                
+                  <div class="page-navigation">
+                    
+                      <a href="../../guide/renderer/" class="prev-page">
+                        
+<svg class="lucide-icon icon-arrow-left page-nav-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-arrow-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" />
+</svg>
+
+                        <span><small>previous</small><strong>
+                            Renderer
+                          </strong></span>
+                      </a>
+                    
+                    
+                      <a href="../../api/" class="next-page">
+                        <span><small>next</small>
+                          <strong>
+                            API Reference
+                          </strong></span>
+                        
+<svg class="lucide-icon icon-arrow-right page-nav-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-arrow-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="m12 5 7 7-7 7" />
+</svg>
+
+                      </a>
+                    
+                  </div>
+                
+              </div>
+              <div class="toc-sidebar">
+                
+
+
+  <div class="toc-container">
+    <h2 class="toc-title">onThisPage<span class="mobile-view toc-menu-button float-right">
+<svg class="lucide-icon icon-chevron-down " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-chevron-down"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m6 9 6 6 6-6" />
+</svg>
+</span></h2>
+    <ul class="toc-list">
+      
+        <li class="toc-item toc-level-2">
+          <a href="#built-in-languages" class="toc-link">Built-in Languages</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#built-in-languages-english-en" class="toc-link">English (en)</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#built-in-languages-japanese-jp" class="toc-link">Japanese (jp)</a>
+        </li>
+      
+        <li class="toc-item toc-level-3">
+          <a href="#built-in-languages-mandarin-zh" class="toc-link">Mandarin (zh)</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#using-language-modules" class="toc-link">Using Language Modules</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#registering-a-custom-language" class="toc-link">Registering a Custom Language</a>
+        </li>
+      
+        <li class="toc-item toc-level-2">
+          <a href="#cross-language-aliasing" class="toc-link">Cross-Language Aliasing</a>
+        </li>
+      
+    </ul>
+  </div>
+
+              </div>
+            </div>
+            <div class="page-footer-actions">
+              
+              
+                <span class="git-last-updated" data-timestamp="1781761736000">
+                  <svg class="git-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span class="git-label">Last updated:</span>
+                  <span class="git-time" data-timestamp="1781761736000"></span>
+                  
+                  <div class="git-commit-tooltip" role="tooltip">
+                    <div class="git-tooltip-title">Recent commits</div>
+                    <ul class="git-commit-list">
+                      
+                        <li class="git-commit-item">
+                          <div class="git-commit-avatar" title="NellowTCS">
+                            
+                              <img src="https://www.gravatar.com/avatar/baecf29c7bedbb00a8d5bd5984799c55?d=mp&amp;s=64" alt="NellowTCS">
+                            
+                          </div>
+                          <div class="git-commit-details">
+                            <div class="git-commit-message" title="Oooops guess who forgot to uncomment some code">Oooops guess who forgot to uncomment ...</div>
+                            <div class="git-commit-meta">
+                              <span class="git-commit-author">NellowTCS</span>
+                              <span class="git-commit-date" data-timestamp="1781761736000"></span>
+                            </div>
+                          </div>
+                        </li>
+                      
+                    </ul>
+                  </div>
+                  
+                </span>
+              
+              <span class="git-spacer"></span>
+              
+                <a href="https://github.com/NellowTCS/UTAU.js/edit/main/Docs/docs/guide/languages.md" target="_blank" rel="noopener noreferrer" class="edit-link">
+                  
+<svg class="lucide-icon icon-pencil " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
+  class="lucide lucide-pencil"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" />
+</svg>
+
+                  Edit this page
+                </a>
+              
+            </div>
+          </main>
+          
+
+
+<footer class="footer-complete">
+  <div class="footer-complete-top">
+      <div class="footer-brand">
+          
+            <span class="footer-title">UTAU.js</span>
+          
+          
+            <p class="footer-desc">A speech-synthesis library for singing voice synthesis in the browser.</p>
+          
+        </div>
+        
+          <div class="footer-columns">
+            
+              <div class="footer-column">
+                <span class="footer-column-title">Resources</span>
+                <ul>
+                  
+                    <li><a href="../../getting-started/quickstart/" >Getting Started</a></li>
+                  
+                    <li><a href="../../api/" >API Reference</a></li>
+                  
+                    <li><a href="../../api/voice-config/" >Voice Config</a></li>
+                  
+                </ul>
+              </div>
+            
+              <div class="footer-column">
+                <span class="footer-column-title">Community</span>
+                <ul>
+                  
+                    <li><a href="https://github.com/NellowTCS/UTAU.js" >GitHub</a></li>
+                  
+                    <li><a href="https://github.com/NellowTCS/UTAU.js/issues" >Issues</a></li>
+                  
+                    <li><a href="https://github.com/NellowTCS/UTAU.js/discussions" >Discussions</a></li>
+                  
+                </ul>
+              </div>
+            
+          </div>
+        
+      </div>
+      <div class="footer-complete-bottom">
+        <div class="user-footer">Built with <a href="https://docmd.io">docmd</a>. <a href="https://github.com/NellowTCS/UTAU.js">View on GitHub</a>.</div>
+        
+          <div class="branding-footer">
+            builtWith <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.io" target="_blank" rel="noopener">docmd.</a>
+          </div>
+        
+      </div>
+  </footer>
+
+        </div>
+      </div>
+      
+      <script src="../../assets/js/docmd-main.js?v=mqj2yply"></script>
+      
+      <script src="../../assets/js/docmd-git.js?v=mqj2yply"></script>
+      <script src="../../assets/js/docmd-image-lightbox.js?v=mqj2yply" ></script>
+<script src="https://cdn.jsdelivr.net/npm/minisearch@7.2.0/dist/umd/index.min.js" ></script>
+<script src="../../assets/js/docmd-search.js?v=mqj2yply" ></script>
+<script src="../../assets/js/init-mermaid.js?v=mqj2yply" type="module"></script>
+<script src="../../assets/js/docmd-git.js?v=mqj2yply" type="module"></script>
+
+  <!-- Search Modal (Injected by @docmd/plugin-search) -->
+  <div id="docmd-search-modal" class="docmd-search-modal" style="display: none;" data-semantic="true" data-show-confidence="true" data-show-filters="true"
+       data-search-placeholder="Search documentation..."
+       data-search-no-results="No results found."
+       data-search-error="Failed to load search index."
+       data-search-initial="Type to start searching..."
+       data-search-navigate="to navigate"
+       data-search-escape="to close">
+      <div class="docmd-search-box">
+          <div class="docmd-search-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon icon-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" id="docmd-search-input" placeholder="Search documentation..." autocomplete="off" spellcheck="false">
+              <button onclick="window.closeDocmdSearch()" class="docmd-search-close" aria-label="Close search">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon icon-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+              </button>
+          </div>
+          <div id="docmd-search-results" class="docmd-search-results"></div>
+          <div class="docmd-search-footer">
+              <span><kbd class="docmd-kbd">↑</kbd> <kbd class="docmd-kbd">↓</kbd> to navigate</span>
+              <span><kbd class="docmd-kbd">ESC</kbd> to close</span>
+          </div>
+      </div>
+  </div>
+
+    <script>
+      (function() {
+        var searchDebounceTimer;
+
+        document.addEventListener('click', function(e) {
+          var link = e.target.closest('a');
+          if (!link || !window.gtag) return;
+          
+          var url = link.href;
+          var hostname = window.location.hostname;
+          var isExternal = link.hostname && link.hostname !== hostname;
+          var isDownload = link.hasAttribute('download') || url.match(/\.(pdf|zip|tar|gz|exe|pkg)$/i);
+          
+          if (isExternal) {
+            gtag('event', 'click_external', { 'url': url, 'link_text': link.innerText.trim() });
+          } else if (isDownload) {
+            gtag('event', 'download', { 'file_name': url.split('/').pop(), 'url': url });
+          }
+
+          // TOC tracking
+          if (link.classList.contains('toc-link')) {
+            gtag('event', 'toc_click', { 'target_id': link.getAttribute('href'), 'title': link.innerText.trim() });
+          }
+
+          // Permalink tracking
+          if (link.classList.contains('heading-anchor')) {
+            gtag('event', 'permalink_click', { 'url': url });
+          }
+        });
+
+        
+        // Search Keyword Tracking
+        document.addEventListener('input', function(e) {
+          if (e.target.id === 'docmd-search-input' && window.gtag) {
+            var query = e.target.value.trim();
+            if (query.length < 3) return;
+            
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(function() {
+              gtag('event', 'search', { 'search_term': query });
+            }, 1000);
+          }
+        });
+        
+      })();
+    </script>
+
+<script>window.__git_config={"repo":"https://github.com/NellowTCS/UTAU.js/edit/main/","branch":"main","editLink":true,"lastUpdated":true,"commitHistory":true,"maxCommits":5,"dateFormat":"relative"};window.__git_i18n={"lastUpdated":"Last updated","recentCommits":"Recent commits","viewCommitHistory":"View commit history","editOnGitHub":"Edit on GitHub","editOnGitLab":"Edit on GitLab","editOnBitbucket":"Edit on Bitbucket","editThisPage":"Edit this page","justNow":"just now","minutesAgo":"{n}m ago","hoursAgo":"{n}h ago","daysAgo":"{n}d ago"}</script>
+      
+  </body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "title": "UTAU.js",
+  "description": "",
+  "pages": [
+    {
+      "title": "DSP Primitives",
+      "url": "https://nellowtcs.me/UTAU.js/docs/api/dsp/",
+      "description": "Low-level digital signal processing components",
+      "priority": "medium"
+    },
+    {
+      "title": "Import / Export",
+      "url": "https://nellowtcs.me/UTAU.js/docs/api/import-export/",
+      "description": "Score file import and export via utaformatix-3",
+      "priority": "medium"
+    },
+    {
+      "title": "API Reference",
+      "url": "https://nellowtcs.me/UTAU.js/docs/api/",
+      "description": "Complete API reference for UTAU.js",
+      "priority": "medium"
+    },
+    {
+      "title": "VoiceConfig Reference",
+      "url": "https://nellowtcs.me/UTAU.js/docs/api/voice-config/",
+      "description": "Complete reference for all VoiceConfig parameters and their perceptual effects",
+      "priority": "medium"
+    },
+    {
+      "title": "Core Concepts",
+      "url": "https://nellowtcs.me/UTAU.js/docs/getting-started/concepts/",
+      "description": "Understand how UTAU.js produces singing voice audio",
+      "priority": "medium"
+    },
+    {
+      "title": "Installation",
+      "url": "https://nellowtcs.me/UTAU.js/docs/getting-started/installation/",
+      "description": "Install UTAU.js via npm or use it directly in the browser",
+      "priority": "medium"
+    },
+    {
+      "title": "Quick Start",
+      "url": "https://nellowtcs.me/UTAU.js/docs/getting-started/quickstart/",
+      "description": "Render your first singing voice synthesis in 5 minutes",
+      "priority": "medium"
+    },
+    {
+      "title": "Architecture",
+      "url": "https://nellowtcs.me/UTAU.js/docs/guide/architecture/",
+      "description": "How the UTAU.js library is organised",
+      "priority": "medium"
+    },
+    {
+      "title": "Languages",
+      "url": "https://nellowtcs.me/UTAU.js/docs/guide/languages/",
+      "description": "Built-in language support and how to add custom languages",
+      "priority": "medium"
+    },
+    {
+      "title": "Renderer",
+      "url": "https://nellowtcs.me/UTAU.js/docs/guide/renderer/",
+      "description": "How the synthesis engine produces audio from a score",
+      "priority": "medium"
+    },
+    {
+      "title": "UTAU.js",
+      "url": "https://nellowtcs.me/UTAU.js/docs/",
+      "description": "A speech-synthesis library for singing voice synthesis in the browser",
+      "priority": "high"
+    }
+  ]
+}
