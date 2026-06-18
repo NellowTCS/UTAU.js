@@ -36,7 +36,7 @@ jobs:
 
       - name: Prepare pages root
         run: |
-          mkdir -p pages-root/docs
+          mkdir -p pages-root/
           cp -r Demo/dist/* pages-root/
           # cp -r Docs/site/* pages-root/docs/
 
