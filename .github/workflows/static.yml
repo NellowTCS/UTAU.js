@@ -30,9 +30,9 @@ jobs:
         working-directory: Demo
         run: npm install && npm run build
 
-      # - name: Build docs
-      #   working-directory: Docs
-      #   run: npm install && npm run build
+      - name: Build docs
+        working-directory: Docs
+        run: npm install && npm run build
 
       - name: Prepare pages root
         run: |

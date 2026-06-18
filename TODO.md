@@ -2,9 +2,7 @@
 
 ## Documentation
 
-- [ ] README: quickstart, API overview, architecture diagram
-- [X] DocMD docs probably
-- [X] API reference for VoiceConfig parameters and their perceptual effect
+- [x] README: quickstart, API overview, architecture diagram
 
 ## Future
 

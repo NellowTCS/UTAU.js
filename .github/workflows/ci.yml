@@ -39,6 +39,6 @@ jobs:
         working-directory: Demo
         run: npx tsc --noEmit
 
-      # - name: Build Docs
-      #   working-directory: Docs
-      #   run: npm run build
+      - name: Build Docs
+        working-directory: Docs
+        run: npm run build
