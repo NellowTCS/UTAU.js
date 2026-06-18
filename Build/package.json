@@ -3,6 +3,28 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Parametric vocal synthesis engine",
+  "license": "MIT",
+  "author": "NellowTCS (https://github.com/NellowTCS)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NellowTCS/UTAU.js.git"
+  },
+  "homepage": "https://github.com/NellowTCS/UTAU.js#readme",
+  "bugs": {
+    "url": "https://github.com/NellowTCS/UTAU.js/issues"
+  },
+  "keywords": [
+    "utau",
+    "synthesis",
+    "singing",
+    "voice",
+    "speech",
+    "audio",
+    "dsp",
+    "lf-glottal",
+    "source-filter",
+    "formant"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.mts",
