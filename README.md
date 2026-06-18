@@ -1,5 +1,9 @@
 # UTAU.js
 
+[![npm version](https://img.shields.io/npm/v/utaujs.svg)](https://www.npmjs.com/package/utaujs)
+[![CI](https://github.com/NellowTCS/UTAU.js/actions/workflows/ci.yml/badge.svg)](https://github.com/NellowTCS/UTAU.js/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Parametric singing voice synthesis in the browser and Node.js. Implements a
 source-filter model with an LF glottal source and cascaded formant filter.
 
