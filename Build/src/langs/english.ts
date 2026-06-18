@@ -449,33 +449,34 @@ export const english: LanguageModule = {
   name: "English",
   phonemes: new Map(enPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
-    const clean = lyric.trim().toUpperCase();
+    const clean = lyric.trim().toLowerCase();
+    if (clean === "r") return ["R"]; // silence/rest marker
     if (g2p[clean]) return [...g2p[clean]];
     const parts = clean.split(/[\s_-]+/).filter(Boolean);
     if (parts.every((p) => this.phonemes.has(p))) return parts;
     const simple: Record<string, string> = {
-      A: "AA",
-      B: "B",
-      D: "D",
-      E: "EH",
-      F: "F",
-      G: "G",
-      H: "HH",
-      I: "IH",
-      K: "K",
-      L: "L",
-      M: "M",
-      N: "N",
-      O: "AA",
-      P: "P",
-      R: "R",
-      S: "S",
-      T: "T",
-      U: "AH",
-      V: "V",
-      W: "W",
-      Y: "Y",
-      Z: "Z",
+      a: "AA",
+      b: "B",
+      d: "D",
+      e: "EH",
+      f: "F",
+      g: "G",
+      h: "HH",
+      i: "IH",
+      k: "K",
+      l: "L",
+      m: "M",
+      n: "N",
+      o: "AA",
+      p: "P",
+      r: "R",
+      s: "S",
+      t: "T",
+      u: "AH",
+      v: "V",
+      w: "W",
+      y: "Y",
+      z: "Z",
     };
     const mapped = [...clean].map((c) => simple[c]).filter(Boolean);
     return mapped.length > 0 ? mapped : ["AH"];

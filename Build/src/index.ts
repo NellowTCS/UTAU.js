@@ -21,7 +21,7 @@ export { NoiseSource, shapeNoiseWithFormants } from "./core/dsp/noise";
 export { applyAmplitudeEnvelope, mixBuffers } from "./core/dsp/envelope";
 export { encodeWav } from "./core/dsp/wav";
 
-export { getLanguage, registerLanguage, japanese, english } from "./langs/index";
+export { getLanguage, registerLanguage, japanese, english, mandarin, toCanonical, sequenceToCanonical } from "./langs/index";
 export { getVoice, registerVoice, maleVoice, femaleVoice, buildVoice, scaleVoice } from "./voices/index";
 export { streamScore, renderScore, mixChunks, renderNote } from "./synth/index";
 export { StreamPlayer } from "./player/index";

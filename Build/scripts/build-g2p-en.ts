@@ -12,7 +12,7 @@
  *   - Lines starting with `#` are comments. Entries like `abbrev`, `dutch`,
  *     `german`, etc. are pronunciation-class tags, not real words.
  *
- * Output: src/langs/data/en-g2p.json — { "WORD": ["PHONEME", ...], ... }
+ * Output: src/langs/data/en-g2p.json - { "WORD": ["PHONEME", ...], ... }
  *
  * Run as:  npm run build:g2p
  *   (also called by the `build` and `dev` scripts so the JSON is
@@ -70,7 +70,7 @@ function parseCmudict(text: string): Map<string, string[]> {
 
   for (const line of lines) {
     if (!line || line.startsWith(";;;") || line.startsWith("#")) continue;
-    // Strip variant markers like WORD(1) → WORD
+    // Strip variant markers like WORD(1) -> WORD
     const m = line.match(/^([A-Za-z']+?)(?:\([0-9]\))?\s+(.*)$/);
     if (!m) continue;
     const word = m[1];

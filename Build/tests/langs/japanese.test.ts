@@ -60,6 +60,30 @@ describe("japanese", () => {
     }
   });
 
+  it("looks up a common kanji word in the G2P lexicon", () => {
+    const result = japanese.lyricToPhonemes("食べる");
+    expect(result.length).toBeGreaterThan(0);
+    for (const s of result) {
+      expect(japanese.phonemes.has(s)).toBe(true);
+    }
+  });
+
+  it("looks up 音楽 in the G2P lexicon", () => {
+    const result = japanese.lyricToPhonemes("音楽");
+    expect(result.length).toBeGreaterThan(0);
+    for (const s of result) {
+      expect(japanese.phonemes.has(s)).toBe(true);
+    }
+  });
+
+  it("falls through for unknown kanji", () => {
+    const result = japanese.lyricToPhonemes("無茶苦茶");
+    expect(result.length).toBeGreaterThan(0);
+    for (const s of result) {
+      expect(japanese.phonemes.has(s)).toBe(true);
+    }
+  });
+
   describe("resolveAccents", () => {
     it("is defined", () => {
       expect(japanese.resolveAccents).toBeDefined();

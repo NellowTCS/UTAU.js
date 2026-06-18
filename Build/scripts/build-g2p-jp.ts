@@ -15,7 +15,7 @@
  * a kana headword (no kanji) are skipped since the existing module
  * handles pure kana/romaji input via its conversion rules.
  *
- * Output: src/langs/data/jp-g2p.json — { "食べる": "たべる", ... }
+ * Output: src/langs/data/jp-g2p.json - { "食べる": "たべる", ... }
  *
  * Run as:  npm run build:g2p:jp
  */
@@ -69,7 +69,7 @@ function parseLine(line: string): [string, string][] | null {
   // Take the primary reading (before first `;`), strip variant markers
   const primaryReading = cleanReading(rawKana.split(";")[0]);
   if (!primaryReading) return null;
-  // Split multi-kanji entries into individual word→reading pairs
+  // Split multi-kanji entries into individual word->reading pairs
   const kanjiForms = splitKanji(rawKanji);
   if (kanjiForms.length === 0) return null;
   return kanjiForms.map((k) => [k, primaryReading]);

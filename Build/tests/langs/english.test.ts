@@ -50,4 +50,17 @@ describe("english", () => {
     const result = english.lyricToPhonemes("A");
     expect(result.length).toBeGreaterThanOrEqual(1);
   });
+
+  it("looks up a word from CMUDict (ABBOTT)", () => {
+    const result = english.lyricToPhonemes("ABBOTT");
+    expect(result.length).toBeGreaterThan(0);
+    for (const s of result) {
+      expect(english.phonemes.has(s)).toBe(true);
+    }
+  });
+
+  it("looks up AMERICAN from CMUDict", () => {
+    const result = english.lyricToPhonemes("AMERICAN");
+    expect(result.length).toBeGreaterThan(0);
+  });
 });

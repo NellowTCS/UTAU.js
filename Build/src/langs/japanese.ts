@@ -29,7 +29,7 @@ import g2pData from "./data/jp-g2p.json";
 // Kana / romaji parsing: standard Hepburn romanisation rules.
 //   Kenkyusha's New Japanese-English Dictionary (5th ed.), 2003. (Yes really.)
 //
-// G2P lexicon for kanji→kana is auto-generated from EDICT2 via
+// G2P lexicon for kanji->kana is auto-generated from EDICT2 via
 // Build/scripts/build-g2p-jp.ts.
 
 const baseVowel = (symbol: string, f1: number, f2: number, f3: number, bw1 = 70, bw2 = 90, bw3 = 130): PhonemeDef => ({

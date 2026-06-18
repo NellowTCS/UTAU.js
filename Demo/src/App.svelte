@@ -219,6 +219,7 @@
       <select bind:value={langId}>
         <option value="jp">Japanese</option>
         <option value="en">English</option>
+        <option value="zh">Mandarin</option>
       </select>
       <button class="icon-btn" onclick={handleUndo} disabled={!canUndo}><Undo2 size={16} /></button>
       <button class="icon-btn" onclick={handleRedo} disabled={!canRedo}><Redo2 size={16} /></button>

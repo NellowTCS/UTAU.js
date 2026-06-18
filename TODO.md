@@ -8,9 +8,10 @@
 
 ## Languages
 
-- [ ] Expand English G2P to ~1000+ common words using a script probably
-- [ ] Chinese (Mandarin) language module
-- [ ] Phoneme alias map for cross-language compatibility
+- [x] Expand English G2P to full CMUDict (124,911 words, via Build/scripts/build-g2p-en.ts)
+- [x] Japanese G2P from EDICT2 (224,808 kanji->kana entries, via Build/scripts/build-g2p-jp.ts)
+- [x] Chinese (Mandarin) language module
+- [x] Phoneme alias map for cross-language compatibility
 
 ## Performance
 
