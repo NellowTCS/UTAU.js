@@ -37,7 +37,7 @@ export type PlayerEvent =
 
 /** Options for StreamPlayer.play(). */
 export interface PlayOptions {
-  /** Playback volume (0--1). */
+  /** Playback volume (0-1). */
   volume?: number;
   /** Output sample rate. Defaults to the AudioContext default. */
   sampleRate?: number;
@@ -75,7 +75,7 @@ export class StreamPlayer {
   private currentBatchStartSample = 0;
   private currentBatchDuration = 0;
 
-  /** Set the output volume (0--1). */
+  /** Set the output volume (0-1). */
   setVolume(v: number): void {
     if (this.gainNode) this.gainNode.gain.value = v;
   }

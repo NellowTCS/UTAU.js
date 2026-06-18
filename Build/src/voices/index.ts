@@ -63,9 +63,9 @@ export function scaleVoice(
     brightness?: number;
     /** Vibrato amount: 0 = none, 1 = full (multiplied against voice depth). */
     vibratoAmount?: number;
-    /** Direct open-quotient override (0.2--0.9). */
+    /** Direct open-quotient override (0.2-0.9). */
     oq?: number;
-    /** Direct speed-quotient override (0.3--3.0). */
+    /** Direct speed-quotient override (0.3-3.0). */
     sq?: number;
     /** Direct formant scale override. */
     fScale?: number;

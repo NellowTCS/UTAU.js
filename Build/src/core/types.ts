@@ -3,21 +3,21 @@
  *  model (Fant 1986, Liljencrants 1985). */
 export interface GlottalConfig {
   /** Open quotient: fraction of the glottal cycle the vocal folds are open.
-   *  Higher values produce a breathier, softer sound (0.2--0.9). */
+   *  Higher values produce a breathier, softer sound (0.2-0.9). */
   openQuotient: number;
   /** Speed quotient: ratio of the opening phase to the closing phase.
-   *  Higher values give a faster closure, increasing brightness (0.3--3.0). */
+   *  Higher values give a faster closure, increasing brightness (0.3-3.0). */
   speedQuotient: number;
   /** Spectral tilt control. Higher values attenuate high frequencies,
-   *  producing a darker timbre (0--1). */
+   *  producing a darker timbre (0-1). */
   tenseness: number;
   /** Aspiration noise level injected into the glottal source.
-   *  Higher values sound breathier (0--0.3). */
+   *  Higher values sound breathier (0-0.3). */
   aspiration: number;
-  /** Output gain multiplier for the glottal pulse (0--1). */
+  /** Output gain multiplier for the glottal pulse (0-1). */
   power: number;
   /** Pitch jitter / shimmer: random cycle-to-cycle variation in F0 and
-   *  amplitude. 0 = stable, ~0.03 = natural (0--0.05). */
+   *  amplitude. 0 = stable, ~0.03 = natural (0-0.05). */
   jitter?: number;
 }
 
@@ -40,9 +40,9 @@ export interface FormantConfig {
 /** Pitch-vibrato modulation envelope. Applied as a sinusoidal FM on the
  *  note fundamental frequency. */
 export interface VibratoConfig {
-  /** Vibrato rate in Hz (cycles per second). Typical range: 4--7. */
+  /** Vibrato rate in Hz (cycles per second). Typical range: 4-7. */
   rate: number;
-  /** Vibrato depth in cents. Typical range: 10--80. */
+  /** Vibrato depth in cents. Typical range: 10-80. */
   depth: number;
   /** Attack time in seconds: how long it takes for the vibrato to reach
    *  full depth after the note onset. 0 = instant. */
@@ -80,7 +80,7 @@ export interface FormantTarget {
 /** Noise source configuration for consonant generation.
  *  Used to specify aspiration, frication, and burst noise spectral shape. */
 export interface NoiseConfig {
-  /** Overall noise amplitude (0--1). */
+  /** Overall noise amplitude (0-1). */
   amplitude: number;
   /** Optional formant-shaping filters to colour the noise spectrum.
    *  Each target centres a resonator at the given frequency. */
@@ -137,7 +137,7 @@ export interface Note {
   /** Start tick position. If omitted, the renderer computes it from the
    *  previous note's position and duration. */
   tick?: number;
-  /** Velocity (0--127, MIDI convention). Not currently used by the renderer. */
+  /** Velocity (0-127, MIDI convention). Not currently used by the renderer. */
   velocity?: number;
   /** Intensity override. Not currently used by the renderer. */
   intensity?: number;
