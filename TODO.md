@@ -3,9 +3,8 @@
 ## Documentation
 
 - [ ] README: quickstart, API overview, architecture diagram
-- [X] JSDoc on all public exports
-- [ ] DocMD docs probably
-- [ ] API reference for VoiceConfig parameters and their perceptual effect
+- [X] DocMD docs probably
+- [X] API reference for VoiceConfig parameters and their perceptual effect
 
 ## Future
 

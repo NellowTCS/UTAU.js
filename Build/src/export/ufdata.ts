@@ -24,6 +24,8 @@ const FORMAT_GENERATORS: Record<string, string> = {
   midi: "generateStandardMid",
   musicxml: "generateMusicXml",
   xml: "generateMusicXml",
+  tssln: "generateTssln",
+  ust: "generateUst",
 };
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -99,16 +101,16 @@ function serializeUfData(data: unknown): Uint8Array {
   return new TextEncoder().encode(json);
 }
 
-let _generators: Record<string, (data: unknown, params?: { pitch?: boolean }) => Promise<Uint8Array>> | null = null;
+let _generators: Record<string, (data: unknown, params?: { pitch?: boolean }) => Promise<Uint8Array | Uint8Array[]>> | null = null;
 
 async function lazyInit(): Promise<void> {
   if (_generators) return;
   const m = await import("@sevenc-nanashi/utaformatix-ts/base");
-  const gens: Record<string, (data: unknown, params?: { pitch?: boolean }) => Promise<Uint8Array>> = {};
+  const gens: Record<string, (data: unknown, params?: { pitch?: boolean }) => Promise<Uint8Array | Uint8Array[]>> = {};
   for (const [ext, fnName] of Object.entries(FORMAT_GENERATORS)) {
     const fn = (m as Record<string, unknown>)[fnName];
     if (typeof fn === "function") {
-      gens[ext] = fn as (data: unknown, params?: { pitch?: boolean }) => Promise<Uint8Array>;
+      gens[ext] = fn as (data: unknown, params?: { pitch?: boolean }) => Promise<Uint8Array | Uint8Array[]>;
     }
   }
   _generators = gens;
@@ -131,7 +133,11 @@ export async function exportScoreToBytes(score: Score, options: ExportOptions = 
   await lazyInit();
   const gen = _generators?.[fmt];
   if (!gen) throw new Error(`Unsupported export format: ${fmt}`);
-  return gen(ufData, { pitch: options.pitch ?? true });
+  const result = await gen(ufData, { pitch: options.pitch ?? true });
+  if (Array.isArray(result)) {
+    return result[0] ?? new Uint8Array(0);
+  }
+  return result;
 }
 
 /** Export a Score to a Blob in the requested format. */
