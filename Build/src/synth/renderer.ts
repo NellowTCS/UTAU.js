@@ -1,6 +1,8 @@
 import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef, PitchBend, FormantTarget } from "../core/types";
 import { LFGlottalSource } from "../core/dsp/oscillator";
 import { FormantCascade, FormantFilter, interpolateFormants } from "../core/dsp/filter";
+
+const FORMANT_UPDATE_INTERVAL = Math.round(0.005 * 44100);
 function midiToFrequency(noteNum: number): number {
   return 440 * Math.pow(2, (noteNum - 69) / 12);
 }
@@ -175,6 +177,7 @@ export function renderNote(
   let prevPi = -1;
   let phSegStart = 0;
   let overallPeak = 1e-10;
+  let lastFormantUpdateSample = -FORMANT_UPDATE_INTERVAL; // force update on first sample
 
   const parallelFilters: FormantFilter[] = Array.from({ length: 3 }, () => new FormantFilter());
   for (const pf of parallelFilters) pf.setPassthrough();
@@ -186,6 +189,11 @@ export function renderNote(
     if (pi !== prevPi) {
       phSegStart = i;
       prevPi = pi;
+      // Reset cascade state when the phoneme changes. Without this, the
+      // filter's internal y1/y2/x1/x2 from the previous formant target
+      // would mix with the new coefficients and produce a wideband click
+      // at every phoneme boundary.
+      cascade.reset();
       const noiseTargets = cp.noise?.formantShaping ?? [];
       for (let fi = 0; fi < parallelFilters.length; fi++) {
         if (fi < noiseTargets.length) {
@@ -207,22 +215,26 @@ export function renderNote(
     const phDur = phSampleCounts[pi];
     const tt = Math.min(1, segPos / Math.max(1, transitionLen));
 
-    const ft = pp.formants ?? [];
-    const ct = cp.formants ?? ft;
-    if (tt < 1 && ft.length && ct.length) {
-      cascade.setFormants(
-        interpolateFormants(applyVoice(ft), applyVoice(ct), tt),
-        sr,
-        cp.antiformants ? applyVoice(cp.antiformants) : undefined,
-      );
-    } else if (cp.type === "diphthong" && cp.endFormants && cp.endFormants.length > 0) {
-      const sweepT = Math.min(1, (segPos - transitionLen) / Math.max(1, phDur - transitionLen));
-      const swept = interpolateFormants(applyVoice(ct), applyVoice(cp.endFormants), sweepT);
-      cascade.setFormants(swept, sr, cp.antiformants ? applyVoice(cp.antiformants) : undefined);
-    } else if (ct.length) {
-      cascade.setFormants(applyVoice(ct), sr, cp.antiformants ? applyVoice(cp.antiformants) : undefined);
-    } else {
-      cascade.setFormants(DEFAULT_FORMANTS, sr);
+    // Throttle formant coefficient updates.
+    if (i - lastFormantUpdateSample >= FORMANT_UPDATE_INTERVAL) {
+      lastFormantUpdateSample = i;
+      const ft = pp.formants ?? [];
+      const ct = cp.formants ?? ft;
+      if (tt < 1 && ft.length && ct.length) {
+        cascade.setFormants(
+          interpolateFormants(applyVoice(ft), applyVoice(ct), tt),
+          sr,
+          cp.antiformants ? applyVoice(cp.antiformants) : undefined,
+        );
+      } else if (cp.type === "diphthong" && cp.endFormants && cp.endFormants.length > 0) {
+        const sweepT = Math.min(1, (segPos - transitionLen) / Math.max(1, phDur - transitionLen));
+        const swept = interpolateFormants(applyVoice(ct), applyVoice(cp.endFormants), sweepT);
+        cascade.setFormants(swept, sr, cp.antiformants ? applyVoice(cp.antiformants) : undefined);
+      } else if (ct.length) {
+        cascade.setFormants(applyVoice(ct), sr, cp.antiformants ? applyVoice(cp.antiformants) : undefined);
+      } else {
+        cascade.setFormants(DEFAULT_FORMANTS, sr);
+      }
     }
 
     const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal });

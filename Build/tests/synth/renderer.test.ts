@@ -155,4 +155,47 @@ describe("renderNote", () => {
       expect(diff).toBeGreaterThan(0);
     });
   });
+
+  describe("signal quality", () => {
+    // Crude noise-content estimator
+    function hfProxyRatio(samples: Float32Array): number {
+      let sumSq = 0;
+      let sumSqDiff = 0;
+      let prev = 0;
+      for (let i = 0; i < samples.length; i++) {
+        sumSq += samples[i] * samples[i];
+        const d = samples[i] - prev;
+        sumSqDiff += d * d;
+        prev = samples[i];
+      }
+      const rms = Math.sqrt(sumSq / samples.length);
+      const rmsDiff = Math.sqrt(sumSqDiff / samples.length);
+      return rmsDiff / Math.max(rms, 1e-9);
+    }
+
+    it("long note stays in sample range and is finite throughout", () => {
+      // Baseline invariant, a long note should not crash, NaN, or clip.
+      const note: Note = { lyric: "a", noteNum: 60, length: 480 * 8, tick: 0 };
+      const { chunk } = renderNote(note, voice, lang, 120, 480);
+      for (const ch of chunk.data) {
+        for (const s of ch) {
+          expect(isFinite(s)).toBe(true);
+          expect(isNaN(s)).toBe(false);
+          expect(Math.abs(s)).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+
+    it("long note is not dominated by white noise", () => {
+      // Sanity check: a non-noisy signal has correlated adjacent samples.
+      const note: Note = { lyric: "a", noteNum: 60, length: 480 * 8, tick: 0 };
+      const { chunk } = renderNote(note, voice, lang, 120, 480);
+      // Skip the first 20% (attack transient).
+      const startIdx = Math.floor(chunk.data[0].length * 0.2);
+      const steady = chunk.data[0].slice(startIdx);
+      const ratio = hfProxyRatio(steady);
+      expect(ratio).toBeGreaterThan(0.05);
+      expect(ratio).toBeLessThan(0.8);
+    });
+  });
 });

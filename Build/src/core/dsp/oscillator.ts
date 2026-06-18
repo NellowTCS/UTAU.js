@@ -2,7 +2,6 @@ import type { GlottalSourceParams } from "../types";
 
 export class LFGlottalSource {
   private phase = 0;
-  private prevSample = 0;
   private dcX = 0;
   private dcY = 0;
   private jitterF0 = 0;
@@ -12,7 +11,6 @@ export class LFGlottalSource {
 
   reset(): void {
     this.phase = 0;
-    this.prevSample = 0;
     this.dcX = 0;
     this.dcY = 0;
     this.jitterF0 = 0;
@@ -48,7 +46,12 @@ export class LFGlottalSource {
       sample = -Math.sin(Math.PI * (1 - x * x * 0.5));
     } else if (t < tc) {
       const x = (t - te) / tn;
-      sample = -Math.exp(-epsilon * x * period);
+      // Real LF return phase: exponential decay modulated by sin(π·t/tn).
+      // The sin term makes the slope match the open phase at t=te (C¹
+      // continuity) and reach 0 at t=tc, killing the click at every pulse
+      // boundary. Without it, the exponential alone starts at -1 with
+      // non-zero slope → audible click on every glottal closure.
+      sample = -Math.exp(-epsilon * x * period) * Math.sin(Math.PI * x);
     } else {
       sample = 0;
     }
@@ -56,11 +59,12 @@ export class LFGlottalSource {
     const rawNoise = Math.random() * 2 - 1;
     this.noiseLP = this.noiseLP * 0.6 + rawNoise * 0.4;
     const breathyNoise = rawNoise - this.noiseLP;
+    // DC blocker: y[n] = x[n] - x[n-1] + R·y[n-1]
+    // The DC blocker below handles drift; an additional 0.8/0.2 smoother on
+    // prevSample would just low-pass the glottal pulse and phase-distort it.
     const rawSample = (sample * tilt * power + breathyNoise * aspiration * 0.15) * this.shimmerAmp;
-    const smoothed = rawSample * 0.8 + this.prevSample * 0.2;
-    this.prevSample = smoothed;
-    const centeredSample = smoothed - this.dcX + 0.995 * this.dcY;
-    this.dcX = smoothed;
+    const centeredSample = rawSample - this.dcX + 0.99 * this.dcY;
+    this.dcX = rawSample;
     this.dcY = centeredSample;
     this.phase++;
     if (this.phase >= period) this.phase -= period;
