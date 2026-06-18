@@ -16,7 +16,7 @@ export default defineConfig(() => {
     },
     server: { port: 5173, open: true },
     build: {
-      chunkSizeWarningLimit: isSingleFile ? 3000 : 500,
+      chunkSizeWarningLimit: isSingleFile ? 3000 : 13000,
     },
   };
 });
