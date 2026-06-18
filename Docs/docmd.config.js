@@ -1,6 +1,6 @@
 export default {
   title: "UTAU.js",
-  url: "https://nisoku.org/UTAU.js",
+  url: "https://nellowtcs.me/UTAU.js/docs",
   logo: { alt: "UTAU.js", href: "./" },
   favicon: "",
   theme: {
