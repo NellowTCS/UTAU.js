@@ -40,10 +40,11 @@
     "build:g2p": "npm run build:g2p:en && npm run build:g2p:jp",
     "build:g2p:en": "tsx scripts/build-g2p-en.ts",
     "build:g2p:jp": "tsx scripts/build-g2p-jp.ts",
+    "build:voicebank": "tsx scripts/build-voicebank.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --fix",
     "make-pretty": "prettier --write .",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -57,7 +58,7 @@
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "tsdown": "^0.22.2",
-    "tsx": "^4.22.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.61.0",
     "unrun": "^0.3.1"

@@ -1,5 +1,11 @@
-import type { PhonemeDef, LanguageModule } from "../core/types";
-import g2pData from "./data/jp-g2p.json";
+import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import { createRequire } from "node:module";
+
+// Loaded via createRequire so the g2p dictionary is read with Node's native CJS
+// JSON loader instead of an ESM-import transform. This sidesteps a tsx
+// regression that runs esbuild's JSON transform (emitting `var arguments = …`)
+// and then re-parses it as raw JSON, which throws on reserved-word keys.
+const g2pData = createRequire(import.meta.url)("./data/jp-g2p.json") as Record<string, string>;
 
 // Japanese phoneme data.
 //
@@ -527,6 +533,50 @@ function resolveAccents(lyrics: string[]): (number | undefined)[] {
   return result;
 }
 
+const CV_VOWELS = ["a", "i", "u", "e", "o"];
+
+/** Build the Japanese CV reclist: one sample per mora (consonant+vowel),
+ *  plus standalone vowels, the nasal ん ("n"), and the sokuon っ ("sil").
+ *  Aliases are romaji; duplicates (e.g. じ/ぢ -> "ji") are collapsed. */
+function buildJpCv(): ReclistEntry[] {
+  const map = new Map<string, ReclistEntry>();
+  for (const romaji of Object.values(hiraganaMap)) {
+    if (romaji === "sil") {
+      if (!map.has("sil")) map.set("sil", { alias: "sil", phonemes: ["sil"] });
+      continue;
+    }
+    const phonemes = romajiToPhonemes(romaji);
+    if (phonemes.length === 0) continue;
+    if (!map.has(romaji)) map.set(romaji, { alias: romaji, phonemes });
+  }
+  return [...map.values()];
+}
+
+/** Build the Japanese VCV reclist: leading vowels ("- a"), endings ("a -"),
+ *  vowel blends ("a i"), and every prev-vowel + mora connection ("a ka").
+ *  Morae are every CV alias whose first phoneme is not a standalone vowel. */
+function buildJpVcv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  const cv = buildJpCv();
+  const morae = cv.filter((e) => !CV_VOWELS.includes(e.phonemes[0]));
+
+  for (const v of CV_VOWELS) {
+    out.push({ alias: `- ${v}`, phonemes: [v] });
+    out.push({ alias: `${v} -`, phonemes: [v] });
+  }
+  for (const v1 of CV_VOWELS) {
+    for (const v2 of CV_VOWELS) {
+      out.push({ alias: `${v1} ${v2}`, phonemes: [v1, v2] });
+    }
+  }
+  for (const v of CV_VOWELS) {
+    for (const m of morae) {
+      out.push({ alias: `${v} ${m.alias}`, phonemes: [v, ...m.phonemes] });
+    }
+  }
+  return out;
+}
+
 /** Japanese language module with IPA-like phoneme inventory, hiragana/romaji
  *  conversion, and EDICT2-based kanji G2P. Handles pitch-accent resolution
  *  for prosody generation. */
@@ -555,4 +605,7 @@ export const japanese: LanguageModule = {
       .flatMap((p) => romajiToPhonemes(p));
   },
   resolveAccents,
+  reclist(style: ReclistStyle): ReclistEntry[] {
+    return style === "vcv" ? buildJpVcv() : buildJpCv();
+  },
 };

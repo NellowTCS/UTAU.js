@@ -1,4 +1,4 @@
-import type { PhonemeDef, LanguageModule } from "../core/types";
+import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
 
 // Mandarin Chinese (Pǔtōnghuà) phoneme data.
 //
@@ -494,6 +494,161 @@ function pinyinToPhonemes(syllable: string): string[] {
   return initial ? [initial, ...finalPhonemes] : finalPhonemes;
 }
 
+// Pinyin finals (after y/w normalisation). Used to enumerate syllables for
+// the voicebank reclists. Medial i/u/ü finals are listed in their phonemic
+// form (ia, ua, ve, ...); y/w spelling is restored by pinyinOrthography.
+const ZH_FINALS = [
+  "a",
+  "o",
+  "e",
+  "i",
+  "u",
+  "v",
+  "er",
+  "ai",
+  "ei",
+  "ao",
+  "ou",
+  "an",
+  "en",
+  "ang",
+  "eng",
+  "ong",
+  "ia",
+  "ie",
+  "iao",
+  "ian",
+  "iang",
+  "ing",
+  "iu",
+  "io",
+  "iong",
+  "in",
+  "ua",
+  "uo",
+  "uai",
+  "uan",
+  "uang",
+  "ui",
+  "un",
+  "ve",
+  "van",
+  "vn",
+];
+
+// Phonotactically valid onset sets per final ("" = zero onset). Encodes the
+// standard Putonghua onset-rime constraints so the reclist only contains real
+// syllables. (Apical syllables zhi/chi/shi/ri/zi/ci/si decompose to ir/iz and
+// are covered by the ir/iz finals contained in the phoneme inventory.)
+const ZH_FINAL_ONSETS: Record<string, string[]> = {
+  a: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  o: ["", "b", "p", "m", "f"],
+  e: ["", "m", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  i: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  u: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  v: ["", "n", "l", "j", "q", "x"],
+  er: [""],
+  ai: ["", "b", "p", "m", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "z", "c", "s"],
+  ei: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "z", "c", "s"],
+  ao: ["", "b", "p", "m", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ou: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  an: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  en: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ang: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  eng: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ong: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ia: ["", "d", "t", "n", "l", "j", "q", "x"],
+  ie: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  iao: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  ian: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  iang: ["", "n", "l", "j", "q", "x"],
+  ing: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  iu: ["", "d", "t", "n", "l", "j", "q", "x"],
+  io: [""],
+  iong: ["", "j", "q", "x"],
+  in: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  ua: ["", "g", "k", "h", "zh", "ch", "sh"],
+  uo: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  uai: ["", "g", "k", "h", "zh", "ch", "sh"],
+  uan: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  uang: ["", "g", "k", "h", "zh", "ch", "sh"],
+  ui: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  un: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ve: ["", "n", "l", "j", "q", "x"],
+  van: ["", "j", "q", "x"],
+  vn: ["", "j", "q", "x"],
+};
+
+// Nucleus vowels used as the "previous vowel" unit in VCV connections.
+const ZH_NUCLEUS = ["a", "o", "e", "i", "u", "v"];
+
+/** Render a (onset, final) pair in canonical pinyin orthography, applying the
+ *  y/w spelling rules for zero onsets (yi, wu, yu, yue, yun, yuan, ying, yang,
+ *  yong, wei, wen, wang, weng, you, wa, wo, yao, yan, yin, ...). */
+function pinyinOrthography(onset: string, final: string): string {
+  if (onset === "") {
+    if (final === "i") return "yi";
+    if (final === "u") return "wu";
+    if (final === "v") return "yu";
+    if (final === "ong") return "weng";
+    if (final === "ve") return "yue";
+    if (final === "vn") return "yun";
+    if (final === "van") return "yuan";
+    if (final.startsWith("i")) return "y" + final.slice(1);
+    if (final.startsWith("u")) return "w" + final.slice(1);
+    return final; // a, o, e, er
+  }
+  return onset + final;
+}
+
+/** Mandarin CV reclist: one sample per valid pinyin syllable (initial + final),
+ *  aliases in canonical pinyin orthography (e.g. "ni", "hao", "wo"). */
+function buildZhCv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const final of ZH_FINALS) {
+    for (const onset of ZH_FINAL_ONSETS[final] ?? []) {
+      const syllable = onset + final;
+      const phonemes = pinyinToPhonemes(syllable);
+      if (phonemes.length === 0) continue;
+      out.push({ alias: pinyinOrthography(onset, final), phonemes });
+    }
+  }
+  return out;
+}
+
+/** Mandarin VCV reclist: leading/ending finals, nucleus-vowel blends, and
+ *  connections from each nucleus vowel to every valid syllable. Uses the
+ *  nucleus set (a o e i u v) as the previous-vowel unit to keep the bank a
+ *  tractable size while still covering natural Mandarin transitions. */
+function buildZhVcv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const final of ZH_FINALS) {
+    const lead = pinyinOrthography("", final);
+    const leadPh = pinyinToPhonemes(final);
+    if (leadPh.length === 0) continue;
+    out.push({ alias: `- ${lead}`, phonemes: leadPh });
+    out.push({ alias: `${lead} -`, phonemes: leadPh });
+  }
+  for (const f1 of ZH_NUCLEUS) {
+    const p1 = pinyinToPhonemes(f1);
+    if (p1.length === 0) continue;
+    const a1 = pinyinOrthography("", f1);
+    for (const f2 of ZH_NUCLEUS) {
+      const p2 = pinyinToPhonemes(f2);
+      if (p2.length === 0) continue;
+      out.push({ alias: `${a1} ${pinyinOrthography("", f2)}`, phonemes: [...p1, ...p2] });
+    }
+    for (const final of ZH_FINALS) {
+      for (const onset of ZH_FINAL_ONSETS[final] ?? []) {
+        const sylPh = pinyinToPhonemes(onset + final);
+        if (sylPh.length === 0) continue;
+        out.push({ alias: `${a1} ${pinyinOrthography(onset, final)}`, phonemes: [...p1, ...sylPh] });
+      }
+    }
+  }
+  return out;
+}
+
 /** Mandarin Chinese (Putonghua) language module with pinyin-based phoneme
  *  inventory and full syllable decomposition (initial + final, including
  *  y/w spelling changes, apical vowels, and diphthong/triphthong codas).
@@ -513,5 +668,8 @@ export const mandarin: LanguageModule = {
     // Handle multi-syllable lyrics separated by spaces
     const syllables = noTone.split(/[\s_-]+/).filter(Boolean);
     return syllables.flatMap((syl) => pinyinToPhonemes(syl));
+  },
+  reclist(style: ReclistStyle): ReclistEntry[] {
+    return style === "vcv" ? buildZhVcv() : buildZhCv();
   },
 };

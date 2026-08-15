@@ -12,7 +12,8 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "cd Build && npx tsc --noEmit",
     "lint": "npm run lint --workspaces",
-    "make-pretty": "npm run make-pretty --workspaces"
+    "make-pretty": "npm run make-pretty --workspaces",
+    "build:voicebank": "npm run build:voicebank -w Build"
   },
   "license": "MIT"
 }

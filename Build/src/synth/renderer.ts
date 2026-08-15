@@ -89,40 +89,23 @@ function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number
   return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
 }
 
-/** Render a single note into an AudioChunk. Returns the audio data and the
- *  final formant targets of the last phoneme (for cross-note formant
- *  continuity).
- *
- *  Internally: lyric -> phoneme symbols (via lang.lyricToPhonemes) ->
- *  phoneme lookup -> LF glottal pulse -> formant cascade -> noise mix ->
- *  amplitude envelope -> normalisation.
+/** Render a single note from an already-resolved phoneme sequence.
+ *  Returns the audio chunk, the final formant targets of the last phoneme
+ *  (for cross-note continuity), and the start sample of each phoneme within
+ *  the chunk (used to compute voicebank slice points).
  *
  *  `prevFormants` provides the ending formant targets from the previous
  *  note for smooth formant transitions across note boundaries. */
-export function renderNote(
+export function renderPhonemes(
+  phonemes: PhonemeDef[],
   note: Note,
   voice: VoiceConfig,
-  lang: LanguageModule,
   tempo: number,
   resolution: number,
   prevFormants?: FormantTarget[],
-): { chunk: AudioChunk; finalFormants: FormantTarget[] } {
+): { chunk: AudioChunk; finalFormants: FormantTarget[]; phonemeStarts: number[] } {
   const sr = voice.sampleRate;
   const baseF0 = midiToFrequency(note.noteNum);
-  const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
-  const phonemes = phonemeSymbols
-    .map((s) => {
-      const p = lang.phonemes.get(s);
-      if (!p) console.warn(`renderNote: missing phoneme "${s}" in lyric "${note.lyric}"`);
-      return p;
-    })
-    .filter((p): p is NonNullable<typeof p> => p !== undefined);
-
-  // Handle note-join marker (＠): suppress the initial consonant so the
-  // vowel carries through as a continuation of the previous note.
-  if (note.lyric.includes("＠") && phonemes.length > 0 && phonemes[0].type === "consonant") {
-    phonemes.shift();
-  }
 
   const noteLen = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
   const fScale = voice.formant.scale;
@@ -147,7 +130,7 @@ export function renderNote(
       startSample: 0,
       channels: voice.channels,
     };
-    return { chunk, finalFormants: DEFAULT_FORMANTS };
+    return { chunk, finalFormants: DEFAULT_FORMANTS, phonemeStarts: [] };
   }
 
   const glottal = new LFGlottalSource();
@@ -309,9 +292,46 @@ export function renderNote(
     finalFormants = DEFAULT_FORMANTS;
   }
 
+  const phonemeStarts = new Array<number>(phonemes.length);
+  let acc = 0;
+  for (let pi = 0; pi < phonemes.length; pi++) {
+    phonemeStarts[pi] = acc;
+    acc += phSampleCounts[pi];
+  }
+
   const chunk: AudioChunk =
     voice.channels === 2
       ? { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 }
       : { data: [mono], sampleRate: sr, startSample: 0, channels: 1 };
-  return { chunk, finalFormants };
+  return { chunk, finalFormants, phonemeStarts };
+}
+
+/** Render a single note from a lyric string. Resolves phonemes via the
+ *  language module (`lang.lyricToPhonemes`), applies the note-join marker
+ *  (＠) rule, and delegates to `renderPhonemes`. Returns the same tuple plus
+ *  per-phoneme start samples. */
+export function renderNote(
+  note: Note,
+  voice: VoiceConfig,
+  lang: LanguageModule,
+  tempo: number,
+  resolution: number,
+  prevFormants?: FormantTarget[],
+): { chunk: AudioChunk; finalFormants: FormantTarget[]; phonemeStarts: number[] } {
+  const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
+  const phonemes = phonemeSymbols
+    .map((s) => {
+      const p = lang.phonemes.get(s);
+      if (!p) console.warn(`renderNote: missing phoneme "${s}" in lyric "${note.lyric}"`);
+      return p;
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+  // Handle note-join marker (＠): suppress the initial consonant so the
+  // vowel carries through as a continuation of the previous note.
+  if (note.lyric.includes("＠") && phonemes.length > 0 && phonemes[0].type === "consonant") {
+    phonemes.shift();
+  }
+
+  return renderPhonemes(phonemes, note, voice, tempo, resolution, prevFormants);
 }

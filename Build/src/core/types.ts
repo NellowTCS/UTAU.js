@@ -185,6 +185,21 @@ export interface AudioChunk {
   channels: number;
 }
 
+/** A single sample in a traditional (recorded) voicebank: the alias a user
+ *  types in a UST, plus the resolved phoneme sequence the engine renders for
+ *  it. `filename` defaults to `${alias}.wav` when omitted. */
+export interface ReclistEntry {
+  /** Alias typed in the UST (e.g. "ka", "a ka", "k AA", "a ba"). */
+  alias: string;
+  /** Resolved phoneme symbols, each present in the language's `phonemes` map. */
+  phonemes: string[];
+  /** Optional explicit wav filename; defaults to `${alias}.wav`. */
+  filename?: string;
+}
+
+/** Traditional voicebank styles supported by a reclist generator. */
+export type ReclistStyle = "cv" | "vcv";
+
 /** Interface for a language module: phoneme inventory, G2P conversion, and
  *  optional accent resolution. Each language registers its own module via
  *  `registerLanguage` or is selected by the built-in registry. */
@@ -203,6 +218,10 @@ export interface LanguageModule {
    *  and returns accent offsets in semitones per note. Used for Japanese
    *  pitch-accent. */
   resolveAccents?(lyrics: string[]): (number | undefined)[];
+  /** Optional reclist generator. Produces the alias/phoneme table needed to
+   *  bake a traditional voicebank for this language. Implementations are
+   *  expected to support at least "cv" and "vcv". */
+  reclist?(style: ReclistStyle): ReclistEntry[];
 }
 
 /** Runtime parameters passed to the glottal source for a single sample
