@@ -10,8 +10,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta name="generator" content="docmd v0.5.x">
+    <meta name="generator" content="docmd v0.8.17">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script>
+      var root = "./";
+      if (root && !root.endsWith('/')) root += '/';
+      if (root === '') root = './';
+      window.DOCMD_ROOT = root;
+
+      window.DOCMD_SITE_ROOT = "/UTAU.js/docs/";
+
+      window.DOCMD_APPEARANCE = "system";
+      window.DOCMD_VERSION_ROOT = "/";
+      window.DOCMD_BASE = "/UTAU.js/docs/";
+      window.DOCMD_LOCALE = "";
+      window.DOCMD_DEFAULT_LOCALE = "";
+    </script>
     <script>/**
  * --------------------------------------------------------------------
  * docmd : the zero-config documentation engine.
@@ -29,9 +44,27 @@
 (function () {
   try {
     // 1. Determine Theme
+    //
+    // Resolve from three sources, in priority order:
+    //   1. localStorage explicit user choice (light / dark)
+    //   2. window.DOCMD_APPEARANCE  (current canonical name, set by EJS templates)
+    //   3. window.DOCMD_DEFAULT_MODE (legacy alias kept for pre-0.8.7 outputs)
+    //   4. 'light' as the final fallback
+    //
+    // Note: localStorage is only honoured when it holds an explicit
+    // 'light' or 'dark' value. A stored 'system' value (from a prior
+    // session where the user picked "follow system") must NOT win over
+    // a freshly resolved config value — the resolved value will itself
+    // be 'system' in that case and the OS preference check below takes
+    // over, so this is a no-op for the in-session behaviour but keeps
+    // any future storage migration simple.
     var localValue = localStorage.getItem('docmd-theme');
-    var configValue = window.DOCMD_DEFAULT_MODE || 'light';
-    var theme = localValue ? localValue : configValue;
+    var configValue = window.DOCMD_APPEARANCE
+      || window.DOCMD_DEFAULT_MODE
+      || 'light';
+    var theme = (localValue === 'light' || localValue === 'dark')
+      ? localValue
+      : configValue;
 
     if (theme === 'system') {
       theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -65,32 +98,17 @@
         visibility: hidden;
       }
     </style>
-    
-    <script>
-      var root = "./";
-      if (root && !root.endsWith('/')) root += '/';
-      if (root === '') root = './';
-      window.DOCMD_ROOT = root;
-
-      var siteRoot = "./";
-      if (siteRoot && !siteRoot.endsWith('/')) siteRoot += '/';
-      if (siteRoot === '') siteRoot = './';
-      window.DOCMD_SITE_ROOT = siteRoot;
-
-      window.DOCMD_APPEARANCE = "system";
-      window.DOCMD_VERSION_ROOT = "/";
-      window.DOCMD_BASE = "/";
-      window.DOCMD_LOCALE = "";
-      window.DOCMD_DEFAULT_LOCALE = "";
-    </script>
     <title>
       UTAU.js
     </title>
     
-    <link rel="stylesheet" href="./assets/css/docmd-main.css?v=mstwp2dv">
     
-    <link rel="stylesheet" href="./assets/css/docmd-highlight-light.css?v=mstwp2dv" id="hljs-light" >
-    <link rel="stylesheet" href="./assets/css/docmd-highlight-dark.css?v=mstwp2dv" id="hljs-dark" disabled>
+
+    <link id="site-favicon" rel="icon" href="./assets/favicon.ico?v=mstx7dcj">
+    <link rel="stylesheet" href="./assets/css/docmd-main.css?v=mstx7dcj">
+    
+    <link rel="stylesheet" href="./assets/css/docmd-highlight-light.css?v=mstx7dcj" id="hljs-light" >
+    <link rel="stylesheet" href="./assets/css/docmd-highlight-dark.css?v=mstx7dcj" id="hljs-dark" disabled>
     
     
 <meta name="description" content="A speech-synthesis library for singing voice synthesis in the browser">
@@ -105,75 +123,28 @@
 
 
 
-<link rel="stylesheet" href="./assets/css/docmd-theme-ruby.css?v=mstwp2dv" >
-<link rel="stylesheet" href="./assets/css/docmd-git.css?v=mstwp2dv" >
-<link rel="stylesheet" href="./assets/css/docmd-openapi.css?v=mstwp2dv" >
+<link rel="stylesheet" href="./assets/css/docmd-theme-ruby.css?v=mstx7dcj" >
+<link rel="stylesheet" href="./assets/css/docmd-git.css?v=mstx7dcj" >
+<link rel="stylesheet" href="./assets/css/docmd-openapi.css?v=mstx7dcj" >
 
     
-      <link rel="stylesheet" href="./assets/css/theme.css?v=mstwp2dv">
+      <link rel="stylesheet" href="./assets/css/theme.css?v=mstx7dcj">
     
-    <script>/**
- * --------------------------------------------------------------------
- * docmd : the zero-config documentation engine.
- *
- * @package     @docmd/core (and ecosystem)
- * @website     https://docmd.io
- * @repository  https://github.com/docmd-io/docmd
- * @license     MIT
- * @copyright   Copyright (c) 2025-present docmd.io
- *
- * [docmd-source] - Please do not remove this header.
- * --------------------------------------------------------------------
- */
-
-(function () {
-  try {
-    // 1. Determine Theme
-    var localValue = localStorage.getItem('docmd-theme');
-    var configValue = window.DOCMD_DEFAULT_MODE || 'light';
-    var theme = localValue ? localValue : configValue;
-
-    if (theme === 'system') {
-      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    // 2. Apply to Root
-    document.documentElement.setAttribute('data-theme', theme);
-
-    // 3. Highlight.js Toggle Strategy
-    var lightLink = document.getElementById('hljs-light');
-    var darkLink = document.getElementById('hljs-dark');
-
-    if (lightLink && darkLink) {
-      if (theme === 'dark') {
-        lightLink.disabled = true;
-        darkLink.disabled = false;
-      } else {
-        lightLink.disabled = false;
-        darkLink.disabled = true;
-      }
-    }
-
-    document.documentElement.style.visibility = "visible";
-  } catch (e) {
-    document.documentElement.style.visibility = "visible";
-    console.error('Theme init failed', e);
-  }
-})();</script>
+    
   </head>
   <body
     class="sidebar-collapsible"
     data-default-collapsed="false"
     data-copy-code-enabled="true" data-spa-enabled="true" data-source-file="docs/index.md">
 
-    <a href="#main-content" class="skip-link">skipToContent</a>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
     
     
       <aside class="sidebar">
         <div class="sidebar-header">
           
-            <h1><a href="./">
+<h1><a href="./">
                 UTAU.js
               </a></h1>
           
@@ -206,7 +177,7 @@
         </div>
         
 
-<nav class="sidebar-nav" aria-label="mainNavigation">
+<nav class="sidebar-nav" aria-label="Main Navigation">
   <ul>
     
       <li class="active" >
@@ -730,6 +701,8 @@
         </div>
       </aside>
       
+      
+      
       <div class="main-content-wrapper">
         
         
@@ -737,7 +710,7 @@
             <div class="header-left">
               
                 <button id="sidebar-toggle-button" class="sidebar-toggle-button"
-                  aria-label="toggleSidebar">
+                  aria-label="Toggle Sidebar">
                   
 <svg class="lucide-icon icon-chevron-left " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-chevron-left"
@@ -769,7 +742,7 @@
 
 <div class="docmd-options-menu">
     
-    <button class="docmd-search-trigger" aria-label="search">
+    <button class="docmd-search-trigger" aria-label="Search">
         
 <svg class="lucide-icon icon-search " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-search"
@@ -787,7 +760,7 @@
   <circle cx="11" cy="11" r="8" />
 </svg>
 
-        <span class="search-label">search</span>
+        <span class="search-label">Search</span>
         <span class="search-keys"><kbd class="docmd-kbd">⌘</kbd><kbd class="docmd-kbd">K</kbd></span>
     </button>
     
@@ -797,7 +770,7 @@
     
 
     
-    <button class="theme-toggle-button" aria-label="toggleTheme">
+    <button class="theme-toggle-button" aria-label="Toggle theme">
         
 <svg class="lucide-icon icon-sun icon-sun" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-sun"
@@ -872,7 +845,7 @@
                   
                     <div class="docmd-copy-widgets">
                       
-                        <button class="docmd-copy-btn docmd-copy-raw-btn" data-copied="copiedToClipboard" title="copyMarkdown" aria-label="copyMarkdown">
+                        <button class="docmd-copy-btn docmd-copy-raw-btn" data-copied="Copied!" title="Copy Markdown" aria-label="Copy Markdown">
                           <span class="docmd-btn-icon">
 <svg class="lucide-icon icon-copy " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-copy"
@@ -893,7 +866,7 @@
                         </button>
                       
                       
-                        <button class="docmd-copy-btn docmd-copy-context-btn" data-copied="copiedToClipboard" title="copyContext">
+                        <button class="docmd-copy-btn docmd-copy-context-btn" data-copied="Copied!" title="Copy Context">
                           <span class="docmd-btn-icon">
 <svg class="lucide-icon icon-message-square " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-message-square"
@@ -910,7 +883,7 @@
   <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
 </svg>
 </span>
-                          <span class="docmd-btn-text">copyContext</span>
+                          <span class="docmd-btn-text">Copy Context</span>
                         </button>
                       
                     </div>
@@ -918,7 +891,7 @@
                 </div>
                 
                 <div class="docmd-hero hero-split hero-glow"><div class="hero-content">
-<!-- markdownlint-disable MD025 -->
+<p>&lt;!-- markdownlint-disable MD025 --&gt;</p>
 <h1>UTAU.js</h1>
 <p>A speech-synthesis library for singing voice synthesis in the browser.</p>
 <p><span class="docmd-tag">LF Glottal</span><br>
@@ -939,7 +912,7 @@
 >
   <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />
 </svg>
-Quick Start</a><!--markdownlint-disable MD034-->
+Quick Start</a><p>&lt;!–markdownlint-disable MD034–&gt;</p>
 <a href="https://github.com/NellowTCS/UTAU.js" class="docmd-button" target="_blank" rel="noopener noreferrer">
 <svg class="lucide-icon icon-github button-icon" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-github"
@@ -958,18 +931,14 @@ Quick Start</a><!--markdownlint-disable MD034-->
 </svg>
 GitHub</a></div>
 <div class="hero-side">
-<div class="docmd-container card"><div class="card-title">Why UTAU.js?</div><div class="card-content">
-<p>Traditional UTAU needs a separate voicebank for every character or style. Each one recorded, oto’d, and bundled individually. UTAU.js flips that: one parametric voice, infinite variation. Change gender, breathiness, brightness, or vibrato with a single function call. No thousand-voice library, no multi-gigabyte downloads.</p>
-</div></div>
-</div>
+<div class="docmd-container card"><div class="card-title">Why UTAU.js?</div><div class="card-content"><p>Traditional UTAU needs a separate voicebank for every character or style. Each one recorded, oto’d, and bundled individually. UTAU.js flips that: one parametric voice, infinite variation. Change gender, breathiness, brightness, or vibrato with a single function call. No thousand-voice library, no multi-gigabyte downloads.</p>
+</div></div></div>
 </div>
 <h2 id="features" class="docmd-heading"><a href="#features" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Features</h2>
 <div class="docmd-container grids">
 <div class="docmd-container grid-item">
-<div class="docmd-container card"><div class="card-title">LF Glottal Source</div><div class="card-content">
-<p>Liljencrants-Fant glottal pulse model with jitter, shimmer, aspiration noise, and DC blocking. Control OQ, SQ, tenseness, and power independently.</p>
-</div></div>
-</div>
+<div class="docmd-container card"><div class="card-title">LF Glottal Source</div><div class="card-content"><p>Liljencrants-Fant glottal pulse model with jitter, shimmer, aspiration noise, and DC blocking. Control OQ, SQ, tenseness, and power independently.</p>
+</div></div></div>
 <div class="docmd-container grid-item">
 <div class="docmd-container card"><div class="card-title">
 <svg class="lucide-icon icon-combine card-icon-heading" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
@@ -991,10 +960,8 @@ GitHub</a></div>
   <rect x="14" y="14" width="7" height="7" rx="1" />
   <rect x="3" y="3" width="7" height="7" rx="1" />
 </svg>
-Cascaded Formant Filter</div><div class="card-content">
-<p>Series of anti-resonators + resonators modelling the vocal-tract transfer function. Smooth interpolation between phoneme targets.</p>
-</div></div>
-</div>
+Cascaded Formant Filter</div><div class="card-content"><p>Series of anti-resonators + resonators modelling the vocal-tract transfer function. Smooth interpolation between phoneme targets.</p>
+</div></div></div>
 <div class="docmd-container grid-item">
 <div class="docmd-container card"><div class="card-title">
 <svg class="lucide-icon icon-globe card-icon-heading" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
@@ -1013,10 +980,8 @@ Cascaded Formant Filter</div><div class="card-content">
   <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
   <path d="M2 12h20" />
 </svg>
-Three Languages</div><div class="card-content">
-<p>English (ARPAbet + CMUDict G2P), Japanese (hiragana/romaji + EDICT2 kanji), Mandarin (pinyin syllable decomposition). Extensible via <code>registerLanguage</code>.</p>
-</div></div>
-</div>
+Three Languages</div><div class="card-content"><p>English (ARPAbet + CMUDict G2P), Japanese (hiragana/romaji + EDICT2 kanji), Mandarin (pinyin syllable decomposition). Extensible via <code>registerLanguage</code>.</p>
+</div></div></div>
 <div class="docmd-container grid-item">
 <div class="docmd-container card"><div class="card-title">
 <svg class="lucide-icon icon-wind card-icon-heading" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
@@ -1035,10 +1000,8 @@ Three Languages</div><div class="card-content">
   <path d="M17.5 8a2.5 2.5 0 1 1 2 4H2" />
   <path d="M9.8 4.4A2 2 0 1 1 11 8H2" />
 </svg>
-Streaming Playback</div><div class="card-content">
-<p>AsyncGenerator-based render pipeline. Play notes as they render via Web Audio with batching and buffer pooling.</p>
-</div></div>
-</div>
+Streaming Playback</div><div class="card-content"><p>AsyncGenerator-based render pipeline. Play notes as they render via Web Audio with batching and buffer pooling.</p>
+</div></div></div>
 <div class="docmd-container grid-item">
 <div class="docmd-container card"><div class="card-title">
 <svg class="lucide-icon icon-file-up card-icon-heading" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
@@ -1058,10 +1021,8 @@ Streaming Playback</div><div class="card-content">
   <path d="M12 12v6" />
   <path d="m15 15-3-3-3 3" />
 </svg>
-File Import / Export</div><div class="card-content">
-<p>Read and write UST, USTX, VPR, VSQX, MIDI, MusicXML, and more via utaformatix-3.</p>
-</div></div>
-</div>
+File Import / Export</div><div class="card-content"><p>Read and write UST, USTX, VPR, VSQX, MIDI, MusicXML, and more via utaformatix-3.</p>
+</div></div></div>
 <div class="docmd-container grid-item">
 <div class="docmd-container card"><div class="card-title">
 <svg class="lucide-icon icon-sliders card-icon-heading" width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
@@ -1086,14 +1047,12 @@ File Import / Export</div><div class="card-content">
   <path d="M5 10V3" />
   <path d="M5 21v-7" />
 </svg>
-OneVoice System</div><div class="card-content">
-<p>One parametric voice, infinite variations. Male, female, breathy, bright, tense. All from a single config. <code>scaleVoice()</code> maps high-level sliders (gender, breathiness, brightness, tension) to the underlying DSP parameters.</p>
-</div></div>
-</div>
+OneVoice System</div><div class="card-content"><p>One parametric voice, infinite variations. Male, female, breathy, bright, tense. All from a single config. <code>scaleVoice()</code> maps high-level sliders (gender, breathiness, brightness, tension) to the underlying DSP parameters.</p>
+</div></div></div>
 </div>
 <h2 id="quick-example" class="docmd-heading"><a href="#quick-example" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Quick Example</h2>
 <div class="docmd-tabs">
-<div class="docmd-tabs-nav"><div class="docmd-tabs-nav-item active"><span>Node.js</span></div><div class="docmd-tabs-nav-item "><span>Browser</span></div><div class="docmd-tabs-nav-item "><span>Custom Voice</span></div></div><div class="docmd-tabs-content"><div class="docmd-tab-pane active"><pre class="hljs"><code><span class="hljs-keyword">import</span> { renderScore, femaleVoice, japanese, encodeWav } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utau.js&quot;</span>;
+<div class="docmd-tabs-nav"><div class="docmd-tabs-nav-item active"><span>Node.js</span></div><div class="docmd-tabs-nav-item "><span>Browser</span></div><div class="docmd-tabs-nav-item "><span>Custom Voice</span></div></div><div class="docmd-tabs-content"><div class="docmd-tab-pane active"><pre class="hljs"><code class="language-typescript"><span class="hljs-keyword">import</span> { renderScore, femaleVoice, japanese, encodeWav } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utau.js&quot;</span>;
 <span class="hljs-keyword">import</span> { writeFileSync } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;node:fs&quot;</span>;
 
 <span class="hljs-keyword">const</span> score <span class="hljs-punctuation">=</span> {
@@ -1112,7 +1071,7 @@ OneVoice System</div><div class="card-content">
 <span class="hljs-keyword">const</span> wav <span class="hljs-punctuation">=</span> <span class="hljs-title function_">encodeWav</span>(chunks);
 <span class="hljs-title function_">writeFileSync</span>(<span class="hljs-string">&quot;hello.wav&quot;</span>, Buffer.<span class="hljs-keyword">from</span>(wav));
 </code></pre>
-</div><div class="docmd-tab-pane "><pre class="hljs"><code><span class="hljs-keyword">import</span> { streamScore, femaleVoice, japanese, StreamPlayer } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utau.js&quot;</span>;
+</div><div class="docmd-tab-pane "><pre class="hljs"><code class="language-typescript"><span class="hljs-keyword">import</span> { streamScore, femaleVoice, japanese, StreamPlayer } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utau.js&quot;</span>;
 
 <span class="hljs-keyword">const</span> score <span class="hljs-punctuation">=</span> { <span class="hljs-comment">/* ... */</span> };
 <span class="hljs-keyword">const</span> player <span class="hljs-punctuation">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title function_">StreamPlayer</span>();
@@ -1124,7 +1083,7 @@ player.<span class="hljs-title function_">on</span>((event) <span class="hljs-pu
 
 <span class="hljs-keyword">await</span> player.<span class="hljs-title function_">play</span>(<span class="hljs-title function_">streamScore</span>(score, femaleVoice, <span class="hljs-string">&quot;jp&quot;</span>));
 </code></pre>
-</div><div class="docmd-tab-pane "><pre class="hljs"><code><span class="hljs-keyword">import</span> { renderScore, buildVoice, scaleVoice, encodeWav } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utau.js&quot;</span>;
+</div><div class="docmd-tab-pane "><pre class="hljs"><code class="language-typescript"><span class="hljs-keyword">import</span> { renderScore, buildVoice, scaleVoice, encodeWav } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;utau.js&quot;</span>;
 
 <span class="hljs-keyword">const</span> brightFemale <span class="hljs-punctuation">=</span> <span class="hljs-title function_">scaleVoice</span>(<span class="hljs-title function_">buildVoice</span>({
   name<span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Bright Alto&quot;</span>,
@@ -1138,7 +1097,7 @@ player.<span class="hljs-title function_">on</span>((event) <span class="hljs-pu
 <span class="hljs-keyword">const</span> chunks <span class="hljs-punctuation">=</span> <span class="hljs-keyword">await</span> <span class="hljs-title function_">renderScore</span>(score, brightFemale, <span class="hljs-string">&quot;en&quot;</span>);
 </code></pre>
 </div></div></div><h2 id="installation" class="docmd-heading"><a href="#installation" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Installation</h2>
-<pre class="hljs"><code><span class="hljs-keyword">npm</span> install utaujs
+<pre class="hljs"><code class="language-bash"><span class="hljs-keyword">npm</span> install utaujs
 </code></pre>
 <h2 id="next-steps" class="docmd-heading"><a href="#next-steps" class="heading-anchor" aria-label="Permalink to this section"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-icon lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 0h2a5 5 0 1 1 0 10h-2m-7-5h8"/></svg></a>Next Steps</h2>
 <div class="docmd-container grids">
@@ -1267,7 +1226,7 @@ Voice Config</a></div>
                     
                     
                       <a href="./getting-started/quickstart/" class="next-page">
-                        <span><small>next</small>
+                        <span><small>Next</small>
                           <strong>
                             Quick Start
                           </strong></span>
@@ -1293,12 +1252,13 @@ Voice Config</a></div>
                   </div>
                 
               </div>
+              
               <div class="toc-sidebar">
                 
 
 
   <div class="toc-container">
-    <h2 class="toc-title">onThisPage<span class="mobile-view toc-menu-button float-right">
+    <h2 class="toc-title">On This Page<span class="mobile-view toc-menu-button float-right">
 <svg class="lucide-icon icon-chevron-down " width="1em" height="1em" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"
   class="lucide lucide-chevron-down"
   xmlns="http://www.w3.org/2000/svg"
@@ -1336,17 +1296,18 @@ Voice Config</a></div>
   </div>
 
               </div>
+              
             </div>
             <div class="page-footer-actions">
               
               
-                <span class="git-last-updated" data-timestamp="1786769902000">
+                <span class="git-last-updated" data-timestamp="1786770748000">
                   <svg class="git-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
                   <span class="git-label">Last updated:</span>
-                  <span class="git-time" data-timestamp="1786769902000"></span>
+                  <span class="git-time" data-timestamp="1786770748000"></span>
                   
                   <div class="git-commit-tooltip" role="tooltip">
                     <div class="git-tooltip-title">Recent commits</div>
@@ -1359,10 +1320,10 @@ Voice Config</a></div>
                             
                           </div>
                           <div class="git-commit-details">
-                            <div class="git-commit-message" title="npm audit fix">npm audit fix</div>
+                            <div class="git-commit-message" title="npm audit fix x2">npm audit fix x2</div>
                             <div class="git-commit-meta">
                               <span class="git-commit-author">NellowTCS</span>
-                              <span class="git-commit-date" data-timestamp="1786769902000"></span>
+                              <span class="git-commit-date" data-timestamp="1786770748000"></span>
                             </div>
                           </div>
                         </li>
@@ -1446,7 +1407,7 @@ Voice Config</a></div>
         <div class="user-footer">Built with <a href="https://docmd.io">docmd</a>. <a href="https://github.com/NellowTCS/UTAU.js">View on GitHub</a>.</div>
         
           <div class="branding-footer">
-            builtWith <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.io" target="_blank" rel="noopener">docmd.</a>
+            Built with <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.io" target="_blank" rel="noopener">docmd.</a>
           </div>
         
       </div>
@@ -1455,20 +1416,21 @@ Voice Config</a></div>
         </div>
       </div>
       
-      <script src="./assets/js/docmd-main.js?v=mstwp2dv"></script>
+      <script src="./assets/js/docmd-main.js?v=mstx7dcj"></script>
       
-      <script src="./assets/js/docmd-git.js?v=mstwp2dv"></script>
-      <script src="./assets/js/docmd-image-lightbox.js?v=mstwp2dv" ></script>
-<script src="https://cdn.jsdelivr.net/npm/minisearch@7.2.0/dist/umd/index.min.js" ></script>
-<script src="./assets/js/docmd-search.js?v=mstwp2dv" ></script>
-<script src="./assets/js/init-mermaid.js?v=mstwp2dv" type="module"></script>
-<script src="./assets/js/docmd-git.js?v=mstwp2dv" type="module"></script>
+      <script src="./assets/js/docmd-git.js?v=mstx7dcj"></script>
+      <script src="./assets/js/docmd-image-lightbox.js?v=mstx7dcj" ></script>
+<script src="./assets/js/vendor/minisearch.js?v=mstx7dcj" ></script>
+<script src="./assets/js/docmd-search.js?v=mstx7dcj" ></script>
+<script src="./assets/js/docmd-git.js?v=mstx7dcj" type="module"></script>
 
   <!-- Search Modal (Injected by @docmd/plugin-search) -->
-  <div id="docmd-search-modal" class="docmd-search-modal" style="display: none;" data-semantic="true" data-show-confidence="true" data-show-filters="true"
+  <div id="docmd-search-modal" data-semantic="true" class="docmd-search-modal" style="display: none;" data-show-confidence="true" data-show-filters="true"
        data-search-placeholder="Search documentation..."
        data-search-no-results="No results found."
        data-search-error="Failed to load search index."
+       data-search-offline="Search requires a web server. Open this site via http://localhost instead of file:// to enable search."
+       data-search-offline-build="Search is disabled because these docs were built with the --offline flag. Rebuild the site without the flag to enable search."
        data-search-initial="Type to start searching..."
        data-search-navigate="to navigate"
        data-search-escape="to close">
@@ -1536,6 +1498,8 @@ Voice Config</a></div>
     </script>
 
 <script>window.__git_config={"repo":"https://github.com/NellowTCS/UTAU.js/edit/main/","branch":"main","editLink":true,"lastUpdated":true,"commitHistory":true,"maxCommits":5,"dateFormat":"relative"};window.__git_i18n={"lastUpdated":"Last updated","recentCommits":"Recent commits","viewCommitHistory":"View commit history","editOnGitHub":"Edit on GitHub","editOnGitLab":"Edit on GitLab","editOnBitbucket":"Edit on Bitbucket","editThisPage":"Edit this page","justNow":"just now","minutesAgo":"{n}m ago","hoursAgo":"{n}h ago","daysAgo":"{n}d ago"}</script>
+      
+      
       
   </body>
 </html>

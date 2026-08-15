@@ -1,0 +1,133 @@
+{
+  "okf_version": "0.8.17",
+  "bundle": {
+    "name": "utau-js",
+    "title": "UTAU.js",
+    "description": "",
+    "url": "https://nellowtcs.me/UTAU.js/docs",
+    "generated_by": "@docmd/plugin-okf",
+    "generated_at": "2026-08-15T05:13:33.416Z",
+    "default_type": "concept"
+  },
+  "stats": {
+    "concepts": 11,
+    "by_type": {
+      "api": 4,
+      "concept": 7
+    },
+    "locales": [],
+    "versions": []
+  },
+  "concepts": [
+    {
+      "id": "api-dsp",
+      "type": "api",
+      "title": "DSP Primitives",
+      "path": "/api/dsp/",
+      "file": "concepts/api-dsp.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "api-import-export",
+      "type": "api",
+      "title": "Import / Export",
+      "path": "/api/import-export/",
+      "file": "concepts/api-import-export.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "api",
+      "type": "api",
+      "title": "API Reference",
+      "path": "/api/",
+      "file": "concepts/api.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "api-voice-config",
+      "type": "api",
+      "title": "VoiceConfig Reference",
+      "path": "/api/voice-config/",
+      "file": "concepts/api-voice-config.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "getting-started-concepts",
+      "type": "concept",
+      "title": "Core Concepts",
+      "path": "/getting-started/concepts/",
+      "file": "concepts/getting-started-concepts.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "getting-started-installation",
+      "type": "concept",
+      "title": "Installation",
+      "path": "/getting-started/installation/",
+      "file": "concepts/getting-started-installation.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "getting-started-quickstart",
+      "type": "concept",
+      "title": "Quick Start",
+      "path": "/getting-started/quickstart/",
+      "file": "concepts/getting-started-quickstart.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "guide-architecture",
+      "type": "concept",
+      "title": "Architecture",
+      "path": "/guide/architecture/",
+      "file": "concepts/guide-architecture.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "guide-languages",
+      "type": "concept",
+      "title": "Languages",
+      "path": "/guide/languages/",
+      "file": "concepts/guide-languages.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "guide-renderer",
+      "type": "concept",
+      "title": "Renderer",
+      "path": "/guide/renderer/",
+      "file": "concepts/guide-renderer.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    },
+    {
+      "id": "root",
+      "type": "concept",
+      "title": "UTAU.js",
+      "path": "/",
+      "file": "concepts/root.md",
+      "locale": "",
+      "version": "",
+      "tags": []
+    }
+  ]
+}

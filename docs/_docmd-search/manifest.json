@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "model": "Xenova/all-MiniLM-L6-v2",
+  "dimensions": 384,
+  "status": "complete",
+  "totalFiles": 11,
+  "indexedFiles": 11,
+  "totalChunks": 99,
+  "batchCount": 1,
+  "files": {
+    "api/dsp.md": {
+      "mtime": 1786770760179.237,
+      "size": 3006,
+      "batches": []
+    },
+    "api/import-export.md": {
+      "mtime": 1786770760179.2764,
+      "size": 2856,
+      "batches": []
+    },
+    "api/index.md": {
+      "mtime": 1786770760179.2764,
+      "size": 5650,
+      "batches": []
+    },
+    "api/voice-config.md": {
+      "mtime": 1786770760179.2764,
+      "size": 8316,
+      "batches": []
+    },
+    "getting-started/concepts.md": {
+      "mtime": 1786770760179.2764,
+      "size": 2993,
+      "batches": []
+    },
+    "getting-started/installation.md": {
+      "mtime": 1786770760179.4429,
+      "size": 713,
+      "batches": []
+    },
+    "getting-started/quickstart.md": {
+      "mtime": 1786770760179.4429,
+      "size": 3565,
+      "batches": []
+    },
+    "guide/architecture.md": {
+      "mtime": 1786770760179.4429,
+      "size": 2355,
+      "batches": []
+    },
+    "guide/languages.md": {
+      "mtime": 1786770760179.5383,
+      "size": 2823,
+      "batches": []
+    },
+    "guide/renderer.md": {
+      "mtime": 1786770760179.5383,
+      "size": 2899,
+      "batches": []
+    },
+    "index.md": {
+      "mtime": 1786770760179.5383,
+      "size": 4227,
+      "batches": []
+    }
+  }
+}

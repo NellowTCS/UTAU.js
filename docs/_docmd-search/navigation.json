@@ -1,0 +1,66 @@
+{
+  "tree": [
+    {
+      "title": "Api",
+      "path": "api",
+      "children": [
+        {
+          "title": "Dsp",
+          "path": "api/dsp.md"
+        },
+        {
+          "title": "Import Export",
+          "path": "api/import-export.md"
+        },
+        {
+          "title": "Index",
+          "path": "api/index.md"
+        },
+        {
+          "title": "Voice Config",
+          "path": "api/voice-config.md"
+        }
+      ]
+    },
+    {
+      "title": "Getting Started",
+      "path": "getting-started",
+      "children": [
+        {
+          "title": "Concepts",
+          "path": "getting-started/concepts.md"
+        },
+        {
+          "title": "Installation",
+          "path": "getting-started/installation.md"
+        },
+        {
+          "title": "Quickstart",
+          "path": "getting-started/quickstart.md"
+        }
+      ]
+    },
+    {
+      "title": "Guide",
+      "path": "guide",
+      "children": [
+        {
+          "title": "Architecture",
+          "path": "guide/architecture.md"
+        },
+        {
+          "title": "Languages",
+          "path": "guide/languages.md"
+        },
+        {
+          "title": "Renderer",
+          "path": "guide/renderer.md"
+        }
+      ]
+    },
+    {
+      "title": "Index",
+      "path": "index.md"
+    }
+  ]
+}
