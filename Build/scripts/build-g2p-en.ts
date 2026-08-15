@@ -12,7 +12,8 @@
  *   - Lines starting with `#` are comments. Entries like `abbrev`, `dutch`,
  *     `german`, etc. are pronunciation-class tags, not real words.
  *
- * Output: src/langs/data/en-g2p.json - { "WORD": ["PHONEME", ...], ... }
+ * Output: src/langs/data/en-g2p.mjs - `export default { "WORD": ["PHONEME", ...], ... }`
+ *         (src/langs/data/en-g2p.json is also written for tooling/back-compat)
  *
  * Run as:  npm run build:g2p
  *   (also called by the `build` and `dev` scripts so the JSON is
@@ -97,7 +98,10 @@ function main() {
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(obj));
 
-  console.log(`[build-g2p-en] wrote ${keys.length} entries to ${OUT_PATH}`);
+  const mjsPath = OUT_PATH.replace(/\.json$/, ".mjs");
+  writeFileSync(mjsPath, `export default ${JSON.stringify(obj)};\n`);
+
+  console.log(`[build-g2p-en] wrote ${keys.length} entries to ${mjsPath}`);
 }
 
 main();

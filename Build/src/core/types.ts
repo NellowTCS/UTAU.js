@@ -65,6 +65,13 @@ export interface VoiceConfig {
   sampleRate: number;
   /** Number of output channels: 1 = mono, 2 = stereo (identical channels). */
   channels: 1 | 2;
+  /** Note volume multiplier, 0..200. */
+  volume?: number;
+  /** Normalization strength 0..100.
+   *  0 keeps the engine's source level; 100 fully peak-normalizes to `normalizeTarget`. */
+  peakComp?: number;
+  /** Target reference peak amplitude at full normalization. */
+  normalizeTarget?: number;
 }
 
 /** A single formant target: centre frequency and bandwidth. Used in arrays

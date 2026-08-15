@@ -11,6 +11,21 @@ function ticksToDuration(tickLen: number, tempo: number, resolution: number, sam
   return tickLen * (60 / (tempo * resolution)) * sampleRate;
 }
 
+/* Per-note leveling */
+function computeAutoGain(
+  peak: number,
+  voicedRatio: number,
+  peakComp: number,
+  volume: number,
+  target: number,
+): number {
+  const weight = 1 / (1 + Math.exp(5 - 10 * voicedRatio));
+  const ref = peak * weight + peak * (1 - weight);
+  const volGain = volume * 0.01;
+  const autoGain = ref === 0 ? 1 : Math.pow(target / ref, peakComp * 0.01);
+  return autoGain * volGain;
+}
+
 function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, totalSamples: number, noteLenTicks: number): number {
   if (!bend || bend.ticks.length === 0) return 0;
   const tickPos = (sampleIdx / totalSamples) * noteLenTicks;
@@ -170,6 +185,7 @@ export function renderPhonemes(
   let prevPi = -1;
   let phSegStart = 0;
   let overallPeak = 1e-10;
+  let voicedSamples = 0;
   let lastFormantUpdateSample = -FORMANT_UPDATE_INTERVAL; // force update on first sample
   const aspirationLpPole = Math.exp((-2 * Math.PI * 4000) / sr);
   let aspirationLpState = 0;
@@ -236,6 +252,7 @@ export function renderPhonemes(
 
     const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal });
     const voiced = cp.voiced !== false;
+    if (voiced) voicedSamples++;
     const nSample = Math.random() * 2 - 1;
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
@@ -279,8 +296,15 @@ export function renderPhonemes(
     if (Math.abs(enveloped) > overallPeak) overallPeak = Math.abs(enveloped);
   }
 
-  const gain = Math.min(100, 0.4 / Math.max(1e-6, overallPeak));
-  for (let i = 0; i < noteLen; i++) mono[i] *= gain;
+  const voicedRatio = noteLen > 0 ? voicedSamples / noteLen : 1;
+  const volume = voice.volume ?? 100;
+  const peakComp = voice.peakComp ?? 100;
+  const target = voice.normalizeTarget ?? 0.5;
+  const gain = computeAutoGain(overallPeak, voicedRatio, peakComp, volume, target);
+  for (let i = 0; i < noteLen; i++) {
+    const s = mono[i] * gain;
+    mono[i] = s > 0.99 ? 0.99 : s < -0.99 ? -0.99 : s;
+  }
 
   const lastPh = phonemes[phonemes.length - 1];
   let finalFormants: FormantTarget[];

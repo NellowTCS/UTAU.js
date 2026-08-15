@@ -1,11 +1,5 @@
 import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
-import { createRequire } from "node:module";
-
-// Loaded via createRequire so the g2p dictionary is read with Node's native CJS
-// JSON loader instead of an ESM-import transform. This sidesteps a tsx
-// regression that runs esbuild's JSON transform (emitting `var arguments = …`)
-// and then re-parses it as raw JSON, which throws on reserved-word keys.
-const g2pData = createRequire(import.meta.url)("./data/jp-g2p.json") as Record<string, string>;
+import g2pData from "./data/jp-g2p.mjs";
 
 // Japanese phoneme data.
 //

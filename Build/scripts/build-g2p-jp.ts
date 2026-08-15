@@ -15,7 +15,8 @@
  * a kana headword (no kanji) are skipped since the existing module
  * handles pure kana/romaji input via its conversion rules.
  *
- * Output: src/langs/data/jp-g2p.json - { "食べる": "たべる", ... }
+ * Output: src/langs/data/jp-g2p.mjs - `export default { "食べる": "たべる", ... }`
+ *         (src/langs/data/jp-g2p.json is also written for tooling/back-compat)
  *
  * Run as:  npm run build:g2p:jp
  */
@@ -98,7 +99,10 @@ function main() {
 
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(obj));
-  console.log(`[build-g2p-jp] wrote ${keys.length} entries to ${OUT_PATH}`);
+
+  const mjsPath = OUT_PATH.replace(/\.json$/, ".mjs");
+  writeFileSync(mjsPath, `export default ${JSON.stringify(obj)};\n`);
+  console.log(`[build-g2p-jp] wrote ${keys.length} entries to ${mjsPath}`);
 }
 
 main();
