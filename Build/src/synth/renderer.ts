@@ -1,6 +1,7 @@
 import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef, PitchBend, FormantTarget } from "../core/types";
 import { LFGlottalSource } from "../core/dsp/oscillator";
 import { FormantCascade, FormantFilter, interpolateFormants } from "../core/dsp/filter";
+import { hashNote, mulberry32 } from "../core/rng";
 
 const FORMANT_UPDATE_INTERVAL = Math.round(0.005 * 44100);
 function midiToFrequency(noteNum: number): number {
@@ -12,13 +13,7 @@ function ticksToDuration(tickLen: number, tempo: number, resolution: number, sam
 }
 
 /* Per-note leveling */
-function computeAutoGain(
-  peak: number,
-  voicedRatio: number,
-  peakComp: number,
-  volume: number,
-  target: number,
-): number {
+function computeAutoGain(peak: number, voicedRatio: number, peakComp: number, volume: number, target: number): number {
   const weight = 1 / (1 + Math.exp(5 - 10 * voicedRatio));
   const ref = peak * weight + peak * (1 - weight);
   const volGain = volume * 0.01;
@@ -149,6 +144,9 @@ export function renderPhonemes(
   }
 
   const glottal = new LFGlottalSource();
+  const seedBase = hashNote(note, `${tempo}:${resolution}:${phonemes.map((p) => p.symbol).join(",")}`);
+  const rng = mulberry32(seedBase);
+  glottal.seed(rng);
   const cascade = new FormantCascade();
 
   const mono = new Float32Array(noteLen);
@@ -187,11 +185,24 @@ export function renderPhonemes(
   let overallPeak = 1e-10;
   let voicedSamples = 0;
   let lastFormantUpdateSample = -FORMANT_UPDATE_INTERVAL; // force update on first sample
-  const aspirationLpPole = Math.exp((-2 * Math.PI * 4000) / sr);
-  let aspirationLpState = 0;
-
   const parallelFilters: FormantFilter[] = Array.from({ length: 3 }, () => new FormantFilter());
   for (const pf of parallelFilters) pf.setPassthrough();
+
+  // Klatt-style parallel aspiration branch: glottal breath is shaped by a
+  // fixed broadband formant pair and summed *after* the voiced cascade, so it
+  // is independent of the vowel formants (unlike the old pre-cascade injection).
+  const breathFilters: FormantFilter[] = [
+    (() => {
+      const f = new FormantFilter();
+      f.setResonator(1800, 1200, sr);
+      return f;
+    })(),
+    (() => {
+      const f = new FormantFilter();
+      f.setResonator(3500, 1800, sr);
+      return f;
+    })(),
+  ];
 
   for (let i = 0; i < noteLen; i++) {
     const pi = piAtSample[i];
@@ -216,6 +227,7 @@ export function renderPhonemes(
           parallelFilters[fi].setPassthrough();
         }
       }
+      for (const bf of breathFilters) bf.reset();
     }
 
     const vibGain = i < vibAttackSamp ? i / vibAttackSamp : 1;
@@ -253,7 +265,7 @@ export function renderPhonemes(
     const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal });
     const voiced = cp.voiced !== false;
     if (voiced) voicedSamples++;
-    const nSample = Math.random() * 2 - 1;
+    const nSample = rng() * 2 - 1;
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
     const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)));
@@ -274,10 +286,12 @@ export function renderPhonemes(
       }
       noiseSignal *= cp.noise.amplitude * noiseEnv;
     }
+    let breathSignal = 0;
     if (cp.type === "vowel" || cp.type === "diphthong") {
-      // Low-pass the aspiration noise so it stays in the natural band
-      aspirationLpState = aspirationLpState * aspirationLpPole + nSample * (1 - aspirationLpPole);
-      glottalSignal += aspirationLpState * voice.glottal.aspiration * 0.3 * noiseEnv;
+      // Parallel aspiration branch (broadband breath), summed post-cascade.
+      let breath = 0;
+      for (const bf of breathFilters) breath += bf.processSample(nSample);
+      breathSignal = breath * voice.glottal.aspiration * 0.5 * noiseEnv;
     }
 
     const phEnv = phEnvelopes[pi];
@@ -291,7 +305,7 @@ export function renderPhonemes(
       env *= t * t * (3 - 2 * t);
     }
     const cascaded = cascade.processSample(glottalSignal);
-    const enveloped = (cascaded + noiseSignal) * env;
+    const enveloped = (cascaded + noiseSignal + breathSignal) * env;
     mono[i] = enveloped;
     if (Math.abs(enveloped) > overallPeak) overallPeak = Math.abs(enveloped);
   }

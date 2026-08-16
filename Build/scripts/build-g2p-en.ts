@@ -12,14 +12,15 @@
  *   - Lines starting with `#` are comments. Entries like `abbrev`, `dutch`,
  *     `german`, etc. are pronunciation-class tags, not real words.
  *
- * Output: src/langs/data/en-g2p.mjs - `export default { "WORD": ["PHONEME", ...], ... }`
+ * Output: src/langs/data/en-g2p.cjs - `module.exports = { "WORD": [...], ... }`
  *         (src/langs/data/en-g2p.json is also written for tooling/back-compat)
+ *
  *
  * Run as:  npm run build:g2p
  *   (also called by the `build` and `dev` scripts so the JSON is
  *    regenerated on every dev iteration)
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -98,10 +99,12 @@ function main() {
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(obj));
 
-  const mjsPath = OUT_PATH.replace(/\.json$/, ".mjs");
-  writeFileSync(mjsPath, `export default ${JSON.stringify(obj)};\n`);
+  const cjsPath = OUT_PATH.replace(/\.json$/, ".cjs");
+  writeFileSync(cjsPath, `module.exports = ${JSON.stringify(obj)};\n`);
 
-  console.log(`[build-g2p-en] wrote ${keys.length} entries to ${mjsPath}`);
+
+
+  console.log(`[build-g2p-en] wrote ${keys.length} entries to ${cjsPath}`);
 }
 
 main();

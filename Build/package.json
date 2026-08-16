@@ -44,7 +44,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --fix",
     "make-pretty": "prettier --write .",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "jest"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

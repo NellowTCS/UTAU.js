@@ -16,9 +16,12 @@ export interface GlottalConfig {
   aspiration: number;
   /** Output gain multiplier for the glottal pulse (0-1). */
   power: number;
-  /** Pitch jitter / shimmer: random cycle-to-cycle variation in F0 and
-   *  amplitude. 0 = stable, ~0.03 = natural (0-0.05). */
+  /** Cycle-to-cycle F0 variation (jitter). 0 = stable, ~0.01 = natural
+   *  (0-0.03). Drives pitch micro-perturbations only. */
   jitter?: number;
+  /** Cycle-to-cycle amplitude variation (shimmer). 0 = stable, ~0.03 =
+   *  natural (0-0.05). */
+  shimmer?: number;
 }
 
 /** Post-hoc formant transformation applied to all phoneme targets.

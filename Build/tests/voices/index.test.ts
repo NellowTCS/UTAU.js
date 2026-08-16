@@ -21,7 +21,7 @@ describe("buildVoice", () => {
   it("merges nested glottal overrides", () => {
     const v = buildVoice({ glottal: { openQuotient: 0.7 } });
     expect(v.glottal.openQuotient).toBe(0.7);
-    expect(v.glottal.speedQuotient).toBe(0.85);
+    expect(v.glottal.speedQuotient).toBe(2.4);
     expect(v.glottal.jitter).toBe(0.015);
   });
 });

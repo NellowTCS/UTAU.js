@@ -1,5 +1,5 @@
 import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
-import g2pData from "./data/en-g2p.mjs";
+import g2pData from "./data/en-g2p.cjs";
 
 // English (ARPAbet) phoneme data.
 //

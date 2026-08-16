@@ -7,9 +7,8 @@ const config: Config = {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", { useESM: true }],
+    "^.+\\.tsx?$": ["ts-jest", { isolatedModules: true }],
   },
-  extensionsToTreatAsEsm: [".ts", ".tsx"],
 };
 
 export default config;

@@ -1,5 +1,5 @@
 import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
-import g2pData from "./data/jp-g2p.mjs";
+import g2pData from "./data/jp-g2p.cjs";
 
 // Japanese phoneme data.
 //

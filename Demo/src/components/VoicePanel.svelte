@@ -2,7 +2,8 @@
   let { params = $bindable({}), advancedOpen = $bindable(false) } = $props();
   const ADV_DEFAULTS = {
     oq: 0.5,
-    sq: 0.9,
+    sq: 2.5,
+    shimmer: 0.03,
     fScale: 1.0,
     fShift: 0,
     vRate: 5.5,
@@ -76,8 +77,18 @@
           min="0.3"
           max="3"
           step="0.1"
-          value={params.sq ?? 0.9}
+          value={params.sq ?? 2.5}
           oninput={(e) => (params.sq = parseFloat(e.currentTarget.value))}
+        /></label
+      >
+      <label
+        >Shimmer <input
+          type="range"
+          min="0"
+          max="0.15"
+          step="0.005"
+          value={params.shimmer ?? 0.03}
+          oninput={(e) => (params.shimmer = parseFloat(e.currentTarget.value))}
         /></label
       >
       <h3>Formant</h3>
