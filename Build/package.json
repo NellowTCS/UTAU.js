@@ -1,5 +1,5 @@
 {
-  "name": "utaujs",
+  "name": "ichikara",
   "version": "0.1.0",
   "type": "module",
   "description": "Parametric vocal synthesis engine",
@@ -7,14 +7,14 @@
   "author": "NellowTCS (https://github.com/NellowTCS)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NellowTCS/UTAU.js.git"
+    "url": "git+https://github.com/NellowTCS/Ichikara.git"
   },
-  "homepage": "https://github.com/NellowTCS/UTAU.js#readme",
+  "homepage": "https://github.com/NellowTCS/Ichikara#readme",
   "bugs": {
-    "url": "https://github.com/NellowTCS/UTAU.js/issues"
+    "url": "https://github.com/NellowTCS/Ichikara/issues"
   },
   "keywords": [
-    "utau",
+    "ichikara",
     "synthesis",
     "singing",
     "voice",

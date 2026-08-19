@@ -14,10 +14,8 @@ function ticksToDuration(tickLen: number, tempo: number, resolution: number, sam
 
 /* Per-note leveling */
 function computeAutoGain(peak: number, voicedRatio: number, peakComp: number, volume: number, target: number): number {
-  const weight = 1 / (1 + Math.exp(5 - 10 * voicedRatio));
-  const ref = peak * weight + peak * (1 - weight);
   const volGain = volume * 0.01;
-  const autoGain = ref === 0 ? 1 : Math.pow(target / ref, peakComp * 0.01);
+  const autoGain = peak === 0 ? 1 : Math.pow(target / peak, peakComp * 0.01);
   return autoGain * volGain;
 }
 
@@ -39,13 +37,16 @@ function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, to
 function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr: number): Int32Array {
   const dur = new Int32Array(phonemes.length);
   let totalConsSamp = 0;
-  let vowelCount = 0;
+  let vowelWeight = 0;
 
   for (const ph of phonemes) {
     if (ph.type === "consonant" || ph.type === "silence") {
       totalConsSamp += Math.round((ph.defaultDuration ?? 0.06) * sr);
     } else {
-      vowelCount++;
+      // Diphthongs need more time to glide; last vowel gets a natural tail.
+      const isLast = ph === phonemes[phonemes.length - 1];
+      const weight = (ph.type === "diphthong" ? 1.3 : 1) * (isLast ? 1.2 : 1);
+      vowelWeight += weight;
     }
   }
 
@@ -64,7 +65,7 @@ function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr
   }
 
   const remaining = noteLenSamp - totalConsSamp;
-  if (vowelCount === 0) {
+  if (vowelWeight === 0) {
     const perPh = Math.max(1, Math.floor(noteLenSamp / phonemes.length));
     let pos = 0;
     for (let i = 0; i < phonemes.length; i++) {
@@ -72,16 +73,24 @@ function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr
       pos += dur[i];
     }
   } else {
-    let vowelIdx = 0;
+    const samplesPerWeight = Math.max(1, remaining / vowelWeight);
+    let pos = 0;
     for (let i = 0; i < phonemes.length; i++) {
-      if (phonemes[i].type === "consonant" || phonemes[i].type === "silence") {
-        if (dur[i] === 0) dur[i] = Math.max(1, Math.round((phonemes[i].defaultDuration ?? 0.06) * sr));
+      const ph = phonemes[i];
+      if (ph.type === "consonant" || ph.type === "silence") {
+        if (dur[i] === 0) dur[i] = Math.max(1, Math.round((ph.defaultDuration ?? 0.06) * sr));
       } else {
-        const perVowel = Math.max(1, Math.floor(remaining / vowelCount));
-        const extra = vowelIdx === vowelCount - 1 ? remaining - perVowel * vowelCount : 0;
-        dur[i] = vowelIdx < vowelCount - 1 ? perVowel : Math.max(1, perVowel + extra);
-        vowelIdx++;
+        const isLast = i === phonemes.length - 1;
+        const weight = (ph.type === "diphthong" ? 1.3 : 1) * (isLast ? 1.2 : 1);
+        dur[i] = Math.max(1, Math.round(samplesPerWeight * weight));
       }
+      pos += dur[i];
+    }
+    // Correct rounding drift so total matches noteLenSamp exactly.
+    const totalDur = dur.reduce((a, b) => a + b, 0);
+    if (totalDur !== noteLenSamp) {
+      const lastVowel = [...phonemes].findLastIndex((p) => p.type !== "consonant" && p.type !== "silence");
+      if (lastVowel >= 0) dur[lastVowel] += noteLenSamp - totalDur;
     }
   }
 
@@ -157,6 +166,16 @@ export function renderPhonemes(
 
   const transitionLen = Math.round(0.03 * sr);
   const fadeLen = Math.round(0.003 * sr);
+  const boundaryFadeLen = Math.round(0.002 * sr);
+
+  // Velocity (0-127) modulates breath, shimmer, and aspiration dynamics.
+  // Higher velocity = more breath, less shimmer, stronger aspiration.
+  const velNorm = Math.max(0, Math.min(1, (note.velocity ?? 100) / 127));
+  const velBreathScale = 0.5 + velNorm * 0.8;       // 0.5x at v=0, 1.3x at v=127
+  const velShimmerScale = 1 - velNorm * 0.6;         // 1.0x at v=0, 0.4x at v=127
+  const velAspirationScale = 0.6 + velNorm * 0.6;    // 0.6x at v=0, 1.2x at v=127
+  const intensity = note.intensity ?? 100;
+  const intensityScale = intensity / 100;
 
   const phDurations = computePhonemeDurations(phonemes, noteLen, sr);
   const piAtSample = new Int32Array(noteLen);
@@ -211,15 +230,12 @@ export function renderPhonemes(
     if (pi !== prevPi) {
       phSegStart = i;
       prevPi = pi;
-      // Reset cascade state when the phoneme changes. Without this, the
-      // filter's internal y1/y2/x1/x2 from the previous formant target
-      // would mix with the new coefficients and produce a wideband click
-      // at every phoneme boundary.
-      cascade.reset();
+      // Keep filter state from the previous phoneme: the ringing of the old
+      // coefficients naturally crossfades into the new ones as they settle,
+      // producing a smooth formant glide instead of a discontinuity.
+      // Update parallel noise-filter coefficients for the new phoneme.
       const noiseTargets = cp.noise?.formantShaping ?? [];
       for (let fi = 0; fi < parallelFilters.length; fi++) {
-        // Reset parallel filter state too
-        parallelFilters[fi].reset();
         if (fi < noiseTargets.length) {
           const at = applyVoice([noiseTargets[fi]])[0];
           parallelFilters[fi].setResonator(at.f, at.bw, sr);
@@ -227,7 +243,6 @@ export function renderPhonemes(
           parallelFilters[fi].setPassthrough();
         }
       }
-      for (const bf of breathFilters) bf.reset();
     }
 
     const vibGain = i < vibAttackSamp ? i / vibAttackSamp : 1;
@@ -262,7 +277,7 @@ export function renderPhonemes(
       }
     }
 
-    const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal });
+    const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal, shimmer: (voice.glottal.shimmer ?? 0) * velShimmerScale });
     const voiced = cp.voiced !== false;
     if (voiced) voicedSamples++;
     const nSample = rng() * 2 - 1;
@@ -284,14 +299,14 @@ export function renderPhonemes(
       } else {
         noiseSignal = nSample;
       }
-      noiseSignal *= cp.noise.amplitude * noiseEnv;
+      noiseSignal *= cp.noise.amplitude * noiseEnv * velBreathScale;
     }
     let breathSignal = 0;
     if (cp.type === "vowel" || cp.type === "diphthong") {
       // Parallel aspiration branch (broadband breath), summed post-cascade.
       let breath = 0;
       for (const bf of breathFilters) breath += bf.processSample(nSample);
-      breathSignal = breath * voice.glottal.aspiration * 0.5 * noiseEnv;
+      breathSignal = breath * voice.glottal.aspiration * noiseEnv * velAspirationScale;
     }
 
     const phEnv = phEnvelopes[pi];
@@ -305,7 +320,8 @@ export function renderPhonemes(
       env *= t * t * (3 - 2 * t);
     }
     const cascaded = cascade.processSample(glottalSignal);
-    const enveloped = (cascaded + noiseSignal + breathSignal) * env;
+    const boundaryFade = Math.min(1, segPos / Math.max(1, boundaryFadeLen));
+    const enveloped = (cascaded + noiseSignal + breathSignal) * env * boundaryFade;
     mono[i] = enveloped;
     if (Math.abs(enveloped) > overallPeak) overallPeak = Math.abs(enveloped);
   }
@@ -314,7 +330,7 @@ export function renderPhonemes(
   const volume = voice.volume ?? 100;
   const peakComp = voice.peakComp ?? 100;
   const target = voice.normalizeTarget ?? 0.5;
-  const gain = computeAutoGain(overallPeak, voicedRatio, peakComp, volume, target);
+  const gain = computeAutoGain(overallPeak, voicedRatio, peakComp, volume, target) * intensityScale;
   for (let i = 0; i < noteLen; i++) {
     const s = mono[i] * gain;
     mono[i] = s > 0.99 ? 0.99 : s < -0.99 ? -0.99 : s;

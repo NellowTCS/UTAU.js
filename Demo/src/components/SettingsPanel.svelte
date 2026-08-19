@@ -1,8 +1,12 @@
 <script lang="ts">
+  import { Dialog } from "bits-ui";
   import { X } from "@lucide/svelte";
+  import IconButton from "./ui/IconButton.svelte";
+  import Switch from "./ui/Switch.svelte";
+  import { ACCENTS, accentId } from "../lib/theme";
 
   let {
-    open = false,
+    open = $bindable(false),
     autoScroll = $bindable(true),
     onClose = () => {},
   }: {
@@ -10,108 +14,106 @@
     autoScroll?: boolean;
     onClose?: () => void;
   } = $props();
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape") onClose();
-  }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
-{#if open}
-  <div class="overlay" onclick={onClose} onkeydown={(e) => e.key === "Enter" && onClose()} role="presentation">
-    <div
-      class="panel"
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.stopPropagation()}
-      role="dialog"
-      aria-label="Settings"
-      tabindex="-1"
-    >
-      <div class="header">
-        <h2>Settings</h2>
-        <button class="close-btn" onclick={onClose}><X size={16} /></button>
+<Dialog.Root bind:open>
+  <Dialog.Portal>
+    <Dialog.Overlay class="dialog-overlay" />
+    <Dialog.Content class="dialog-content" aria-describedby={undefined}>
+      <div class="dialog-header">
+        <Dialog.Title class="dialog-title">Settings</Dialog.Title>
+        <Dialog.Close>
+          <IconButton title="Close"><X size={16} /></IconButton>
+        </Dialog.Close>
       </div>
-      <div class="body">
-        <label class="setting">
-          <span class="setting-label">Auto-scroll during playback</span>
-          <input type="checkbox" bind:checked={autoScroll} />
+      <div class="dialog-body">
+        <div class="setting-row">
+          <span>
+            <span class="setting-label">Theme Accent</span>
+            <span class="setting-sub">Color used for selection highlights and active states.</span>
+          </span>
+          <div class="accent-row">
+            {#each ACCENTS as a (a.id)}
+              <button
+                class="accent-swatch"
+                class:active={$accentId === a.id}
+                style="background:{a.color};color:{a.color}"
+                title={a.name}
+                onclick={() => accentId.set(a.id)}
+              ></button>
+            {/each}
+          </div>
+        </div>
+        <label class="setting-row">
+          <span>
+            <span class="setting-label">Auto-scroll during playback</span>
+            <span class="setting-sub">Follow the playhead as the song plays.</span>
+          </span>
+          <Switch bind:checked={autoScroll} ariaLabel="Auto-scroll during playback" />
         </label>
-        <p class="hint">When enabled, the piano roll scrolls to follow playback position.</p>
+        <p class="hint">
+          Tip: scroll the piano roll with the wheel, hold <kbd>Shift</kbd> to scroll
+          horizontally, or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> to zoom. Right-click a note to edit its
+          pitch bend.
+        </p>
       </div>
-    </div>
-  </div>
-{/if}
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
 
 <style>
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .panel {
-    background: #1a1a2e;
-    border: 1px solid #444;
-    border-radius: 6px;
-    width: 340px;
-    max-width: 90vw;
-    color: #ddd;
-    font-family: monospace;
-    font-size: 13px;
-  }
-  .header {
+  .setting-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid #333;
-  }
-  .header h2 {
-    margin: 0;
-    font-size: 14px;
-    color: #4fc3f7;
-  }
-  .close-btn {
-    background: none;
-    border: none;
-    color: #888;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-  }
-  .close-btn:hover {
-    background: #2a2a4e;
-    color: #fff;
-  }
-  .body {
-    padding: 16px;
-  }
-  .setting {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    gap: 16px;
   }
   .setting-label {
-    font-size: 12px;
-    color: #ccc;
+    display: block;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
   }
-  input[type="checkbox"] {
-    accent-color: #4fc3f7;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
+  .setting-sub {
+    display: block;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 2px;
   }
   .hint {
-    margin: 0;
+    margin: 18px 0 0;
     font-size: 11px;
-    color: #666;
-    line-height: 1.4;
+    color: var(--text-faint);
+    line-height: 1.6;
+  }
+  .hint kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--text);
+  }
+  .accent-row {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .accent-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid var(--border-strong);
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+  }
+  .accent-swatch:hover {
+    transform: scale(1.08);
+    border-color: var(--text);
+  }
+  .accent-swatch.active {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px var(--bg-1), 0 0 0 4px currentColor;
   }
 </style>

@@ -147,11 +147,13 @@ export interface Note {
   /** Start tick position. If omitted, the renderer computes it from the
    *  previous note's position and duration. */
   tick?: number;
-  /** Velocity (0-127, MIDI convention). Not currently used by the renderer. */
+  /** Velocity (0-127, MIDI convention). Modulates breath amount, shimmer,
+   *  and aspiration level: higher = brighter, breathier, less shimmer. */
   velocity?: number;
-  /** Intensity override. Not currently used by the renderer. */
+  /** Intensity override (default 100). Scales the final gain of the note. */
   intensity?: number;
-  /** Modulation override. Not currently used by the renderer. */
+  /** Modulation override. Reserved for future per-note vibrato depth
+   *  modulation. Currently unused by the renderer. */
   modulation?: number;
   /** Per-note vibrato override. Any field not set falls through to the
    *  global VoiceConfig vibrato. */

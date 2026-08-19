@@ -1,203 +1,125 @@
 <script lang="ts">
-  let { params = $bindable({}), advancedOpen = $bindable(false) } = $props();
-  const ADV_DEFAULTS = {
-    oq: 0.5,
-    sq: 2.5,
-    shimmer: 0.03,
-    fScale: 1.0,
-    fShift: 0,
-    vRate: 5.5,
-    vAttack: 0.12,
-  } as const;
-  function adv(key: keyof typeof ADV_DEFAULTS): number {
-    return (params as any)[key] ?? ADV_DEFAULTS[key];
-  }
-  function setAdv(key: keyof typeof ADV_DEFAULTS, value: number) {
-    (params as any)[key] = value;
-  }
-  function bindAdv(key: keyof typeof ADV_DEFAULTS) {
-    return (e: Event) => {
-      const t = e.currentTarget as HTMLInputElement;
-      setAdv(key, parseFloat(t.value));
-    };
+  import { Tabs } from "bits-ui";
+  import { Sparkles } from "@lucide/svelte";
+  import Field from "./ui/Field.svelte";
+  import Button from "./ui/Button.svelte";
+
+  let {
+    params = $bindable({}),
+    advancedOpen = $bindable(false),
+  }: {
+    params?: Record<string, number>;
+    advancedOpen?: boolean;
+  } = $props();
+
+  let tab = $state("voice");
+
+  const PRESETS: { name: string; values: Record<string, number> }[] = [
+    { name: "Neutral", values: { gender: 0, breathiness: 0.3, tension: 0.5, brightness: 0.5, vibratoAmount: 0.5 } },
+    { name: "Soft", values: { gender: -0.3, breathiness: 0.6, tension: 0.3, brightness: 0.4, vibratoAmount: 0.4 } },
+    { name: "Bright", values: { gender: 0.2, breathiness: 0.15, tension: 0.7, brightness: 0.85, vibratoAmount: 0.5 } },
+    { name: "Breathy", values: { gender: -0.1, breathiness: 0.9, tension: 0.35, brightness: 0.45, vibratoAmount: 0.4 } },
+    { name: "Power", values: { gender: 0.3, breathiness: 0.1, tension: 0.85, brightness: 0.6, vibratoAmount: 0.7 } },
+    { name: "Robotic", values: { gender: 0, breathiness: 0.2, tension: 0.6, brightness: 0.5, vibratoAmount: 0.0 } },
+  ];
+
+  function applyPreset(p: Record<string, number>) {
+    for (const k of Object.keys(p)) params[k] = p[k];
   }
 </script>
 
-<div class="voice-panel">
-  <h2>Voice</h2>
-  <div class="section">
-    <h3>Easy</h3>
-    <label
-      >Gender
-      <input type="range" min="-1" max="1" step="0.01" bind:value={params.gender} />
-      <span class="val">{params.gender?.toFixed(2)}</span>
-    </label>
-    <label
-      >Breathiness
-      <input type="range" min="0" max="1" step="0.01" bind:value={params.breathiness} />
-      <span class="val">{params.breathiness?.toFixed(2)}</span>
-    </label>
-    <label
-      >Tension
-      <input type="range" min="0" max="1" step="0.01" bind:value={params.tension} />
-      <span class="val">{params.tension?.toFixed(2)}</span>
-    </label>
-    <label
-      >Brightness
-      <input type="range" min="0" max="1" step="0.01" bind:value={params.brightness} />
-      <span class="val">{params.brightness?.toFixed(2)}</span>
-    </label>
-    <label
-      >Vibrato
-      <input type="range" min="0" max="1" step="0.01" bind:value={params.vibratoAmount} />
-      <span class="val">{params.vibratoAmount?.toFixed(2)}</span>
-    </label>
-  </div>
+<Tabs.Root bind:value={tab} class="vp-tabs-root">
+  <Tabs.List class="vp-tabs">
+    <Tabs.Trigger value="voice" class="vp-tab">Voice</Tabs.Trigger>
+    <Tabs.Trigger value="presets" class="vp-tab">Presets</Tabs.Trigger>
+  </Tabs.List>
 
-  <button class="toggle" onclick={() => (advancedOpen = !advancedOpen)}>
-    {advancedOpen ? "Hide" : "Show"} Advanced
-  </button>
-
-  {#if advancedOpen}
-    <div class="section advanced">
-      <h3>Glottal Source</h3>
-      <label
-        >Open Quotient <input
-          type="range"
-          min="0.2"
-          max="0.9"
-          step="0.01"
-          value={params.oq ?? 0.5}
-          oninput={(e) => (params.oq = parseFloat(e.currentTarget.value))}
-        /></label
-      >
-      <label
-        >Speed Quotient <input
-          type="range"
-          min="0.3"
-          max="3"
-          step="0.1"
-          value={params.sq ?? 2.5}
-          oninput={(e) => (params.sq = parseFloat(e.currentTarget.value))}
-        /></label
-      >
-      <label
-        >Shimmer <input
-          type="range"
-          min="0"
-          max="0.15"
-          step="0.005"
-          value={params.shimmer ?? 0.03}
-          oninput={(e) => (params.shimmer = parseFloat(e.currentTarget.value))}
-        /></label
-      >
-      <h3>Formant</h3>
-      <label
-        >Scale <input
-          type="range"
-          min="0.7"
-          max="1.3"
-          step="0.01"
-          value={params.fScale ?? 1.0}
-          oninput={(e) => (params.fScale = parseFloat(e.currentTarget.value))}
-        /></label
-      >
-      <label
-        >Shift <input
-          type="range"
-          min="-6"
-          max="6"
-          step="1"
-          value={params.fShift ?? 0}
-          oninput={(e) => (params.fShift = parseFloat(e.currentTarget.value))}
-        /></label
-      >
-      <h3>Vibrato</h3>
-      <label
-        >Rate <input
-          type="range"
-          min="2"
-          max="10"
-          step="0.1"
-          value={params.vRate ?? 5.5}
-          oninput={(e) => (params.vRate = parseFloat(e.currentTarget.value))}
-        /></label
-      >
-      <label
-        >Attack <input
-          type="range"
-          min="0"
-          max="0.5"
-          step="0.01"
-          value={params.vAttack ?? 0.12}
-          oninput={(e) => (params.vAttack = parseFloat(e.currentTarget.value))}
-        /></label
-      >
+  <Tabs.Content value="voice" class="vp-tab-content">
+    <div class="vp-section">
+      <h3>Character</h3>
+      <Field label="Gender" value={params.gender ?? 0} step={0.01}
+        format={(v) => v.toFixed(2)} hint="Negative = masculine, positive = feminine timbre."
+        onChange={(v) => (params.gender = v)} />
+      <Field label="Breathiness" value={params.breathiness ?? 0.3} step={0.01}
+        hint="Adds aspiration noise into the glottal source."
+        onChange={(v) => (params.breathiness = v)} />
+      <Field label="Tension" value={params.tension ?? 0.5} step={0.01}
+        hint="Vocal-fold tension: higher = brighter, thinner, more harmonics."
+        onChange={(v) => (params.tension = v)} />
+      <Field label="Brightness" value={params.brightness ?? 0.5} step={0.01}
+        hint="Shifts the vocal-tract formants upward for a brighter tone."
+        onChange={(v) => (params.brightness = v)} />
+      <Field label="Vibrato" value={params.vibratoAmount ?? 0.5} step={0.01}
+        hint="Depth of the pitch-vibrato modulation."
+        onChange={(v) => (params.vibratoAmount = v)} />
     </div>
-  {/if}
-</div>
+
+    <button class="vp-adv-toggle" onclick={() => (advancedOpen = !advancedOpen)}>
+      <span>{advancedOpen ? "Hide" : "Show"} advanced glottal controls</span>
+      <span class="vp-adv-caret">{advancedOpen ? "▾" : "▸"}</span>
+    </button>
+
+    {#if advancedOpen}
+      <div class="vp-section vp-advanced">
+        <h3>Glottal Source</h3>
+        <Field label="Open Quotient" value={params.oq ?? 0.5} min={0} max={1} step={0.01}
+          hint="Fraction of the cycle the glottis is open. Higher = brighter, breathier."
+          onChange={(v) => (params.oq = v)} />
+        <Field label="Speed Quotient" value={params.sq ?? 2.4} min={0} max={5} step={0.1}
+          hint="Asymmetry of the glottal pulse. Higher = more natural, rounded."
+          onChange={(v) => (params.sq = v)} />
+        <Field label="Shimmer" value={params.shimmer ?? 0.03} min={0} max={1} step={0.005}
+          hint="Amplitude jitter (cycle-to-cycle variation)."
+          onChange={(v) => (params.shimmer = v)} />
+        <h3>Timbre</h3>
+        <Field label="Formant Scale" value={params.fScale ?? 1} min={0} max={3} step={0.01}
+          hint="Global scaling of the vocal-tract resonances."
+          onChange={(v) => (params.fScale = v)} />
+        <Field label="Formant Shift" value={params.fShift ?? 0} min={-24} max={24} step={1}
+          hint="Semitone shift applied to all formants."
+          onChange={(v) => (params.fShift = v)} />
+        <Field label="Vibrato Rate" value={params.vRate ?? 5.5} min={0} max={20} step={0.1}
+          onChange={(v) => (params.vRate = v)} />
+        <Field label="Vibrato Attack" value={params.vAttack ?? 0.12} min={0} max={2} step={0.01}
+          onChange={(v) => (params.vAttack = v)} />
+      </div>
+    {/if}
+  </Tabs.Content>
+
+  <Tabs.Content value="presets" class="vp-tab-content">
+    <p class="vp-presets-hint">One-tap starting points. They set the character sliders; tweak from there.</p>
+    <div class="preset-row">
+      {#each PRESETS as p (p.name)}
+        <Button variant="subtle" size="sm" onclick={() => applyPreset(p.values)}>
+          <Sparkles size={13} /> {p.name}
+        </Button>
+      {/each}
+    </div>
+  </Tabs.Content>
+</Tabs.Root>
 
 <style>
-  .voice-panel {
-    padding: 12px;
-    background: #1a1a2e;
-    border-left: 1px solid #333;
-    height: 100%;
-    overflow-y: auto;
-    color: #ddd;
-    font-family: monospace;
-    font-size: 12px;
-  }
-  h2 {
-    margin: 0 0 12px;
-    font-size: 14px;
-    color: #4fc3f7;
-  }
-  h3 {
-    margin: 12px 0 6px;
-    font-size: 12px;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .section {
-    margin-bottom: 12px;
-  }
-  label {
+  .vp-adv-toggle {
+    width: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 11px;
-  }
-  input[type="range"] {
-    flex: 1;
-    height: 4px;
-    accent-color: #4fc3f7;
-  }
-  .val {
-    width: 36px;
-    text-align: right;
-    color: #aaa;
-    font-size: 10px;
-  }
-  .toggle {
-    width: 100%;
-    padding: 6px;
-    background: #16213e;
-    border: 1px solid #333;
-    color: #aaa;
+    justify-content: space-between;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    color: var(--text-dim);
+    border-radius: var(--r-sm);
+    padding: 8px 10px;
+    font-size: 12px;
     cursor: pointer;
-    font-family: monospace;
-    font-size: 11px;
-    margin-bottom: 8px;
+    margin: 4px 0 12px;
   }
-  .toggle:hover {
-    background: #1e2a4e;
-    color: #fff;
+  .vp-adv-toggle:hover {
+    border-color: var(--accent-line);
+    color: var(--text);
   }
-  .advanced {
-    border-top: 1px solid #333;
-    padding-top: 8px;
+  .vp-presets-hint {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin: 0 0 12px;
   }
 </style>

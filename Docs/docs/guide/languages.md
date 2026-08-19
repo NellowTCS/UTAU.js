@@ -29,7 +29,7 @@ description: "Built-in language support and how to add custom languages"
 ## Using Language Modules
 
 ```typescript
-import { japanese, english, mandarin, getLanguage } from "utaujs";
+import { japanese, english, mandarin, getLanguage } from "ichikara";
 
 // Direct reference
 renderScore(score, voice, japanese);  // or "jp"
@@ -44,8 +44,8 @@ renderScore(score, voice, lang);
 Implement the `LanguageModule` interface and register it:
 
 ```typescript
-import { registerLanguage } from "utaujs";
-import type { LanguageModule, PhonemeDef } from "utaujs";
+import { registerLanguage } from "ichikara";
+import type { LanguageModule, PhonemeDef } from "ichikara";
 
 const myLang: LanguageModule = {
   id: "custom",
@@ -74,7 +74,7 @@ const chunks = await renderScore(score, voice, "custom");
 The alias system maps language-specific phoneme symbols to a canonical IPA-like set. This is useful when a voicebank recorded for one language sings lyrics in another:
 
 ```typescript
-import { toCanonical, sequenceToCanonical } from "utaujs";
+import { toCanonical, sequenceToCanonical } from "ichikara";
 
 // Map a single phoneme
 toCanonical("en", "IY");   // -> "i"

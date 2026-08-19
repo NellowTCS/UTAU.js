@@ -436,7 +436,19 @@ function sanitizeLyric(lyric: string): string {
   if (effectiveLyric.startsWith(".")) return "";
   const cleaned = effectiveLyric.replace(/[＠％]/g, "");
   if (!cleaned) return "";
-  return hiraganaMap[cleaned] ?? cleaned;
+
+  const single = hiraganaMap[cleaned];
+  if (single) return single;
+  // Multi-mora kana
+  if (/[\u3040-\u309f\u30a0-\u30ff]/.test(cleaned)) {
+    const parts: string[] = [];
+    for (const ch of [...cleaned]) {
+      const m = hiraganaMap[ch];
+      parts.push(m ?? ch);
+    }
+    return parts.join(" ");
+  }
+  return cleaned;
 }
 
 function romajiToPhonemes(romaji: string): string[] {
@@ -516,15 +528,8 @@ function romajiToPhonemes(romaji: string): string[] {
   return result;
 }
 
-const HIGH_OFFSET = 1;
-
 function resolveAccents(lyrics: string[]): (number | undefined)[] {
-  const result: (number | undefined)[] = new Array(lyrics.length).fill(undefined);
-  if (lyrics.length === 0) return result;
-  for (let i = 0; i < lyrics.length; i++) {
-    result[i] = i === 0 ? 0 : HIGH_OFFSET;
-  }
-  return result;
+  return lyrics.map(() => undefined);
 }
 
 const CV_VOWELS = ["a", "i", "u", "e", "o"];

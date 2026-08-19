@@ -1,7 +1,7 @@
 export default {
-  title: "UTAU.js",
-  url: "https://nellowtcs.me/UTAU.js/docs",
-  logo: { alt: "UTAU.js", href: "./" },
+  title: "Ichikara",
+  url: "https://nellowtcs.me/Ichikara/docs",
+  logo: { alt: "Ichikara", href: "./" },
   favicon: "",
   theme: {
     name: "ruby",
@@ -33,9 +33,9 @@ export default {
         {
           title: "Community",
           links: [
-            { text: "GitHub", url: "https://github.com/NellowTCS/UTAU.js" },
-            { text: "Issues", url: "https://github.com/NellowTCS/UTAU.js/issues" },
-            { text: "Discussions", url: "https://github.com/NellowTCS/UTAU.js/discussions" },
+            { text: "GitHub", url: "https://github.com/NellowTCS/Ichikara" },
+            { text: "Issues", url: "https://github.com/NellowTCS/Ichikara/issues" },
+            { text: "Discussions", url: "https://github.com/NellowTCS/Ichikara/discussions" },
           ],
         },
       ],
@@ -48,7 +48,7 @@ export default {
     },
     seo: {
       defaultDescription:
-        "UTAU.js is a speech-synthesis library for singing voice synthesis in the browser. Cross-language phoneme support with an LF-glottal source-formant filter engine.",
+        "Ichikara is a speech-synthesis library for singing voice synthesis in the browser. Cross-language phoneme support with an LF-glottal source-formant filter engine.",
       openGraph: { defaultImage: "" },
       twitter: { cardType: "summary_large_image" },
     },
@@ -102,15 +102,15 @@ export default {
     },
     {
       title: "GitHub",
-      path: "https://github.com/NellowTCS/UTAU.js",
+      path: "https://github.com/NellowTCS/Ichikara",
       icon: "github",
       external: true,
     },
   ],
-  footer: "Built with [docmd](https://docmd.io). [View on GitHub](https://github.com/NellowTCS/UTAU.js).",
+  footer: "Built with [docmd](https://docmd.io). [View on GitHub](https://github.com/NellowTCS/Ichikara).",
   editLink: {
     enabled: true,
-    baseUrl: "https://github.com/NellowTCS/UTAU.js/edit/main/",
+    baseUrl: "https://github.com/NellowTCS/Ichikara/edit/main/",
     text: "Edit this page",
   },
 };

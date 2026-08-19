@@ -42,9 +42,10 @@ describe("scaleVoice", () => {
     expect(female.formant.scale).toBeCloseTo(1.2, 2);
   });
 
-  it("clamps gender to [-1, 1]", () => {
+  it("passes gender through unclamped (limitless)", () => {
     const v = scaleVoice(buildVoice(), { gender: 2 });
-    expect(v.formant.scale).toBeCloseTo(1.2, 2);
+    // gender=2 → fScale = 1.0 * (1 + 0.2 * 2) = 1.4
+    expect(v.formant.scale).toBeCloseTo(1.4, 2);
   });
 
   it("adjusts breathiness", () => {

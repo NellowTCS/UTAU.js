@@ -89,14 +89,14 @@ describe("japanese", () => {
       expect(japanese.resolveAccents).toBeDefined();
     });
 
-    it("returns heiban pattern for a multi-mora word", () => {
+    it("returns all-undefined (accent disabled) for a multi-mora word", () => {
       const result = japanese.resolveAccents!(["ka", "ra", "su"]);
-      expect(result).toEqual([0, 1, 1]);
+      expect(result).toEqual([undefined, undefined, undefined]);
     });
 
-    it("returns 0 for a single-mora word", () => {
+    it("returns all-undefined (accent disabled) for a single-mora word", () => {
       const result = japanese.resolveAccents!(["ki"]);
-      expect(result).toEqual([0]);
+      expect(result).toEqual([undefined]);
     });
 
     it("handles empty input", () => {
@@ -106,7 +106,7 @@ describe("japanese", () => {
 
     it("handles a phrase with many morae", () => {
       const result = japanese.resolveAccents!(["a", "ri", "ga", "to", "u"]);
-      expect(result).toEqual([0, 1, 1, 1, 1]);
+      expect(result).toEqual([undefined, undefined, undefined, undefined, undefined]);
     });
   });
 });

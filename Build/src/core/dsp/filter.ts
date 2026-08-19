@@ -15,10 +15,13 @@ export class FormantFilter {
   private x2 = 0;
 
   /** Configure as a resonator (formant) at `freq` Hz with bandwidth `bw` Hz.
-   *  Coefficients computed via standard bilinear-transform pole placement. */
+   *  Coefficients computed via standard bilinear-transform pole placement.
+   *  Safety guards: bw clamped to ≥ 0.01, freq clamped to [0, sr/2 - 1]. */
   setResonator(freq: number, bw: number, sampleRate: number): void {
-    const theta = (2 * Math.PI * freq) / sampleRate;
-    const r = Math.exp((-Math.PI * bw) / sampleRate);
+    const safeFreq = Math.max(0, Math.min(sampleRate / 2 - 1, freq));
+    const safeBw = Math.max(0.01, bw);
+    const theta = (2 * Math.PI * safeFreq) / sampleRate;
+    const r = Math.exp((-Math.PI * safeBw) / sampleRate);
     const B = 2 * r * Math.cos(theta);
     const C = -(r * r);
     this.b0 = 1 - B - C;
@@ -29,14 +32,17 @@ export class FormantFilter {
   }
 
   /** Configure as an anti-resonator (spectral zero / anti-formant) at `freq`
-   *  Hz with bandwidth `bw` Hz. Used for nasal antiformants. */
+   *  Hz with bandwidth `bw` Hz. Used for nasal antiformants.
+   *  Safety guards: bw clamped to ≥ 0.01, freq clamped to [0, sr/2 - 1]. */
   setAntiResonator(freq: number, bw: number, sampleRate: number): void {
-    const theta = (2 * Math.PI * freq) / sampleRate;
-    const rz = Math.exp((-Math.PI * bw) / sampleRate);
+    const safeFreq = Math.max(0, Math.min(sampleRate / 2 - 1, freq));
+    const safeBw = Math.max(0.01, bw);
+    const theta = (2 * Math.PI * safeFreq) / sampleRate;
+    const rz = Math.exp((-Math.PI * safeBw) / sampleRate);
     this.b0 = 1;
     this.b1 = -2 * rz * Math.cos(theta);
     this.b2 = rz * rz;
-    const rp = Math.exp((-Math.PI * bw * 1.5) / sampleRate);
+    const rp = Math.exp((-Math.PI * safeBw * 1.5) / sampleRate);
     this.a1 = -2 * rp * Math.cos(theta);
     this.a2 = rp * rp;
   }

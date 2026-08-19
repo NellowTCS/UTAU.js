@@ -64,11 +64,11 @@ export function scaleVoice(
     brightness?: number;
     /** Vibrato amount: 0 = none, 1 = full (multiplied against voice depth). */
     vibratoAmount?: number;
-    /** Direct open-quotient override (0.2-0.9). */
+    /** Direct open-quotient override. */
     oq?: number;
-    /** Direct speed-quotient override (0.3-3.0). */
+    /** Direct speed-quotient override. */
     sq?: number;
-    /** Direct shimmer (amplitude jitter) override (0-0.15). */
+    /** Direct shimmer (amplitude jitter) override. */
     shimmer?: number;
     /** Direct formant scale override. */
     fScale?: number;
@@ -94,17 +94,16 @@ export function scaleVoice(
     vRate,
     vAttack,
   } = params;
-  const g = Math.max(-1, Math.min(1, gender));
-  const fScale = fs ?? voice.formant.scale * (1.0 + 0.2 * g);
-  const baseTenseness = 0.55 - g * 0.12;
+  const fScale = fs ?? voice.formant.scale * (1.0 + 0.2 * gender);
+  const baseTenseness = 0.55 - gender * 0.12;
   return {
     ...voice,
     glottal: {
       ...voice.glottal,
-      openQuotient: oq ?? Math.max(0.25, Math.min(0.8, voice.glottal.openQuotient + breathiness * 0.06)),
-      speedQuotient: sq ?? Math.max(0.3, Math.min(3.0, voice.glottal.speedQuotient * (1 + g * 0.3))),
-      tenseness: Math.max(0.15, Math.min(1, baseTenseness + tension * 0.3)),
-      aspiration: Math.max(0, Math.min(0.3, breathiness * 0.1 + 0.02)),
+      openQuotient: oq ?? voice.glottal.openQuotient + breathiness * 0.06,
+      speedQuotient: sq ?? voice.glottal.speedQuotient * (1 + gender * 0.3),
+      tenseness: baseTenseness + tension * 0.3,
+      aspiration: breathiness * 0.1 + 0.02,
       shimmer: shimmer ?? voice.glottal.shimmer ?? 0.03,
       jitter: voice.glottal.jitter ?? 0.02,
     },

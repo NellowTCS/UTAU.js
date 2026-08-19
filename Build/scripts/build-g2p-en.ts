@@ -49,6 +49,14 @@ const STRESS_RE = /[012]$/;
 // Phonemes that are *vowels* in CMUDict. Consonants don't have stress.
 const VOWELS = new Set(["AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH", "IY", "OW", "OY", "UH", "UW"]);
 
+// Valid ARPAbet phoneme pattern.
+const ARPA_RE = /^[B-D-F-HJ-L-N-P-T-V-Z]{1,2}$/;  // consonants
+const ARPA_VOWEL_RE = /^(AA|AE|AH|AO|AW|AY|EH|ER|EY|IH|IY|OW|OY|UH|UW)$/;
+
+function isValidPhoneme(p: string): boolean {
+  return ARPA_VOWEL_RE.test(p) || ARPA_RE.test(p);
+}
+
 function normalizePhoneme(p: string): string {
   // Strip the stress marker if it's a vowel.
   if (VOWELS.has(p)) return p;
@@ -80,9 +88,9 @@ function parseCmudict(text: string): Map<string, string[]> {
     if (!isRealWord(word)) continue;
     // If a primary (un-numbered) entry already exists, don't overwrite
     // it with a variant. CMUDict orders variants after primaries, so
-    // first-write-wins gives us the canonical pronunciation.
+    // first-write-wins gives us the best pronunciation.
     if (out.has(word)) continue;
-    out.set(word, rawPhonemes.map(normalizePhoneme));
+    out.set(word, rawPhonemes.map(normalizePhoneme).filter(isValidPhoneme));
   }
 
   return out;

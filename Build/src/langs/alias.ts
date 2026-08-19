@@ -95,7 +95,7 @@ const CANONICAL_CONSONANTS: Record<string, string> = {
   t: "t",
   n: "n",
   l: "l",
-  g: "k",
+  g: "g",
   k: "k",
   h: "h",
   ts: "ts",
