@@ -1,0 +1,72 @@
+:root {
+  /* Flat surfaces */
+  --bg-0: #0a0a0d;
+  --bg-1: #101015;
+  --bg-2: #17171f;
+  --bg-3: #20202b;
+  --bg-inset: #060608;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.17);
+
+  /* Text */
+  --text: #e9e9f0;
+  --text-dim: #9a9aae;
+  --text-faint: #5f5f73;
+
+  /* Accent */
+  --accent: #2dd4bf;
+  --accent-ink: #10100f;
+  --accent-soft: rgba(45, 212, 191, 0.16);
+  --accent-line: rgba(45, 212, 191, 0.42);
+
+  /* Status */
+  --good: #46c98b;
+  --warn: #e8b341;
+  --bad: #f16767;
+
+  /* Radii */
+  --r-xs: 3px;
+  --r-sm: 5px;
+  --r-md: 7px;
+  --r-lg: 9px;
+  --r-pill: 999px;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Elevation */
+  --shadow-pop: 0 2px 8px rgba(0, 0, 0, 0.55);
+
+  /* Canvas piano-roll */
+  --canvas-bg: #0a0a0d;
+  --canvas-row-black: #0d0d18;
+  --canvas-row-white: #10101c;
+  --grid-measure: rgba(255, 255, 255, 0.10);
+  --grid-beat: rgba(255, 255, 255, 0.045);
+  --note-lyric: rgba(255, 255, 255, 0.92);
+  --pitch-bend: #ffdd44;
+  --ruler-bg: rgba(8, 8, 16, 0.92);
+  --ruler-text: #5a607a;
+  --ruler-text-strong: #9aa0b8;
+  --key-black: #23232f;
+  --key-white: #e9e9f2;
+  --key-label: #5a607a;
+  --key-separator: rgba(255, 255, 255, 0.12);
+
+  /* Typography */
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Layout */
+  --header-h: 56px;
+  --transport-h: 66px;
+  --sidebar-w: 312px;
+}

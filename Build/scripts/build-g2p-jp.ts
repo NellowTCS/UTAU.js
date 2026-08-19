@@ -15,11 +15,12 @@
  * a kana headword (no kanji) are skipped since the existing module
  * handles pure kana/romaji input via its conversion rules.
  *
- * Output: src/langs/data/jp-g2p.json - { "食べる": "たべる", ... }
+ * Output: src/langs/data/jp-g2p.cjs - `module.exports = { "食べる": "たべる", ... }`
+ *         (src/langs/data/jp-g2p.json is also written for tooling/back-compat).
  *
  * Run as:  npm run build:g2p:jp
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,8 +34,8 @@ const OUT_PATH = resolve(buildRoot, "src/langs/data/jp-g2p.json");
 if (!existsSync(RAW_PATH)) {
   console.error(
     `[build-g2p-jp] EDICT2 not found at ${RAW_PATH}\n` +
-      `  Download from ftp://ftp.edrdg.org/pub/Nihongo/edict2.gz\n` +
-      `  and place it (decompressed) at ${RAW_PATH}`,
+    `  Download from ftp://ftp.edrdg.org/pub/Nihongo/edict2.gz\n` +
+    `  and place it (decompressed) at ${RAW_PATH}`,
   );
   process.exit(1);
 }
@@ -98,7 +99,11 @@ function main() {
 
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(obj));
-  console.log(`[build-g2p-jp] wrote ${keys.length} entries to ${OUT_PATH}`);
+
+  const cjsPath = OUT_PATH.replace(/\.json$/, ".cjs");
+  writeFileSync(cjsPath, `module.exports = ${JSON.stringify(obj)};\n`);
+
+  console.log(`[build-g2p-jp] wrote ${keys.length} entries to ${cjsPath}`);
 }
 
 main();

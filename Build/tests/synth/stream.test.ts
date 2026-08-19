@@ -64,7 +64,11 @@ describe("renderScore", () => {
     };
     const chunks = await renderScore(score, voice, "jp");
     expect(chunks.length).toBe(2);
-    expect(chunks[1].startSample).toBeGreaterThan(chunks[0].startSample + chunks[0].data[0].length - 1);
+    // With 5ms cross-note overlap, the second chunk starts slightly before
+    // the first chunk ends (the natural envelope decay + filter carry-over
+    // creates a smooth crossfade).
+    expect(chunks[1].startSample).toBeLessThan(chunks[0].startSample + chunks[0].data[0].length);
+    expect(chunks[1].startSample).toBeGreaterThan(chunks[0].startSample);
   });
 
   it("handles voice lookup by name", async () => {

@@ -16,9 +16,12 @@ export interface GlottalConfig {
   aspiration: number;
   /** Output gain multiplier for the glottal pulse (0-1). */
   power: number;
-  /** Pitch jitter / shimmer: random cycle-to-cycle variation in F0 and
-   *  amplitude. 0 = stable, ~0.03 = natural (0-0.05). */
+  /** Cycle-to-cycle F0 variation (jitter). 0 = stable, ~0.01 = natural
+   *  (0-0.03). Drives pitch micro-perturbations only. */
   jitter?: number;
+  /** Cycle-to-cycle amplitude variation (shimmer). 0 = stable, ~0.03 =
+   *  natural (0-0.05). */
+  shimmer?: number;
 }
 
 /** Post-hoc formant transformation applied to all phoneme targets.
@@ -65,6 +68,13 @@ export interface VoiceConfig {
   sampleRate: number;
   /** Number of output channels: 1 = mono, 2 = stereo (identical channels). */
   channels: 1 | 2;
+  /** Note volume multiplier, 0..200. */
+  volume?: number;
+  /** Normalization strength 0..100.
+   *  0 keeps the engine's source level; 100 fully peak-normalizes to `normalizeTarget`. */
+  peakComp?: number;
+  /** Target reference peak amplitude at full normalization. */
+  normalizeTarget?: number;
 }
 
 /** A single formant target: centre frequency and bandwidth. Used in arrays
@@ -137,11 +147,13 @@ export interface Note {
   /** Start tick position. If omitted, the renderer computes it from the
    *  previous note's position and duration. */
   tick?: number;
-  /** Velocity (0-127, MIDI convention). Not currently used by the renderer. */
+  /** Velocity (0-127, MIDI convention). Modulates breath amount, shimmer,
+   *  and aspiration level: higher = brighter, breathier, less shimmer. */
   velocity?: number;
-  /** Intensity override. Not currently used by the renderer. */
+  /** Intensity override (default 100). Scales the final gain of the note. */
   intensity?: number;
-  /** Modulation override. Not currently used by the renderer. */
+  /** Modulation override. Reserved for future per-note vibrato depth
+   *  modulation. Currently unused by the renderer. */
   modulation?: number;
   /** Per-note vibrato override. Any field not set falls through to the
    *  global VoiceConfig vibrato. */
@@ -185,6 +197,21 @@ export interface AudioChunk {
   channels: number;
 }
 
+/** A single sample in a traditional (recorded) voicebank: the alias a user
+ *  types in a UST, plus the resolved phoneme sequence the engine renders for
+ *  it. `filename` defaults to `${alias}.wav` when omitted. */
+export interface ReclistEntry {
+  /** Alias typed in the UST (e.g. "ka", "a ka", "k AA", "a ba"). */
+  alias: string;
+  /** Resolved phoneme symbols, each present in the language's `phonemes` map. */
+  phonemes: string[];
+  /** Optional explicit wav filename; defaults to `${alias}.wav`. */
+  filename?: string;
+}
+
+/** Traditional voicebank styles supported by a reclist generator. */
+export type ReclistStyle = "cv" | "vcv";
+
 /** Interface for a language module: phoneme inventory, G2P conversion, and
  *  optional accent resolution. Each language registers its own module via
  *  `registerLanguage` or is selected by the built-in registry. */
@@ -203,6 +230,10 @@ export interface LanguageModule {
    *  and returns accent offsets in semitones per note. Used for Japanese
    *  pitch-accent. */
   resolveAccents?(lyrics: string[]): (number | undefined)[];
+  /** Optional reclist generator. Produces the alias/phoneme table needed to
+   *  bake a traditional voicebank for this language. Implementations are
+   *  expected to support at least "cv" and "vcv". */
+  reclist?(style: ReclistStyle): ReclistEntry[];
 }
 
 /** Runtime parameters passed to the glottal source for a single sample

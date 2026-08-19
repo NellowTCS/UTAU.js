@@ -6,7 +6,7 @@ export const maleVoice: VoiceConfig = {
   name: "Male",
   sampleRate: 44100,
   channels: 2,
-  glottal: { openQuotient: 0.4, speedQuotient: 0.65, tenseness: 0.65, aspiration: 0.05, power: 0.75, jitter: 0.01 },
+  glottal: { openQuotient: 0.4, speedQuotient: 2.5, tenseness: 0.65, aspiration: 0.05, power: 0.75, jitter: 0.01, shimmer: 0.03 },
   formant: { scale: 1.0, shift: 0, bandwidth: 1.0 },
   vibrato: { rate: 5.5, depth: 30, attack: 0.15 },
 };
@@ -17,7 +17,7 @@ export const femaleVoice: VoiceConfig = {
   name: "Female",
   sampleRate: 44100,
   channels: 2,
-  glottal: { openQuotient: 0.52, speedQuotient: 1.1, tenseness: 0.48, aspiration: 0.08, power: 0.65, jitter: 0.02 },
+  glottal: { openQuotient: 0.52, speedQuotient: 2.2, tenseness: 0.48, aspiration: 0.08, power: 0.65, jitter: 0.02, shimmer: 0.04 },
   formant: { scale: 1.18, shift: 0, bandwidth: 1.0 },
   vibrato: { rate: 6.0, depth: 40, attack: 0.1 },
 };
@@ -33,11 +33,12 @@ export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
     ...overrides,
     glottal: {
       openQuotient: 0.48,
-      speedQuotient: 0.85,
+      speedQuotient: 2.4,
       tenseness: 0.55,
       aspiration: 0.08,
       power: 0.7,
       jitter: 0.015,
+      shimmer: 0.03,
       ...overrides.glottal,
     },
     formant: { scale: 1.0, shift: 0, bandwidth: 1.0, ...overrides.formant },
@@ -63,10 +64,12 @@ export function scaleVoice(
     brightness?: number;
     /** Vibrato amount: 0 = none, 1 = full (multiplied against voice depth). */
     vibratoAmount?: number;
-    /** Direct open-quotient override (0.2-0.9). */
+    /** Direct open-quotient override. */
     oq?: number;
-    /** Direct speed-quotient override (0.3-3.0). */
+    /** Direct speed-quotient override. */
     sq?: number;
+    /** Direct shimmer (amplitude jitter) override. */
+    shimmer?: number;
     /** Direct formant scale override. */
     fScale?: number;
     /** Direct formant shift override (semitones). */
@@ -85,22 +88,23 @@ export function scaleVoice(
     vibratoAmount = 0.5,
     oq,
     sq,
+    shimmer,
     fScale: fs,
     fShift,
     vRate,
     vAttack,
   } = params;
-  const g = Math.max(-1, Math.min(1, gender));
-  const fScale = fs ?? voice.formant.scale * (1.0 + 0.2 * g);
-  const baseTenseness = 0.55 - g * 0.12;
+  const fScale = fs ?? voice.formant.scale * (1.0 + 0.2 * gender);
+  const baseTenseness = 0.55 - gender * 0.12;
   return {
     ...voice,
     glottal: {
       ...voice.glottal,
-      openQuotient: oq ?? Math.max(0.25, Math.min(0.8, voice.glottal.openQuotient + breathiness * 0.06)),
-      speedQuotient: sq ?? Math.max(0.3, Math.min(3.0, voice.glottal.speedQuotient * (1 + g * 0.3))),
-      tenseness: Math.max(0.15, Math.min(1, baseTenseness + tension * 0.3)),
-      aspiration: Math.max(0, Math.min(0.3, breathiness * 0.1 + 0.02)),
+      openQuotient: oq ?? voice.glottal.openQuotient + breathiness * 0.06,
+      speedQuotient: sq ?? voice.glottal.speedQuotient * (1 + gender * 0.3),
+      tenseness: baseTenseness + tension * 0.3,
+      aspiration: breathiness * 0.1 + 0.02,
+      shimmer: shimmer ?? voice.glottal.shimmer ?? 0.03,
       jitter: voice.glottal.jitter ?? 0.02,
     },
     formant: { ...voice.formant, scale: fScale, shift: fShift ?? voice.formant.shift, bandwidth: 0.8 + (1 - brightness) * 0.4 },

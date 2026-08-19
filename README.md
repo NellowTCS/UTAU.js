@@ -1,16 +1,16 @@
-# UTAU.js
+# Ichikara
 
-[![npm version](https://img.shields.io/npm/v/utaujs.svg)](https://www.npmjs.com/package/utaujs)
-[![CI](https://github.com/NellowTCS/UTAU.js/actions/workflows/ci.yml/badge.svg)](https://github.com/NellowTCS/UTAU.js/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/ichikara.svg)](https://www.npmjs.com/package/ichikara)
+[![CI](https://github.com/NellowTCS/Ichikara/actions/workflows/ci.yml/badge.svg)](https://github.com/NellowTCS/Ichikara/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Parametric singing voice synthesis in the browser and Node.js. Implements a
 source-filter model with an LF glottal source and cascaded formant filter.
 
-Visit the [live demo](https://nellowtcs.me/UTAU.js)!
+Visit the [live demo](https://nellowtcs.me/Ichikara)!
 
 ```bash
-npm install utaujs
+npm install ichikara
 ```
 
 ## Features
@@ -35,7 +35,7 @@ npm install utaujs
 ## Quickstart
 
 ```typescript
-import { renderScore, femaleVoice, japanese, encodeWav } from "utaujs";
+import { renderScore, femaleVoice, japanese, encodeWav } from "ichikara";
 import { writeFileSync } from "node:fs";
 
 const score = {
@@ -58,7 +58,7 @@ writeFileSync("hello.wav", Buffer.from(wav));
 Stream to audio output in the browser:
 
 ```typescript
-import { streamScore, femaleVoice, japanese, StreamPlayer } from "utaujs";
+import { streamScore, femaleVoice, japanese, StreamPlayer } from "ichikara";
 
 const player = new StreamPlayer();
 await player.play(streamScore(score, femaleVoice, "jp"));
@@ -81,13 +81,13 @@ await player.play(streamScore(score, femaleVoice, "jp"));
 | `StreamPlayer`                                               | Web Audio playback with real-time scheduling |
 | `registerLanguage` / `registerVoice`                         | Extend with custom languages or voices       |
 
-Full API reference at [Docs/](Docs/) or [https://nellowtcs.me/UTAU.js/docs](https://nellowtcs.me/UTAU.js/docs).
+Full API reference at [Docs/](Docs/) or [https://nellowtcs.me/Ichikara/docs](https://nellowtcs.me/Ichikara/docs).
 
 ## Architecture
 
 ```mermaid
 mindmap
-  root((UTAU.js))
+  root((Ichikara))
     Core DSP
       LFGlottalSource
       FormantCascade
@@ -114,8 +114,8 @@ mindmap
 
 ```bash
 # clone with submodules (required for CMUDict)
-git clone https://github.com/NellowTCS/UTAU.js.git --recurse-submodules
-cd UTAU.js/Build
+git clone https://github.com/NellowTCS/Ichikara.git --recurse-submodules
+cd Ichikara/Build
 
 npm install
 npm run build     # builds G2P data + library

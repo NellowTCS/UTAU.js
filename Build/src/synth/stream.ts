@@ -55,12 +55,22 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
 
   const accentOffsets = computeAccentOffsets(notes, lang);
 
+  // Cross-note overlap: render each note with extra tail samples so that
+  // consecutive notes overlap. The natural envelope decay/attack and the
+  // filter state carry-over (prevFormants) create a smooth crossfade.
+  const OVERLAP_MS = 5;
+  const overlapSamples = Math.round((OVERLAP_MS / 1000) * sr);
+
   let prevFormants: FormantTarget[] | undefined;
+  let prevChunkEnd = 0;
   for (let ni = 0; ni < notes.length; ni++) {
     const note = notes[ni];
     const noteTick = note.tick ?? currentTick;
     const gap = Math.max(0, noteTick - currentTick);
-    if (gap > 0) prevFormants = undefined;
+    if (gap > 0) {
+      prevFormants = undefined;
+      prevChunkEnd = 0;
+    }
     currentSample += Math.round(ticksToDuration(gap, currentTempo, resolution, sr));
 
     const noteTempo = tempoAt(noteTick);
@@ -70,22 +80,30 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
       tempoIdx++;
     }
 
+    // For non-first notes with no gap, render extra tail samples for overlap.
+    const hasOverlap = ni > 0 && gap === 0 && prevChunkEnd > 0;
+    const extraSamples = hasOverlap ? overlapSamples : 0;
+
     const noteSamples = Math.round(noteSampleDuration(noteTick, note.length));
     const adjustedLength = Math.max(1, Math.round((noteSamples * noteTempo * resolution) / (60 * sr)));
-    const adjustedNote = { ...note, length: adjustedLength };
+    const adjustedNote = { ...note, length: adjustedLength + Math.round((extraSamples * noteTempo * resolution) / (60 * sr)) };
     if (accentOffsets[ni] !== undefined) {
       adjustedNote.pitchAccent = accentOffsets[ni];
     }
     const { chunk, finalFormants } = renderNote(adjustedNote, voice, lang, noteTempo, resolution, prevFormants);
     prevFormants = finalFormants;
-    chunk.startSample = currentSample;
+    // Overlap: shift startSample backward so the tail overlaps with the
+    // previous note's ending. The playback system sums both signals.
+    chunk.startSample = hasOverlap ? prevChunkEnd - overlapSamples : currentSample;
+    const chunkLen = chunk.data[0].length;
     if (voice.channels === 2 && chunk.data.length === 1) {
       chunk.data = [new Float32Array(chunk.data[0]), new Float32Array(chunk.data[0])];
       chunk.channels = 2;
     }
     yield chunk;
     await new Promise((r) => setTimeout(r, 0));
-    currentSample += chunk.data[0].length;
+    prevChunkEnd = chunk.startSample + chunkLen;
+    currentSample = hasOverlap ? prevChunkEnd - overlapSamples : currentSample + chunkLen;
     currentTick = noteTick + note.length;
   }
 }

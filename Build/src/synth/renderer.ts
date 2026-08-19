@@ -1,6 +1,7 @@
 import type { AudioChunk, VoiceConfig, LanguageModule, Note, PhonemeDef, PitchBend, FormantTarget } from "../core/types";
 import { LFGlottalSource } from "../core/dsp/oscillator";
 import { FormantCascade, FormantFilter, interpolateFormants } from "../core/dsp/filter";
+import { hashNote, mulberry32 } from "../core/rng";
 
 const FORMANT_UPDATE_INTERVAL = Math.round(0.005 * 44100);
 function midiToFrequency(noteNum: number): number {
@@ -9,6 +10,13 @@ function midiToFrequency(noteNum: number): number {
 
 function ticksToDuration(tickLen: number, tempo: number, resolution: number, sampleRate: number): number {
   return tickLen * (60 / (tempo * resolution)) * sampleRate;
+}
+
+/* Per-note leveling */
+function computeAutoGain(peak: number, voicedRatio: number, peakComp: number, volume: number, target: number): number {
+  const volGain = volume * 0.01;
+  const autoGain = peak === 0 ? 1 : Math.pow(target / peak, peakComp * 0.01);
+  return autoGain * volGain;
 }
 
 function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, totalSamples: number, noteLenTicks: number): number {
@@ -29,13 +37,16 @@ function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, to
 function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr: number): Int32Array {
   const dur = new Int32Array(phonemes.length);
   let totalConsSamp = 0;
-  let vowelCount = 0;
+  let vowelWeight = 0;
 
   for (const ph of phonemes) {
     if (ph.type === "consonant" || ph.type === "silence") {
       totalConsSamp += Math.round((ph.defaultDuration ?? 0.06) * sr);
     } else {
-      vowelCount++;
+      // Diphthongs need more time to glide; last vowel gets a natural tail.
+      const isLast = ph === phonemes[phonemes.length - 1];
+      const weight = (ph.type === "diphthong" ? 1.3 : 1) * (isLast ? 1.2 : 1);
+      vowelWeight += weight;
     }
   }
 
@@ -54,7 +65,7 @@ function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr
   }
 
   const remaining = noteLenSamp - totalConsSamp;
-  if (vowelCount === 0) {
+  if (vowelWeight === 0) {
     const perPh = Math.max(1, Math.floor(noteLenSamp / phonemes.length));
     let pos = 0;
     for (let i = 0; i < phonemes.length; i++) {
@@ -62,16 +73,24 @@ function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr
       pos += dur[i];
     }
   } else {
-    let vowelIdx = 0;
+    const samplesPerWeight = Math.max(1, remaining / vowelWeight);
+    let pos = 0;
     for (let i = 0; i < phonemes.length; i++) {
-      if (phonemes[i].type === "consonant" || phonemes[i].type === "silence") {
-        if (dur[i] === 0) dur[i] = Math.max(1, Math.round((phonemes[i].defaultDuration ?? 0.06) * sr));
+      const ph = phonemes[i];
+      if (ph.type === "consonant" || ph.type === "silence") {
+        if (dur[i] === 0) dur[i] = Math.max(1, Math.round((ph.defaultDuration ?? 0.06) * sr));
       } else {
-        const perVowel = Math.max(1, Math.floor(remaining / vowelCount));
-        const extra = vowelIdx === vowelCount - 1 ? remaining - perVowel * vowelCount : 0;
-        dur[i] = vowelIdx < vowelCount - 1 ? perVowel : Math.max(1, perVowel + extra);
-        vowelIdx++;
+        const isLast = i === phonemes.length - 1;
+        const weight = (ph.type === "diphthong" ? 1.3 : 1) * (isLast ? 1.2 : 1);
+        dur[i] = Math.max(1, Math.round(samplesPerWeight * weight));
       }
+      pos += dur[i];
+    }
+    // Correct rounding drift so total matches noteLenSamp exactly.
+    const totalDur = dur.reduce((a, b) => a + b, 0);
+    if (totalDur !== noteLenSamp) {
+      const lastVowel = [...phonemes].findLastIndex((p) => p.type !== "consonant" && p.type !== "silence");
+      if (lastVowel >= 0) dur[lastVowel] += noteLenSamp - totalDur;
     }
   }
 
@@ -89,40 +108,23 @@ function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number
   return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
 }
 
-/** Render a single note into an AudioChunk. Returns the audio data and the
- *  final formant targets of the last phoneme (for cross-note formant
- *  continuity).
- *
- *  Internally: lyric -> phoneme symbols (via lang.lyricToPhonemes) ->
- *  phoneme lookup -> LF glottal pulse -> formant cascade -> noise mix ->
- *  amplitude envelope -> normalisation.
+/** Render a single note from an already-resolved phoneme sequence.
+ *  Returns the audio chunk, the final formant targets of the last phoneme
+ *  (for cross-note continuity), and the start sample of each phoneme within
+ *  the chunk (used to compute voicebank slice points).
  *
  *  `prevFormants` provides the ending formant targets from the previous
  *  note for smooth formant transitions across note boundaries. */
-export function renderNote(
+export function renderPhonemes(
+  phonemes: PhonemeDef[],
   note: Note,
   voice: VoiceConfig,
-  lang: LanguageModule,
   tempo: number,
   resolution: number,
   prevFormants?: FormantTarget[],
-): { chunk: AudioChunk; finalFormants: FormantTarget[] } {
+): { chunk: AudioChunk; finalFormants: FormantTarget[]; phonemeStarts: number[] } {
   const sr = voice.sampleRate;
   const baseF0 = midiToFrequency(note.noteNum);
-  const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
-  const phonemes = phonemeSymbols
-    .map((s) => {
-      const p = lang.phonemes.get(s);
-      if (!p) console.warn(`renderNote: missing phoneme "${s}" in lyric "${note.lyric}"`);
-      return p;
-    })
-    .filter((p): p is NonNullable<typeof p> => p !== undefined);
-
-  // Handle note-join marker (＠): suppress the initial consonant so the
-  // vowel carries through as a continuation of the previous note.
-  if (note.lyric.includes("＠") && phonemes.length > 0 && phonemes[0].type === "consonant") {
-    phonemes.shift();
-  }
 
   const noteLen = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
   const fScale = voice.formant.scale;
@@ -147,10 +149,13 @@ export function renderNote(
       startSample: 0,
       channels: voice.channels,
     };
-    return { chunk, finalFormants: DEFAULT_FORMANTS };
+    return { chunk, finalFormants: DEFAULT_FORMANTS, phonemeStarts: [] };
   }
 
   const glottal = new LFGlottalSource();
+  const seedBase = hashNote(note, `${tempo}:${resolution}:${phonemes.map((p) => p.symbol).join(",")}`);
+  const rng = mulberry32(seedBase);
+  glottal.seed(rng);
   const cascade = new FormantCascade();
 
   const mono = new Float32Array(noteLen);
@@ -161,6 +166,16 @@ export function renderNote(
 
   const transitionLen = Math.round(0.03 * sr);
   const fadeLen = Math.round(0.003 * sr);
+  const boundaryFadeLen = Math.round(0.002 * sr);
+
+  // Velocity (0-127) modulates breath, shimmer, and aspiration dynamics.
+  // Higher velocity = more breath, less shimmer, stronger aspiration.
+  const velNorm = Math.max(0, Math.min(1, (note.velocity ?? 100) / 127));
+  const velBreathScale = 0.5 + velNorm * 0.8;       // 0.5x at v=0, 1.3x at v=127
+  const velShimmerScale = 1 - velNorm * 0.6;         // 1.0x at v=0, 0.4x at v=127
+  const velAspirationScale = 0.6 + velNorm * 0.6;    // 0.6x at v=0, 1.2x at v=127
+  const intensity = note.intensity ?? 100;
+  const intensityScale = intensity / 100;
 
   const phDurations = computePhonemeDurations(phonemes, noteLen, sr);
   const piAtSample = new Int32Array(noteLen);
@@ -187,12 +202,26 @@ export function renderNote(
   let prevPi = -1;
   let phSegStart = 0;
   let overallPeak = 1e-10;
+  let voicedSamples = 0;
   let lastFormantUpdateSample = -FORMANT_UPDATE_INTERVAL; // force update on first sample
-  const aspirationLpPole = Math.exp((-2 * Math.PI * 4000) / sr);
-  let aspirationLpState = 0;
-
   const parallelFilters: FormantFilter[] = Array.from({ length: 3 }, () => new FormantFilter());
   for (const pf of parallelFilters) pf.setPassthrough();
+
+  // Klatt-style parallel aspiration branch: glottal breath is shaped by a
+  // fixed broadband formant pair and summed *after* the voiced cascade, so it
+  // is independent of the vowel formants (unlike the old pre-cascade injection).
+  const breathFilters: FormantFilter[] = [
+    (() => {
+      const f = new FormantFilter();
+      f.setResonator(1800, 1200, sr);
+      return f;
+    })(),
+    (() => {
+      const f = new FormantFilter();
+      f.setResonator(3500, 1800, sr);
+      return f;
+    })(),
+  ];
 
   for (let i = 0; i < noteLen; i++) {
     const pi = piAtSample[i];
@@ -201,15 +230,12 @@ export function renderNote(
     if (pi !== prevPi) {
       phSegStart = i;
       prevPi = pi;
-      // Reset cascade state when the phoneme changes. Without this, the
-      // filter's internal y1/y2/x1/x2 from the previous formant target
-      // would mix with the new coefficients and produce a wideband click
-      // at every phoneme boundary.
-      cascade.reset();
+      // Keep filter state from the previous phoneme: the ringing of the old
+      // coefficients naturally crossfades into the new ones as they settle,
+      // producing a smooth formant glide instead of a discontinuity.
+      // Update parallel noise-filter coefficients for the new phoneme.
       const noiseTargets = cp.noise?.formantShaping ?? [];
       for (let fi = 0; fi < parallelFilters.length; fi++) {
-        // Reset parallel filter state too
-        parallelFilters[fi].reset();
         if (fi < noiseTargets.length) {
           const at = applyVoice([noiseTargets[fi]])[0];
           parallelFilters[fi].setResonator(at.f, at.bw, sr);
@@ -251,9 +277,10 @@ export function renderNote(
       }
     }
 
-    const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal });
+    const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal, shimmer: (voice.glottal.shimmer ?? 0) * velShimmerScale });
     const voiced = cp.voiced !== false;
-    const nSample = Math.random() * 2 - 1;
+    if (voiced) voicedSamples++;
+    const nSample = rng() * 2 - 1;
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
     const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)));
@@ -272,12 +299,14 @@ export function renderNote(
       } else {
         noiseSignal = nSample;
       }
-      noiseSignal *= cp.noise.amplitude * noiseEnv;
+      noiseSignal *= cp.noise.amplitude * noiseEnv * velBreathScale;
     }
+    let breathSignal = 0;
     if (cp.type === "vowel" || cp.type === "diphthong") {
-      // Low-pass the aspiration noise so it stays in the natural band
-      aspirationLpState = aspirationLpState * aspirationLpPole + nSample * (1 - aspirationLpPole);
-      glottalSignal += aspirationLpState * voice.glottal.aspiration * 0.3 * noiseEnv;
+      // Parallel aspiration branch (broadband breath), summed post-cascade.
+      let breath = 0;
+      for (const bf of breathFilters) breath += bf.processSample(nSample);
+      breathSignal = breath * voice.glottal.aspiration * noiseEnv * velAspirationScale;
     }
 
     const phEnv = phEnvelopes[pi];
@@ -291,13 +320,21 @@ export function renderNote(
       env *= t * t * (3 - 2 * t);
     }
     const cascaded = cascade.processSample(glottalSignal);
-    const enveloped = (cascaded + noiseSignal) * env;
+    const boundaryFade = Math.min(1, segPos / Math.max(1, boundaryFadeLen));
+    const enveloped = (cascaded + noiseSignal + breathSignal) * env * boundaryFade;
     mono[i] = enveloped;
     if (Math.abs(enveloped) > overallPeak) overallPeak = Math.abs(enveloped);
   }
 
-  const gain = Math.min(100, 0.4 / Math.max(1e-6, overallPeak));
-  for (let i = 0; i < noteLen; i++) mono[i] *= gain;
+  const voicedRatio = noteLen > 0 ? voicedSamples / noteLen : 1;
+  const volume = voice.volume ?? 100;
+  const peakComp = voice.peakComp ?? 100;
+  const target = voice.normalizeTarget ?? 0.5;
+  const gain = computeAutoGain(overallPeak, voicedRatio, peakComp, volume, target) * intensityScale;
+  for (let i = 0; i < noteLen; i++) {
+    const s = mono[i] * gain;
+    mono[i] = s > 0.99 ? 0.99 : s < -0.99 ? -0.99 : s;
+  }
 
   const lastPh = phonemes[phonemes.length - 1];
   let finalFormants: FormantTarget[];
@@ -309,9 +346,46 @@ export function renderNote(
     finalFormants = DEFAULT_FORMANTS;
   }
 
+  const phonemeStarts = new Array<number>(phonemes.length);
+  let acc = 0;
+  for (let pi = 0; pi < phonemes.length; pi++) {
+    phonemeStarts[pi] = acc;
+    acc += phSampleCounts[pi];
+  }
+
   const chunk: AudioChunk =
     voice.channels === 2
       ? { data: [new Float32Array(mono), new Float32Array(mono)], sampleRate: sr, startSample: 0, channels: 2 }
       : { data: [mono], sampleRate: sr, startSample: 0, channels: 1 };
-  return { chunk, finalFormants };
+  return { chunk, finalFormants, phonemeStarts };
+}
+
+/** Render a single note from a lyric string. Resolves phonemes via the
+ *  language module (`lang.lyricToPhonemes`), applies the note-join marker
+ *  (＠) rule, and delegates to `renderPhonemes`. Returns the same tuple plus
+ *  per-phoneme start samples. */
+export function renderNote(
+  note: Note,
+  voice: VoiceConfig,
+  lang: LanguageModule,
+  tempo: number,
+  resolution: number,
+  prevFormants?: FormantTarget[],
+): { chunk: AudioChunk; finalFormants: FormantTarget[]; phonemeStarts: number[] } {
+  const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
+  const phonemes = phonemeSymbols
+    .map((s) => {
+      const p = lang.phonemes.get(s);
+      if (!p) console.warn(`renderNote: missing phoneme "${s}" in lyric "${note.lyric}"`);
+      return p;
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+  // Handle note-join marker (＠): suppress the initial consonant so the
+  // vowel carries through as a continuation of the previous note.
+  if (note.lyric.includes("＠") && phonemes.length > 0 && phonemes[0].type === "consonant") {
+    phonemes.shift();
+  }
+
+  return renderPhonemes(phonemes, note, voice, tempo, resolution, prevFormants);
 }

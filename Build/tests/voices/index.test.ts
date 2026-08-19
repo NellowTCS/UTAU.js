@@ -21,7 +21,7 @@ describe("buildVoice", () => {
   it("merges nested glottal overrides", () => {
     const v = buildVoice({ glottal: { openQuotient: 0.7 } });
     expect(v.glottal.openQuotient).toBe(0.7);
-    expect(v.glottal.speedQuotient).toBe(0.85);
+    expect(v.glottal.speedQuotient).toBe(2.4);
     expect(v.glottal.jitter).toBe(0.015);
   });
 });
@@ -42,9 +42,10 @@ describe("scaleVoice", () => {
     expect(female.formant.scale).toBeCloseTo(1.2, 2);
   });
 
-  it("clamps gender to [-1, 1]", () => {
+  it("passes gender through unclamped (limitless)", () => {
     const v = scaleVoice(buildVoice(), { gender: 2 });
-    expect(v.formant.scale).toBeCloseTo(1.2, 2);
+    // gender=2 → fScale = 1.0 * (1 + 0.2 * 2) = 1.4
+    expect(v.formant.scale).toBeCloseTo(1.4, 2);
   });
 
   it("adjusts breathiness", () => {

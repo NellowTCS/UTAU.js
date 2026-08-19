@@ -1,9 +1,9 @@
 ---
 title: "API Reference"
-description: "Complete API reference for UTAU.js"
+description: "Complete API reference for Ichikara"
 ---
 
-UTAU.js exposes a flat module surface through its main entry point. All public types and functions are exported from `utaujs`.
+Ichikara exposes a flat module surface through its main entry point. All public types and functions are exported from `ichikara`.
 
 ## Core Types
 

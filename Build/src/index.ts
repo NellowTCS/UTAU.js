@@ -13,6 +13,8 @@ export type {
   LanguageModule,
   GlottalSourceParams,
   PitchBend,
+  ReclistEntry,
+  ReclistStyle,
 } from "./core/types";
 
 export { LFGlottalSource } from "./core/dsp/oscillator";
@@ -30,3 +32,5 @@ export { ufDataToScore, importScoreFromFile, importScoreFromBytes } from "./impo
 export type { ImportOptions, UfData } from "./import/ufdata";
 export { scoreToUfData, exportScoreToBytes, exportScoreToBlob, exportScoreToUrl, downloadScore } from "./export/ufdata";
 export type { ExportOptions } from "./export/ufdata";
+export { buildVoicebank } from "./export/voicebank";
+export type { VoicebankBundle, VoicebankSample, BuildVoicebankOptions } from "./export/voicebank";

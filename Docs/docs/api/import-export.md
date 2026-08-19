@@ -33,7 +33,7 @@ File or bytes  -->  utaformatix-3 parser  -->  UfData  -->  Score
 ### Import from File
 
 ```typescript
-import { importScoreFromFile } from "utaujs";
+import { importScoreFromFile } from "ichikara";
 
 // Browser file input
 const input = document.querySelector('input[type="file"]');
@@ -46,7 +46,7 @@ input.addEventListener("change", async () => {
 ### Import from Bytes
 
 ```typescript
-import { importScoreFromBytes } from "utaujs";
+import { importScoreFromBytes } from "ichikara";
 
 const response = await fetch("song.ustx");
 const buf = new Uint8Array(await response.arrayBuffer());
@@ -69,7 +69,7 @@ Export a Score to any supported format:
 ### Export as Bytes
 
 ```typescript
-import { exportScoreToBytes } from "utaujs";
+import { exportScoreToBytes } from "ichikara";
 
 const bytes = await exportScoreToBytes(score, {
   format: "ustx",
@@ -86,7 +86,7 @@ const blob = await exportScoreToBlob(score, { format: "mid" });
 ### Download in Browser
 
 ```typescript
-import { downloadScore } from "utaujs";
+import { downloadScore } from "ichikara";
 
 await downloadScore(score, {
   format: "ustx",
@@ -97,7 +97,7 @@ await downloadScore(score, {
 ### Low-Level: Direct UfData Conversion
 
 ```typescript
-import { scoreToUfData, ufDataToScore } from "utaujs";
+import { scoreToUfData, ufDataToScore } from "ichikara";
 
 const ufData = scoreToUfData(score);
 // Manipulate ufData directly...

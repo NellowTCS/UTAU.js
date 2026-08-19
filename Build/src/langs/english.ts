@@ -1,5 +1,5 @@
-import type { PhonemeDef, LanguageModule } from "../core/types";
-import g2pData from "./data/en-g2p.json";
+import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import g2pData from "./data/en-g2p.cjs";
 
 // English (ARPAbet) phoneme data.
 //
@@ -443,6 +443,39 @@ const enPhonemes: PhonemeDef[] = [
 ];
 
 const g2p = g2pData as Record<string, string[]>;
+const EN_VOWELS = enPhonemes.filter((p) => p.type === "vowel" || p.type === "diphthong").map((p) => p.symbol);
+const EN_CONSONANTS = enPhonemes.filter((p) => p.type === "consonant").map((p) => p.symbol);
+
+/** English CV reclist: standalone vowels plus one consonant+vowel sample per
+ *  (consonant, vowel) pair. */
+function buildEnCv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const v of EN_VOWELS) out.push({ alias: v.toLowerCase(), phonemes: [v] });
+  for (const c of EN_CONSONANTS) {
+    for (const v of EN_VOWELS) out.push({ alias: `${c.toLowerCase()} ${v.toLowerCase()}`, phonemes: [c, v] });
+  }
+  return out;
+}
+
+/** English VCCV-style reclist: leading/ending vowels, vowel blends, and every
+ *  vowel+consonant and consonant+vowel connection. */
+function buildEnVcv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const v of EN_VOWELS) {
+    out.push({ alias: `- ${v.toLowerCase()}`, phonemes: [v] });
+    out.push({ alias: `${v.toLowerCase()} -`, phonemes: [v] });
+  }
+  for (const v1 of EN_VOWELS) {
+    for (const v2 of EN_VOWELS) out.push({ alias: `${v1.toLowerCase()} ${v2.toLowerCase()}`, phonemes: [v1, v2] });
+  }
+  for (const v of EN_VOWELS) {
+    for (const c of EN_CONSONANTS) out.push({ alias: `${v.toLowerCase()} ${c.toLowerCase()}`, phonemes: [v, c] });
+  }
+  for (const c of EN_CONSONANTS) {
+    for (const v of EN_VOWELS) out.push({ alias: `${c.toLowerCase()} ${v.toLowerCase()}`, phonemes: [c, v] });
+  }
+  return out;
+}
 
 /** English language module with ARPAbet phoneme inventory and CMUDict-based
  *  G2P. Handles letter-to-phoneme conversion via a compressed CMU Pronouncing
@@ -460,28 +493,35 @@ export const english: LanguageModule = {
     const simple: Record<string, string> = {
       a: "AA",
       b: "B",
+      c: "S",
       d: "D",
       e: "EH",
       f: "F",
       g: "G",
       h: "HH",
       i: "IH",
+      j: "JH",
       k: "K",
       l: "L",
       m: "M",
       n: "N",
       o: "AA",
       p: "P",
+      q: "K",
       r: "R",
       s: "S",
       t: "T",
       u: "AH",
       v: "V",
       w: "W",
+      x: "K S",
       y: "Y",
       z: "Z",
     };
     const mapped = [...clean].map((c) => simple[c]).filter(Boolean);
     return mapped.length > 0 ? mapped : ["AH"];
+  },
+  reclist(style: ReclistStyle): ReclistEntry[] {
+    return style === "vcv" ? buildEnVcv() : buildEnCv();
   },
 };

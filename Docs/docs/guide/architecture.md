@@ -1,6 +1,6 @@
 ---
 title: "Architecture"
-description: "How the UTAU.js library is organised"
+description: "How the Ichikara library is organised"
 ---
 
 ## Module Layout

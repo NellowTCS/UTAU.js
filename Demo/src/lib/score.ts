@@ -1,4 +1,4 @@
-import type { Note, Score } from "utaujs";
+import type { Note, Score } from "ichikara";
 
 export type EditorLanguage = "jp" | "en" | "zh";
 

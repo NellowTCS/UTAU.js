@@ -1,5 +1,5 @@
-import type { PhonemeDef, LanguageModule } from "../core/types";
-import g2pData from "./data/jp-g2p.json";
+import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import g2pData from "./data/jp-g2p.cjs";
 
 // Japanese phoneme data.
 //
@@ -436,7 +436,19 @@ function sanitizeLyric(lyric: string): string {
   if (effectiveLyric.startsWith(".")) return "";
   const cleaned = effectiveLyric.replace(/[＠％]/g, "");
   if (!cleaned) return "";
-  return hiraganaMap[cleaned] ?? cleaned;
+
+  const single = hiraganaMap[cleaned];
+  if (single) return single;
+  // Multi-mora kana
+  if (/[\u3040-\u309f\u30a0-\u30ff]/.test(cleaned)) {
+    const parts: string[] = [];
+    for (const ch of [...cleaned]) {
+      const m = hiraganaMap[ch];
+      parts.push(m ?? ch);
+    }
+    return parts.join(" ");
+  }
+  return cleaned;
 }
 
 function romajiToPhonemes(romaji: string): string[] {
@@ -516,15 +528,52 @@ function romajiToPhonemes(romaji: string): string[] {
   return result;
 }
 
-const HIGH_OFFSET = 1;
-
 function resolveAccents(lyrics: string[]): (number | undefined)[] {
-  const result: (number | undefined)[] = new Array(lyrics.length).fill(undefined);
-  if (lyrics.length === 0) return result;
-  for (let i = 0; i < lyrics.length; i++) {
-    result[i] = i === 0 ? 0 : HIGH_OFFSET;
+  return lyrics.map(() => undefined);
+}
+
+const CV_VOWELS = ["a", "i", "u", "e", "o"];
+
+/** Build the Japanese CV reclist: one sample per mora (consonant+vowel),
+ *  plus standalone vowels, the nasal ん ("n"), and the sokuon っ ("sil").
+ *  Aliases are romaji; duplicates (e.g. じ/ぢ -> "ji") are collapsed. */
+function buildJpCv(): ReclistEntry[] {
+  const map = new Map<string, ReclistEntry>();
+  for (const romaji of Object.values(hiraganaMap)) {
+    if (romaji === "sil") {
+      if (!map.has("sil")) map.set("sil", { alias: "sil", phonemes: ["sil"] });
+      continue;
+    }
+    const phonemes = romajiToPhonemes(romaji);
+    if (phonemes.length === 0) continue;
+    if (!map.has(romaji)) map.set(romaji, { alias: romaji, phonemes });
   }
-  return result;
+  return [...map.values()];
+}
+
+/** Build the Japanese VCV reclist: leading vowels ("- a"), endings ("a -"),
+ *  vowel blends ("a i"), and every prev-vowel + mora connection ("a ka").
+ *  Morae are every CV alias whose first phoneme is not a standalone vowel. */
+function buildJpVcv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  const cv = buildJpCv();
+  const morae = cv.filter((e) => !CV_VOWELS.includes(e.phonemes[0]));
+
+  for (const v of CV_VOWELS) {
+    out.push({ alias: `- ${v}`, phonemes: [v] });
+    out.push({ alias: `${v} -`, phonemes: [v] });
+  }
+  for (const v1 of CV_VOWELS) {
+    for (const v2 of CV_VOWELS) {
+      out.push({ alias: `${v1} ${v2}`, phonemes: [v1, v2] });
+    }
+  }
+  for (const v of CV_VOWELS) {
+    for (const m of morae) {
+      out.push({ alias: `${v} ${m.alias}`, phonemes: [v, ...m.phonemes] });
+    }
+  }
+  return out;
 }
 
 /** Japanese language module with IPA-like phoneme inventory, hiragana/romaji
@@ -555,4 +604,7 @@ export const japanese: LanguageModule = {
       .flatMap((p) => romajiToPhonemes(p));
   },
   resolveAccents,
+  reclist(style: ReclistStyle): ReclistEntry[] {
+    return style === "vcv" ? buildJpVcv() : buildJpCv();
+  },
 };
