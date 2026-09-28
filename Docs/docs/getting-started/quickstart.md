@@ -3,7 +3,7 @@ title: "Quick Start"
 description: "Render your first singing voice synthesis in 5 minutes"
 ---
 
-This guide gets you from zero to a working UTAU.js render. You will create a score, render it with a voice preset, and save the output as a WAV file.
+This guide gets you from zero to a working Ichikara render. You will create a score, render it with a voice preset, and save the output as a WAV file.
 
 ::: callout tip "Prerequisites"
 You need Node.js 18+ or a modern browser. See [Installation](./installation) to set things up.
@@ -16,7 +16,7 @@ You need Node.js 18+ or a modern browser. See [Installation](./installation) to 
    A Score is the input to the renderer: tempo map, timing resolution, and a list of notes. Each note has a lyric, MIDI note number, and duration.
 
    ```typescript
-   import { renderScore, femaleVoice, japanese, encodeWav } from "utaujs";
+   import { renderScore, chitoseChika, japanese, encodeWav } from "ichikara";
 
    const score = {
      tempos: [{ tick: 0, tempo: 120 }],
@@ -41,7 +41,7 @@ You need Node.js 18+ or a modern browser. See [Installation](./installation) to 
    Call `renderScore` with your score, a voice config, and a language identifier:
 
    ```typescript
-   const chunks = await renderScore(score, femaleVoice, "jp");
+   const chunks = await renderScore(score, chitoseChika, "jp");
    console.log(`Rendered ${chunks.length} notes`);
    ```
 
@@ -73,29 +73,29 @@ You need Node.js 18+ or a modern browser. See [Installation](./installation) to 
    For real-time playback without waiting for the full render:
 
    ```typescript
-   import { streamScore, StreamPlayer } from "utaujs";
+   import { streamScore, StreamPlayer } from "ichikara";
 
    const player = new StreamPlayer();
-   await player.play(streamScore(score, femaleVoice, "jp"));
+   await player.play(streamScore(score, chitoseChika, "jp"));
    ```
 
    The renderer produces audio chunks while the player schedules them against the Web Audio clock. Pre-buffer threshold defaults to 1 second.
 
 5. **Try a Different Voice**
 
-   UTAU.js ships with male and female presets, plus a builder for custom voices:
+   Ichikara ships with three named voices, plus a builder for custom ones:
 
    ```typescript
-   import { maleVoice, buildVoice, scaleVoice } from "utaujs";
+   import { chitoseChika, chitoseSho, buildVoice, scaleVoice } from "ichikara";
 
-   // Use the built-in male voice
-   const chunks1 = await renderScore(score, maleVoice, "jp");
+   // Use a built-in voice
+   const chunks1 = await renderScore(score, chitoseSho, "jp");
 
    // Build a custom voice
    const custom = buildVoice({ name: "My Voice", sampleRate: 48000 });
 
    // Scale along perceptual dimensions
-   const breathy = scaleVoice(femaleVoice, {
+   const breathy = scaleVoice(chitoseChika, {
      breathiness: 0.6,
      tension: 0.3,
      vibratoAmount: 0.5,

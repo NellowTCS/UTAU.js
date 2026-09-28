@@ -33,11 +33,11 @@ jobs:
 
       - name: Rename for distribution
         working-directory: Demo/dist
-        run: mv index.html UTAUjsEditor.html
+        run: mv index.html IchikaraEditor.html
 
       - name: Upload Demo Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UTAUjsEditor-Standalone
-          path: Demo/dist/UTAUjsEditor.html
+          name: IchikaraEditor-Standalone
+          path: Demo/dist/IchikaraEditor.html
           if-no-files-found: error

@@ -1,12 +1,12 @@
 ---
-title: "UTAU.js"
+title: "Ichikara"
 description: "A speech-synthesis library for singing voice synthesis in the browser"
 ---
 
 ::: hero layout:split glow:true
 
 <!-- markdownlint-disable MD025 -->
-# UTAU.js
+# Ichikara
 
 A speech-synthesis library for singing voice synthesis in the browser.
 
@@ -16,12 +16,12 @@ A speech-synthesis library for singing voice synthesis in the browser.
 
 ::: button "Quick Start" ./getting-started/quickstart.md icon:play
 <!--markdownlint-disable MD034-->
-::: button "GitHub" external:https://github.com/NellowTCS/UTAU.js icon:github
+::: button "GitHub" external:https://github.com/NellowTCS/Ichikara icon:github
 
 == side
 
-::: card "Why UTAU.js?"
-Traditional UTAU needs a separate voicebank for every character or style. Each one recorded, oto'd, and bundled individually. UTAU.js flips that: one parametric voice, infinite variation. Change gender, breathiness, brightness, or vibrato with a single function call. No thousand-voice library, no multi-gigabyte downloads.
+::: card "Why Ichikara?"
+Traditional UTAU needs a separate voicebank for every character or style. Each one recorded, oto'd, and bundled individually. Ichikara flips that: one parametric voice, infinite variation. Change gender, breathiness, brightness, or vibrato with a single function call. No thousand-voice library, no multi-gigabyte downloads.
 :::
 :::
 
@@ -73,7 +73,7 @@ One parametric voice, infinite variations. Male, female, breathy, bright, tense.
 == tab "Node.js"
 
 ```typescript
-import { renderScore, femaleVoice, japanese, encodeWav } from "utau.js";
+import { renderScore, chitoseChika, japanese, encodeWav } from "ichikara";
 import { writeFileSync } from "node:fs";
 
 const score = {
@@ -88,7 +88,7 @@ const score = {
   ],
 };
 
-const chunks = await renderScore(score, femaleVoice, "jp");
+const chunks = await renderScore(score, chitoseChika, "jp");
 const wav = encodeWav(chunks);
 writeFileSync("hello.wav", Buffer.from(wav));
 ```
@@ -96,7 +96,7 @@ writeFileSync("hello.wav", Buffer.from(wav));
 == tab "Browser"
 
 ```typescript
-import { streamScore, femaleVoice, japanese, StreamPlayer } from "utau.js";
+import { streamScore, chitoseChika, japanese, StreamPlayer } from "ichikara";
 
 const score = { /* ... */ };
 const player = new StreamPlayer();
@@ -106,13 +106,13 @@ player.on((event) => {
   if (event.type === "progress") console.log(`${event.renderedSamples} samples scheduled`);
 });
 
-await player.play(streamScore(score, femaleVoice, "jp"));
+await player.play(streamScore(score, chitoseChika, "jp"));
 ```
 
 == tab "Custom Voice"
 
 ```typescript
-import { renderScore, buildVoice, scaleVoice, encodeWav } from "utau.js";
+import { renderScore, buildVoice, scaleVoice, encodeWav } from "ichikara";
 
 const brightFemale = scaleVoice(buildVoice({
   name: "Bright Alto",
@@ -131,7 +131,7 @@ const chunks = await renderScore(score, brightFemale, "en");
 ## Installation
 
 ```bash
-npm install utaujs
+npm install ichikara
 ```
 
 ## Next Steps
@@ -141,7 +141,7 @@ npm install utaujs
 
 ### Getting Started
 
-Start here if you are new to UTAU.js.
+Start here if you are new to Ichikara.
 
 ::: button "Quick Start" ./getting-started/quickstart.md icon:play
 ::: button "Installation" ./getting-started/installation.md icon:download

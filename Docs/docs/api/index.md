@@ -1,9 +1,9 @@
 ---
 title: "API Reference"
-description: "Complete API reference for UTAU.js"
+description: "Complete API reference for Ichikara"
 ---
 
-UTAU.js exposes a flat module surface through its main entry point. All public types and functions are exported from `utaujs`.
+Ichikara exposes a flat module surface through its main entry point. All public types and functions are exported from `ichikara`.
 
 ## Core Types
 
@@ -63,12 +63,14 @@ UTAU.js exposes a flat module surface through its main entry point. All public t
 
 | Export          | Description                             |
 |-----------------|-----------------------------------------|
-| `getVoice`      | Look up registered voice by name        |
-| `registerVoice` | Register a custom voice config          |
-| `maleVoice`     | Default male voice preset               |
-| `femaleVoice`   | Default female voice preset             |
-| `buildVoice`    | Build voice from partial overrides      |
-| `scaleVoice`    | Scale voice along perceptual dimensions |
+| `getVoice`        | Look up registered voice by name        |
+| `registerVoice`   | Register a custom voice config          |
+| `chitoseChika`    | Chitose Chika, the female voice          |
+| `chitoseSho`      | Chitose Sho, the male voice              |
+| `chitoseRen`      | Chitose Ren, the neutral voice           |
+| `chitoseVoices`   | All named voices, in UI order           |
+| `buildVoice`      | Build voice from partial overrides      |
+| `scaleVoice`      | Scale voice along perceptual dimensions |
 
 ## Playback
 

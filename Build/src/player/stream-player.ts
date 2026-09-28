@@ -1,47 +1,32 @@
 import type { AudioChunk } from "../core/types";
 
-/** Playback state of a StreamPlayer. */
 export type PlayerState = "idle" | "playing" | "paused";
 
-/** Events emitted by StreamPlayer during playback. Subscribe via `on()`. */
 export type PlayerEvent =
   | {
-      /** Playback state has changed. */
       type: "stateChange";
       state: PlayerState;
     }
   | {
-      /** Periodic progress update during playback. */
       type: "progress";
-      /** Number of samples scheduled so far. */
       renderedSamples: number;
-      /** Total samples in the full stream (may be 0 if unknown). */
-      totalSamples: number;
-      /** Seconds of audio ahead of the current playhead. */
       bufferAhead: number;
     }
   | {
-      /** Stream has been fully rendered and played. */
       type: "done";
     }
   | {
-      /** Buffer fell below the safe threshold (may cause audio dropout). */
       type: "bufferUnderrun";
       bufferAhead: number;
     }
   | {
-      /** An error occurred during rendering or playback. */
       type: "error";
       error: Error;
     };
 
-/** Options for StreamPlayer.play(). */
 export interface PlayOptions {
-  /** Playback volume (0-1). */
   volume?: number;
-  /** Output sample rate. Defaults to the AudioContext default. */
   sampleRate?: number;
-  /** Seconds of audio to pre-buffer before starting playback. Default 1.0. */
   preBufferThreshold?: number;
 }
 
@@ -51,12 +36,12 @@ interface PoolEntry {
 }
 
 const BATCH_TARGET_SEC = 0.5;
+const START_LEAD_SECONDS = 0.05;
 
-/** Streaming audio player that consumes an AsyncGenerator of AudioChunks
- *  and schedules them against the Web Audio API clock. Uses batching to
- *  reduce scheduling overhead and a buffer pool to minimise GC pressure.
- *
- *  Emits PlayerEvents for state changes, progress, and errors. */
+function toError(err: unknown): Error {
+  return err instanceof Error ? err : new Error(String(err));
+}
+
 export class StreamPlayer {
   private ctx: AudioContext | null = null;
   private state: PlayerState = "idle";
@@ -65,27 +50,24 @@ export class StreamPlayer {
   private abortController: AbortController | null = null;
   private gainNode: GainNode | null = null;
   private totalSamplesScheduled = 0;
-  private totalDurationSec = 0;
+  private scheduledEndTime = 0;
   private preBufferThreshold = 1.0;
   private underrunEmitted = false;
 
-  // Batching + buffer pool
   private bufferPool: PoolEntry[] = [];
   private currentBatch: AudioChunk[] = [];
   private currentBatchStartSample = 0;
   private currentBatchDuration = 0;
+  private playbackEndInterval: ReturnType<typeof setInterval> | null = null;
 
-  /** Set the output volume (0-1). */
   setVolume(v: number): void {
     if (this.gainNode) this.gainNode.gain.value = v;
   }
 
-  /** Current player state. */
   get currentState(): PlayerState {
     return this.state;
   }
 
-  /** Subscribe to player events. Returns an unsubscribe function. */
   on(cb: (event: PlayerEvent) => void): () => void {
     this.listeners.push(cb);
     return () => {
@@ -97,21 +79,21 @@ export class StreamPlayer {
     for (const cb of this.listeners) {
       try {
         cb(event);
-      } catch {
-        /* noop */
+      } catch (err) {
+        console.error("[StreamPlayer] event listener threw", { event: event.type, err });
       }
     }
   }
 
-  private acquireBuffer(sampleRate: number, length: number): AudioBuffer {
+  private acquireBuffer(channels: number, sampleRate: number, length: number, ctx: AudioContext): AudioBuffer {
     for (const entry of this.bufferPool) {
-      if (!entry.inUse && entry.buf.sampleRate === sampleRate && entry.buf.length >= length) {
+      if (!entry.inUse && entry.buf.sampleRate === sampleRate && entry.buf.numberOfChannels === channels && entry.buf.length >= length) {
         entry.inUse = true;
-        entry.buf.getChannelData(0).fill(0);
+        for (let c = 0; c < channels; c++) entry.buf.getChannelData(c).fill(0);
         return entry.buf;
       }
     }
-    const buf = this.ctx!.createBuffer(1, length, sampleRate);
+    const buf = ctx.createBuffer(channels, length, sampleRate);
     this.bufferPool.push({ buf, inUse: true });
     return buf;
   }
@@ -125,33 +107,39 @@ export class StreamPlayer {
     }
   }
 
-  private flushBatch(): void {
+  private flushBatch(ctx: AudioContext, gainNode: GainNode): void {
     if (this.currentBatch.length === 0) return;
     const sr = this.currentBatch[0].sampleRate;
     const channels = this.currentBatch[0].data.length;
-    const totalLen = this.currentBatch.reduce((s, c) => s + c.data[0].length, 0);
-    const batchStartSec = this.currentBatchStartSample / sr;
-    const t = Math.max(this.ctx!.currentTime + 0.01, this.startTime + batchStartSec);
 
+    const spanStart = this.currentBatchStartSample;
+    let spanEnd = spanStart;
+    for (const c of this.currentBatch) spanEnd = Math.max(spanEnd, c.startSample + c.data[0].length);
+    const totalLen = Math.max(1, spanEnd - spanStart);
+
+    const buf = this.acquireBuffer(channels, sr, totalLen, ctx);
     for (let c = 0; c < channels; c++) {
-      const buf = this.acquireBuffer(sr, totalLen);
-      const channelData = buf.getChannelData(0);
-      let offset = 0;
+      const dst = buf.getChannelData(c);
       for (const chunk of this.currentBatch) {
-        const src = chunk.data[c];
-        channelData.set(src, offset);
-        offset += src.length;
+        const src = chunk.data[Math.min(c, chunk.data.length - 1)];
+        const at = chunk.startSample - spanStart;
+        for (let i = 0; i < src.length; i++) {
+          const idx = at + i;
+          if (idx >= 0 && idx < totalLen) dst[idx] += src[i];
+        }
       }
-      const src = this.ctx!.createBufferSource();
-      src.buffer = buf;
-      src.connect(this.gainNode!);
-      src.start(t);
-      src.onended = () => this.releaseBuffer(buf);
     }
 
-    const lastChunk = this.currentBatch[this.currentBatch.length - 1];
-    const scheduledEnd = this.startTime + (lastChunk.startSample + lastChunk.data[0].length) / sr;
-    const bufferAhead = Math.max(0, scheduledEnd - this.ctx!.currentTime);
+    const t = Math.max(ctx.currentTime + 0.01, this.startTime + spanStart / sr);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(gainNode);
+    src.start(t, 0, totalLen / sr);
+    src.onended = () => this.releaseBuffer(buf);
+
+    this.totalSamplesScheduled = Math.max(this.totalSamplesScheduled, spanEnd);
+    this.scheduledEndTime = Math.max(this.scheduledEndTime, t + totalLen / sr);
+    const bufferAhead = Math.max(0, this.scheduledEndTime - ctx.currentTime);
 
     if (bufferAhead < 0.15 && !this.underrunEmitted) {
       this.underrunEmitted = true;
@@ -162,7 +150,6 @@ export class StreamPlayer {
       this.emit({
         type: "progress",
         renderedSamples: this.totalSamplesScheduled,
-        totalSamples: this.totalDurationSec > 0 ? Math.round(this.totalDurationSec * sr) : this.totalSamplesScheduled,
         bufferAhead,
       });
     }
@@ -171,125 +158,181 @@ export class StreamPlayer {
     this.currentBatchDuration = 0;
   }
 
-  private scheduleChunk(chunk: AudioChunk): void {
+  private scheduleChunk(chunk: AudioChunk, ctx: AudioContext, gainNode: GainNode): void {
     if (this.abortController?.signal.aborted) return;
+    if (this.currentBatch.length > 0 && chunk.sampleRate !== this.currentBatch[0].sampleRate) {
+      this.flushBatch(ctx, gainNode);
+    }
     this.currentBatch.push(chunk);
     if (this.currentBatch.length === 1) {
       this.currentBatchStartSample = chunk.startSample;
+    } else {
+      this.currentBatchStartSample = Math.min(this.currentBatchStartSample, chunk.startSample);
     }
     this.currentBatchDuration += chunk.data[0].length / chunk.sampleRate;
     this.totalSamplesScheduled = Math.max(this.totalSamplesScheduled, chunk.startSample + chunk.data[0].length);
     if (this.currentBatchDuration >= BATCH_TARGET_SEC) {
-      this.flushBatch();
+      this.flushBatch(ctx, gainNode);
     }
   }
 
-  /** Start playback of an AudioChunk stream. Pre-buffers `preBufferThreshold`
-   *  seconds before allowing audio to reach the output, then schedules chunks
-   *  in batches against the AudioContext clock. Stops any current playback
-   *  first. */
   async play(stream: AsyncGenerator<AudioChunk>, volume = 0.8, sampleRate?: number, options?: PlayOptions): Promise<void> {
     this.stop();
     this.preBufferThreshold = options?.preBufferThreshold ?? 1.0;
     this.underrunEmitted = false;
     this.ctx = new AudioContext({ sampleRate: sampleRate ?? 44100 });
-    this.gainNode = this.ctx.createGain();
-    this.gainNode.connect(this.ctx.destination);
+    const ctx = this.ctx;
+    this.gainNode = ctx.createGain();
+    this.gainNode.connect(ctx.destination);
     this.gainNode.gain.value = Math.max(0, Math.min(1, volume));
+    if (ctx.state === "suspended") {
+      try {
+        await ctx.resume();
+      } catch (err) {
+        this.cleanup(ctx);
+        await ctx.close().catch((closeErr) => console.error("[StreamPlayer] failed to close AudioContext", closeErr));
+        this.state = "idle";
+        this.emit({ type: "error", error: toError(err) });
+        this.emit({ type: "stateChange", state: "idle" });
+        return;
+      }
+    }
+    const gainNode = this.gainNode;
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
     this.totalSamplesScheduled = 0;
-    this.totalDurationSec = 0;
+    this.scheduledEndTime = 0;
     this.bufferPool = [];
     this.currentBatch = [];
     this.currentBatchDuration = 0;
 
     const iter = stream[Symbol.asyncIterator]();
 
-    // Pre-buffer: collect chunks until threshold met or stream exhausted
     const buf: AudioChunk[] = [];
     let bufSec = 0;
-    for (;;) {
-      if (signal.aborted) {
-        this.cleanup();
-        return;
-      }
-      const { value: chunk, done } = await iter.next();
-      if (done) break;
-      this.totalDurationSec += chunk.data[0].length / chunk.sampleRate;
-      buf.push(chunk);
-      bufSec += chunk.data[0].length / chunk.sampleRate;
-      if (bufSec >= this.preBufferThreshold) break;
-    }
-
-    // Start playback
-    this.startTime = this.ctx.currentTime + 0.05;
-    this.state = "playing";
-    this.emit({ type: "stateChange", state: "playing" });
-
-    // Schedule pre-buffered chunks (goes through batching)
-    for (const chunk of buf) this.scheduleChunk(chunk);
-    this.flushBatch();
-
-    // Consume remaining chunks
     try {
       for (;;) {
         if (signal.aborted) break;
         const { value: chunk, done } = await iter.next();
         if (done) break;
-        this.scheduleChunk(chunk);
+        buf.push(chunk);
+        bufSec += chunk.data[0].length / chunk.sampleRate;
+        if (bufSec >= this.preBufferThreshold) break;
       }
-      this.flushBatch();
+
       if (!signal.aborted) {
-        this.state = "idle";
-        this.emit({ type: "done" });
-        this.emit({ type: "stateChange", state: "idle" });
+        this.startTime = ctx.currentTime + START_LEAD_SECONDS;
+        this.state = "playing";
+        this.emit({ type: "stateChange", state: "playing" });
+        for (const chunk of buf) this.scheduleChunk(chunk, ctx, gainNode);
+        this.flushBatch(ctx, gainNode);
+      }
+
+      for (;;) {
+        if (signal.aborted) break;
+        const { value: chunk, done } = await iter.next();
+        if (done) break;
+        this.scheduleChunk(chunk, ctx, gainNode);
+      }
+      this.flushBatch(ctx, gainNode);
+      if (!signal.aborted) {
+        await this.waitForPlaybackEnd(ctx, signal);
+        if (!signal.aborted) {
+          this.state = "idle";
+          this.emit({ type: "done" });
+          this.emit({ type: "stateChange", state: "idle" });
+        }
       }
     } catch (err) {
       this.state = "idle";
-      this.emit({
-        type: "error",
-        error: err instanceof Error ? err : new Error(String(err)),
-      });
+      this.emit({ type: "error", error: toError(err) });
       this.emit({ type: "stateChange", state: "idle" });
     } finally {
-      if (signal.aborted) this.cleanup();
+      await this.finalizeStream(iter);
+      this.cleanup(ctx);
+      if (!signal.aborted && ctx.state !== "closed") {
+        ctx.close().catch((err) => console.error("[StreamPlayer] failed to close AudioContext", err));
+      }
     }
   }
 
-  private cleanup(): void {
+  private async finalizeStream(iter: AsyncIterator<AudioChunk>): Promise<void> {
+    try {
+      await iter.return?.();
+    } catch (err) {
+      console.error("[StreamPlayer] failed to finalize the source stream", err);
+    }
+  }
+
+  private waitForPlaybackEnd(ctx: AudioContext, signal: AbortSignal): Promise<void> {
+    return new Promise((resolve) => {
+      const endSec = this.scheduledEndTime;
+      const check = () => {
+        if (signal.aborted) {
+          if (this.playbackEndInterval) clearInterval(this.playbackEndInterval);
+          this.playbackEndInterval = null;
+          resolve();
+          return;
+        }
+        if (ctx.currentTime >= endSec) {
+          if (this.playbackEndInterval) clearInterval(this.playbackEndInterval);
+          this.playbackEndInterval = null;
+          resolve();
+        }
+      };
+      this.playbackEndInterval = setInterval(check, 50);
+      check();
+    });
+  }
+
+  private cleanup(ctx?: AudioContext): void {
+    if (this.playbackEndInterval) {
+      clearInterval(this.playbackEndInterval);
+      this.playbackEndInterval = null;
+    }
     this.abortController = null;
-    this.ctx = null;
-    this.gainNode = null;
+    if (ctx === undefined || this.ctx === ctx) {
+      this.ctx = null;
+      this.gainNode = null;
+    }
     this.bufferPool = [];
     this.currentBatch = [];
     this.currentBatchDuration = 0;
   }
 
-  /** Pause playback. The AudioContext is suspended and can be resumed via
-   *  `resume()`. */
   pause(): void {
     if (this.state !== "playing" || !this.ctx) return;
-    this.ctx.suspend();
+    const ctx = this.ctx;
     this.state = "paused";
     this.emit({ type: "stateChange", state: "paused" });
+    ctx.suspend().catch((err) => {
+      this.state = "playing";
+      this.emit({ type: "error", error: toError(err) });
+      this.emit({ type: "stateChange", state: "playing" });
+    });
   }
 
-  /** Resume playback after a pause. */
   resume(): void {
     if (this.state !== "paused" || !this.ctx) return;
-    this.ctx.resume();
+    const ctx = this.ctx;
     this.state = "playing";
     this.emit({ type: "stateChange", state: "playing" });
+    ctx.resume().catch((err) => {
+      this.state = "paused";
+      this.emit({ type: "error", error: toError(err) });
+      this.emit({ type: "stateChange", state: "paused" });
+    });
   }
 
   private fadeTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /** Stop playback immediately (with a 50ms fade-out to avoid click) and
-   *  close the underlying AudioContext. */
   stop(): void {
     this.abortController?.abort();
     this.abortController = null;
+    if (this.playbackEndInterval) {
+      clearInterval(this.playbackEndInterval);
+      this.playbackEndInterval = null;
+    }
     const oldCtx = this.ctx;
     const oldGain = this.gainNode;
     this.ctx = null;
@@ -305,7 +348,9 @@ export class StreamPlayer {
     this.state = "idle";
     this.emit({ type: "stateChange", state: "idle" });
     this.fadeTimer = setTimeout(() => {
-      if (oldCtx.state !== "closed") oldCtx.close().catch(() => {});
+      if (oldCtx.state !== "closed") {
+        oldCtx.close().catch((err) => console.error("[StreamPlayer] failed to close AudioContext", err));
+      }
       this.fadeTimer = null;
     }, 60);
   }

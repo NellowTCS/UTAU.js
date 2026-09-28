@@ -1,5 +1,6 @@
-import type { PhonemeDef, LanguageModule } from "../core/types";
-import g2pData from "./data/en-g2p.json";
+import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import { isRestLyric, REST_PHONEME } from "./alias";
+import g2pData from "./data/en-g2p.cjs";
 
 // English (ARPAbet) phoneme data.
 //
@@ -425,7 +426,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "JH",
@@ -438,50 +439,89 @@ const enPhonemes: PhonemeDef[] = [
       { f: 1800, bw: 150 },
       { f: 2500, bw: 200 },
     ],
-    noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.12, formantShaping: [{ f: 3500, bw: 1500 }] },
+  },
+  {
+    symbol: REST_PHONEME,
+    type: "silence",
+    voiced: false,
+    defaultDuration: 0.06,
   },
 ];
 
 const g2p = g2pData as Record<string, string[]>;
+const EN_VOWELS = enPhonemes.filter((p) => p.type === "vowel" || p.type === "diphthong").map((p) => p.symbol);
+const EN_CONSONANTS = enPhonemes.filter((p) => p.type === "consonant").map((p) => p.symbol);
 
-/** English language module with ARPAbet phoneme inventory and CMUDict-based
- *  G2P. Handles letter-to-phoneme conversion via a compressed CMU Pronouncing
- *  Dictionary lookup, with a character-level fallback for unknown words. */
+function buildEnCv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const v of EN_VOWELS) out.push({ alias: v.toLowerCase(), phonemes: [v] });
+  for (const c of EN_CONSONANTS) {
+    for (const v of EN_VOWELS) out.push({ alias: `${c.toLowerCase()} ${v.toLowerCase()}`, phonemes: [c, v] });
+  }
+  return out;
+}
+
+function buildEnVcv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const v of EN_VOWELS) {
+    out.push({ alias: `- ${v.toLowerCase()}`, phonemes: [v] });
+    out.push({ alias: `${v.toLowerCase()} -`, phonemes: [v] });
+  }
+  for (const v1 of EN_VOWELS) {
+    for (const v2 of EN_VOWELS) out.push({ alias: `${v1.toLowerCase()} ${v2.toLowerCase()}`, phonemes: [v1, v2] });
+  }
+  for (const v of EN_VOWELS) {
+    for (const c of EN_CONSONANTS) out.push({ alias: `${v.toLowerCase()} ${c.toLowerCase()}`, phonemes: [v, c] });
+  }
+  for (const c of EN_CONSONANTS) {
+    for (const v of EN_VOWELS) out.push({ alias: `${c.toLowerCase()} ${v.toLowerCase()}`, phonemes: [c, v] });
+  }
+  return out;
+}
+
 export const english: LanguageModule = {
   id: "en",
   name: "English",
   phonemes: new Map(enPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
+    if (isRestLyric(lyric)) return [REST_PHONEME];
     const clean = lyric.trim().toLowerCase();
-    if (clean === "r") return ["R"]; // silence/rest marker
     if (g2p[clean]) return [...g2p[clean]];
     const parts = clean.split(/[\s_-]+/).filter(Boolean);
     if (parts.every((p) => this.phonemes.has(p))) return parts;
     const simple: Record<string, string> = {
       a: "AA",
       b: "B",
+      c: "S",
       d: "D",
       e: "EH",
       f: "F",
       g: "G",
       h: "HH",
       i: "IH",
+      j: "JH",
       k: "K",
       l: "L",
       m: "M",
       n: "N",
       o: "AA",
       p: "P",
+      q: "K",
       r: "R",
       s: "S",
       t: "T",
       u: "AH",
       v: "V",
       w: "W",
+      x: "K S",
       y: "Y",
       z: "Z",
     };
     const mapped = [...clean].map((c) => simple[c]).filter(Boolean);
     return mapped.length > 0 ? mapped : ["AH"];
+  },
+  reclist(style: ReclistStyle): ReclistEntry[] {
+    return style === "vcv" ? buildEnVcv() : buildEnCv();
   },
 };

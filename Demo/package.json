@@ -1,5 +1,5 @@
 {
-  "name": "utaujs-demo",
+  "name": "ichikara-demo",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:single": "cross-env SINGLE_FILE=true vite build",
     "preview": "vite preview",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json --threshold warning --fail-on-warnings",
     "lint": "eslint . --ext .ts,.js,.svelte --fix",
     "make-pretty": "prettier --write ."
   },
@@ -21,15 +22,19 @@
     "prettier": "^3.8.3",
     "prettier-plugin-svelte": "^3.3.0",
     "svelte": "^5.0.0",
+    "svelte-check": "^4.7.6",
     "typescript-eslint": "^8.61.0",
     "vite": "^8.0.16",
     "vite-plugin-singlefile": "^2.3.3"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "@lucide/svelte": "^1.18.0",
     "@nellowtcs/updato": "^1.0.3",
     "@nisoku/satori": "^0.1.3",
-    "undora": "^0.1.2",
-    "utaujs": "*"
+    "bits-ui": "^2.18.1",
+    "ichikara": "*",
+    "undora": "^0.1.2"
   }
 }

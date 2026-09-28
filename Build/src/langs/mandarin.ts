@@ -1,4 +1,5 @@
-import type { PhonemeDef, LanguageModule } from "../core/types";
+import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import { REST_PHONEME, isRestLyric } from "./alias";
 
 // Mandarin Chinese (Pǔtōnghuà) phoneme data.
 //
@@ -43,7 +44,7 @@ const cnPhonemes: PhonemeDef[] = [
   baseVowel("e", 580, 1500, 2500),
   baseVowel("i", 290, 2360, 3100, 60, 80, 120),
   baseVowel("u", 380, 620, 2800, 70, 90, 130),
-  baseVowel("v", 290, 2050, 3100, 60, 80, 120), // ü
+  baseVowel("v", 290, 2050, 3100, 60, 80, 120),
 
   // Retroflex vowel er
   {
@@ -193,7 +194,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 7000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 7000, bw: 2000 }] },
   },
   {
     symbol: "c",
@@ -201,7 +202,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.45, formantShaping: [{ f: 7000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 7000, bw: 2000 }] },
   },
   {
     symbol: "zh",
@@ -209,7 +210,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "ch",
@@ -217,7 +218,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.45, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "j",
@@ -225,7 +226,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 5000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 5000, bw: 2000 }] },
   },
   {
     symbol: "q",
@@ -233,7 +234,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.45, formantShaping: [{ f: 5000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 5000, bw: 2000 }] },
   },
 
   // Nasals:
@@ -309,6 +310,7 @@ const cnPhonemes: PhonemeDef[] = [
   {
     symbol: "sil",
     type: "silence" as const,
+    voiced: false,
     defaultDuration: 0.06,
   },
 ];
@@ -422,18 +424,14 @@ function pinyinToPhonemes(syllable: string): string[] {
   const s = syllable.toLowerCase().trim();
   if (!s) return [];
 
-  // Check for direct lookup
   if (pinyinG2P[s]) return [...pinyinG2P[s]];
 
-  // Pure vowel syllable (a, o, e, i, u, v, er)
   if (VOWELS.has(s)) return [s];
   if (s === "er") return ["er"];
 
-  // Split into initial + final
   let initial = "";
   let final = s;
 
-  // Try the longest initial match (zh, ch, sh before z, c, s, etc.)
   for (let len = 2; len >= 1; len--) {
     const candidate = s.slice(0, len);
     if (INITIALS.has(candidate) && candidate !== "y" && candidate !== "w") {
@@ -443,10 +441,8 @@ function pinyinToPhonemes(syllable: string): string[] {
     }
   }
 
-  // Handle y/w spelling changes
   if (!initial && (s.startsWith("y") || s.startsWith("w"))) {
     if (s.startsWith("yu")) {
-      // yu -> v
       initial = "";
       final = "v" + s.slice(2);
     } else if (s === "yi") {
@@ -470,9 +466,7 @@ function pinyinToPhonemes(syllable: string): string[] {
     }
   }
 
-  // If no initial found, treat whole syllable as final
   if (!initial) {
-    // Map syllable-initial y/w back
     if (final.startsWith("yu")) final = "v" + final.slice(2);
     else if (final.startsWith("yi")) final = "i" + final.slice(2);
     else if (final.startsWith("y")) final = "i" + final.slice(1);
@@ -480,18 +474,161 @@ function pinyinToPhonemes(syllable: string): string[] {
     else if (final.startsWith("w")) final = "u" + final.slice(1);
   }
 
-  // Look up the final in the G2P table
   const finalPhonemes = pinyinG2P[final] ?? (VOWELS.has(final) ? [final] : null);
 
-  // Fallback: if the final is a single vowel, use it; otherwise try a simple split
   if (!finalPhonemes) {
-    // Check if the whole syllable is a known phoneme sequence
     if (INITIALS.has(s) && s !== "y" && s !== "w") return [s];
-    // Last resort: split into individual characters as phonemes
     return [...s].filter((ch) => ch !== " ").map((ch) => ch);
   }
 
   return initial ? [initial, ...finalPhonemes] : finalPhonemes;
+}
+
+const ZH_FINALS = [
+  "a",
+  "o",
+  "e",
+  "i",
+  "u",
+  "v",
+  "er",
+  "ai",
+  "ei",
+  "ao",
+  "ou",
+  "an",
+  "en",
+  "ang",
+  "eng",
+  "ong",
+  "ia",
+  "ie",
+  "iao",
+  "ian",
+  "iang",
+  "ing",
+  "iu",
+  "io",
+  "iong",
+  "in",
+  "ua",
+  "uo",
+  "uai",
+  "uan",
+  "uang",
+  "ui",
+  "un",
+  "ve",
+  "van",
+  "vn",
+];
+
+const ZH_FINAL_ONSETS: Record<string, string[]> = {
+  a: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  o: ["", "b", "p", "m", "f"],
+  e: ["", "m", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  i: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  u: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  v: ["", "n", "l", "j", "q", "x"],
+  er: [""],
+  ai: ["", "b", "p", "m", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "z", "c", "s"],
+  ei: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "z", "c", "s"],
+  ao: ["", "b", "p", "m", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ou: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  an: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  en: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ang: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  eng: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ong: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ia: ["", "d", "t", "n", "l", "j", "q", "x"],
+  ie: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  iao: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  ian: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  iang: ["", "n", "l", "j", "q", "x"],
+  ing: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  iu: ["", "d", "t", "n", "l", "j", "q", "x"],
+  io: [""],
+  iong: ["", "j", "q", "x"],
+  in: ["", "b", "p", "m", "d", "t", "n", "l", "j", "q", "x"],
+  ua: ["", "g", "k", "h", "zh", "ch", "sh"],
+  uo: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  uai: ["", "g", "k", "h", "zh", "ch", "sh"],
+  uan: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  uang: ["", "g", "k", "h", "zh", "ch", "sh"],
+  ui: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  un: ["", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
+  ve: ["", "n", "l", "j", "q", "x"],
+  van: ["", "j", "q", "x"],
+  vn: ["", "j", "q", "x"],
+};
+
+const ZH_NUCLEUS = ["a", "o", "e", "i", "u", "v"];
+
+/** Render a (onset, final) pair in canonical pinyin orthography, applying the
+ *  y/w spelling rules for zero onsets (yi, wu, yu, yue, yun, yuan, ying, yang,
+ *  yong, wei, wen, wang, weng, you, wa, wo, yao, yan, yin, ...). */
+function pinyinOrthography(onset: string, final: string): string {
+  if (onset === "") {
+    if (final === "i") return "yi";
+    if (final === "u") return "wu";
+    if (final === "v") return "yu";
+    if (final === "ong") return "weng";
+    if (final === "ve") return "yue";
+    if (final === "vn") return "yun";
+    if (final === "van") return "yuan";
+    if (final.startsWith("i")) return "y" + final.slice(1);
+    if (final.startsWith("u")) return "w" + final.slice(1);
+    return final;
+  }
+  return onset + final;
+}
+
+/** Mandarin CV reclist: one sample per valid pinyin syllable (initial + final),
+ *  aliases in canonical pinyin orthography (e.g. "ni", "hao", "wo"). */
+function buildZhCv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const final of ZH_FINALS) {
+    for (const onset of ZH_FINAL_ONSETS[final] ?? []) {
+      const syllable = onset + final;
+      const phonemes = pinyinToPhonemes(syllable);
+      if (phonemes.length === 0) continue;
+      out.push({ alias: pinyinOrthography(onset, final), phonemes });
+    }
+  }
+  return out;
+}
+
+/** Mandarin VCV reclist: leading/ending finals, nucleus-vowel blends, and
+ *  connections from each nucleus vowel to every valid syllable. Uses the
+ *  nucleus set (a o e i u v) as the previous-vowel unit to keep the bank a
+ *  tractable size while still covering natural Mandarin transitions. */
+function buildZhVcv(): ReclistEntry[] {
+  const out: ReclistEntry[] = [];
+  for (const final of ZH_FINALS) {
+    const lead = pinyinOrthography("", final);
+    const leadPh = pinyinToPhonemes(final);
+    if (leadPh.length === 0) continue;
+    out.push({ alias: `- ${lead}`, phonemes: leadPh });
+    out.push({ alias: `${lead} -`, phonemes: leadPh });
+  }
+  for (const f1 of ZH_NUCLEUS) {
+    const p1 = pinyinToPhonemes(f1);
+    if (p1.length === 0) continue;
+    const a1 = pinyinOrthography("", f1);
+    for (const f2 of ZH_NUCLEUS) {
+      const p2 = pinyinToPhonemes(f2);
+      if (p2.length === 0) continue;
+      out.push({ alias: `${a1} ${pinyinOrthography("", f2)}`, phonemes: [...p1, ...p2] });
+    }
+    for (const final of ZH_FINALS) {
+      for (const onset of ZH_FINAL_ONSETS[final] ?? []) {
+        const sylPh = pinyinToPhonemes(onset + final);
+        if (sylPh.length === 0) continue;
+        out.push({ alias: `${a1} ${pinyinOrthography(onset, final)}`, phonemes: [...p1, ...sylPh] });
+      }
+    }
+  }
+  return out;
 }
 
 /** Mandarin Chinese (Putonghua) language module with pinyin-based phoneme
@@ -504,14 +641,16 @@ export const mandarin: LanguageModule = {
   name: "Mandarin Chinese",
   phonemes: new Map(cnPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
+    if (isRestLyric(lyric)) return [REST_PHONEME];
     const clean = lyric.trim();
     if (!clean) return [];
 
-    // Strip tone numbers (1-5) from the end of each syllable
     const noTone = clean.replace(/[1-5]$/, "");
 
-    // Handle multi-syllable lyrics separated by spaces
     const syllables = noTone.split(/[\s_-]+/).filter(Boolean);
     return syllables.flatMap((syl) => pinyinToPhonemes(syl));
+  },
+  reclist(style: ReclistStyle): ReclistEntry[] {
+    return style === "vcv" ? buildZhVcv() : buildZhCv();
   },
 };

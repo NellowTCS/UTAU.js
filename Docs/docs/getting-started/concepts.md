@@ -1,11 +1,11 @@
 ---
 title: "Core Concepts"
-description: "Understand how UTAU.js produces singing voice audio"
+description: "Understand how Ichikara produces singing voice audio"
 ---
 
 ## Source-Filter Model
 
-UTAU.js implements the **source-filter model of speech production**: a glottal source (the "buzz" from the vocal folds) is shaped by a filter (the vocal tract's resonances). This separation lets you control pitch and timbre independently.
+Ichikara implements the **source-filter model of speech production**: a glottal source (the "buzz" from the vocal folds) is shaped by a filter (the vocal tract's resonances). This separation lets you control pitch and timbre independently.
 
 ```mermaid
 flowchart LR

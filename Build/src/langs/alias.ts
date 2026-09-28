@@ -1,34 +1,6 @@
-/**
- * Cross-language phoneme alias map.
- *
- * Each language defines its own phoneme symbols (ARPAbet for English,
- * IPA-like for Japanese, pinyin-based for Mandarin, etc.).  The alias map
- * provides a bridge: it maps a source-language phoneme symbol to a
- * canonical IPA-like target that represents the *acoustic target*.
- *
- * This is useful when a UTAU voicebank recorded for one language is used
- * to sing lyrics in another language, the synthesis layer uses the
- * canonical target's formant/noise data rather than the source language's.
- *
- * The canonical set is a subset of IPA with roughly 40 symbols covering
- * the most common acoustic targets across English, Japanese, and Mandarin:
- *
- *   Vowels:  i  y  e  ø  E  a  A  O  o  u  @  V  er  Y  I  U  ei  ai  au  ou  oi
- *   Consonants: p b t d k g f v T D s z S Z h C j m n N l r w
- *
- * Each language module exposes its alias table; the engine can look it up
- *
- * This file defines the per-language tables.  New languages add their own
- * mapping.
- */
-
 export type LangCode = "en" | "jp" | "zh";
 
-// Each canonical symbol appears only once per table.  When the same phoneme
-// symbol is used across languages (e.g. Japanese /i/ and Mandarin /i/ both map
-// to canonical "i"), the single entry covers all.
 const CANONICAL_VOWELS: Record<string, string> = {
-  // English uppercase
   IY: "i",
   IH: "I",
   EY: "ei",
@@ -45,7 +17,6 @@ const CANONICAL_VOWELS: Record<string, string> = {
   AW: "au",
   OY: "oi",
 
-  // Shared lowercase vowels (Japanese, Mandarin)
   i: "i",
   e: "e",
   a: "a",
@@ -53,14 +24,11 @@ const CANONICAL_VOWELS: Record<string, string> = {
   u: "u",
   ir: "I",
   iz: "I",
-  v: "y", // ü
+  v: "y",
   er: "er",
 };
 
-// All consonant phonemes from English (ARPAbet uppercase), Japanese, and
-// Mandarin, combined
 const CANONICAL_CONSONANTS: Record<string, string> = {
-  // English (ARPAbet)
   P: "p",
   B: "b",
   T: "t",
@@ -79,14 +47,13 @@ const CANONICAL_CONSONANTS: Record<string, string> = {
   CH: "C",
   JH: "j",
   M: "m",
-  N: "n", // English N (e.g. "N" in "knee")
+  N: "n",
   NG: "N",
   L: "l",
   R: "r",
   Y: "j",
   W: "w",
 
-  // Japanese / Mandarin (lowercase)
   b: "b",
   p: "p",
   m: "m",
@@ -95,7 +62,7 @@ const CANONICAL_CONSONANTS: Record<string, string> = {
   t: "t",
   n: "n",
   l: "l",
-  g: "k",
+  g: "g",
   k: "k",
   h: "h",
   ts: "ts",
@@ -203,17 +170,18 @@ const tables: Record<LangCode, AliasTable> = {
   zh: zhAliases,
 };
 
-/**
- * Map a language-specific phoneme symbol to its canonical IPA target.
- * Returns `undefined` if no mapping exists.
- */
+export const REST_LYRIC = "R";
+
+export const REST_PHONEME = "sil";
+
+export function isRestLyric(lyric: string): boolean {
+  return lyric.trim() === REST_LYRIC;
+}
+
 export function toCanonical(lang: LangCode, phoneme: string): string | undefined {
   return tables[lang]?.[phoneme];
 }
 
-/**
- * Map a phoneme sequence for a given language to canonical IPA symbols.
- */
 export function sequenceToCanonical(lang: LangCode, phonemes: string[]): (string | undefined)[] {
   return phonemes.map((p) => toCanonical(lang, p));
 }

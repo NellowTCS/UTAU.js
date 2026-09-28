@@ -64,7 +64,8 @@ describe("renderScore", () => {
     };
     const chunks = await renderScore(score, voice, "jp");
     expect(chunks.length).toBe(2);
-    expect(chunks[1].startSample).toBeGreaterThan(chunks[0].startSample + chunks[0].data[0].length - 1);
+    expect(chunks[1].startSample).toBeLessThan(chunks[0].startSample + chunks[0].data[0].length);
+    expect(chunks[1].startSample).toBeGreaterThan(chunks[0].startSample);
   });
 
   it("handles voice lookup by name", async () => {
@@ -73,7 +74,7 @@ describe("renderScore", () => {
       resolution: 480,
       notes: [{ tick: 0, lyric: "a", noteNum: 72, length: 480 }],
     };
-    const chunks = await renderScore(score, "female", "jp");
+    const chunks = await renderScore(score, "chitose chika", "jp");
     expect(chunks.length).toBe(1);
   });
 });
@@ -91,5 +92,42 @@ describe("streamScore", () => {
       chunks.push(chunk);
     }
     expect(chunks.length).toBe(1);
+  });
+});
+
+describe("cross-note overlap timing", () => {
+  const voice = buildVoice();
+  const SAMPLES_PER_NOTE = 22050;
+
+  function legatoScore(count: number): Score {
+    return {
+      tempos: [{ tick: 0, tempo: 120 }],
+      resolution: 480,
+      notes: Array.from({ length: count }, (_, i) => ({
+        tick: i * 480,
+        lyric: i % 2 === 0 ? "ka" : "na",
+        noteNum: 60 + (i % 7),
+        length: 480,
+      })),
+    };
+  }
+
+  for (const count of [1, 2, 12, 50]) {
+    it(`keeps the mixed span exact for ${count} legato notes`, async () => {
+      const chunks: AudioChunk[] = [];
+      for await (const c of streamScore(legatoScore(count), voice, "jp")) chunks.push(c);
+      const mixed = mixChunks(chunks);
+      expect(mixed.data[0].length).toBe(count * SAMPLES_PER_NOTE);
+    }, 60_000);
+  }
+
+  it("does not grow the overlap tail with tick quantisation", async () => {
+    const chunks: AudioChunk[] = [];
+    for await (const c of streamScore(legatoScore(2), voice, "jp")) chunks.push(c);
+    const first = chunks[0];
+    const second = chunks[1];
+    const overlap = first.startSample + first.data[0].length - second.startSample;
+    expect(overlap).toBe(Math.round(0.005 * voice.sampleRate));
+    expect(second.data[0].length).toBe(SAMPLES_PER_NOTE + overlap);
   });
 });
