@@ -4,8 +4,6 @@ import type { Score, VoiceConfig } from "ichikara";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
-// Bound the work in flight so the worker renders only a small window ahead of
-// the main thread's consume rate (render-ahead buffer), not the entire song.
 const CAP = 6;
 let outstanding = 0;
 let ackWaiter: (() => void) | null = null;

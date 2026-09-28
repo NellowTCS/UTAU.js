@@ -7,13 +7,6 @@ function ticksToDuration(tickLen: number, tempo: number, resolution: number, sam
   return tickLen * (60 / (tempo * resolution)) * sampleRate;
 }
 
-/** Stream a Score as an async generator of AudioChunks, one note at a time.
- *  Audio is rendered lazily as each chunk is produced just-in-time, allowing
- *  interleaved playback via StreamPlayer.
- *
- *  `voiceInput` can be a registered voice name (string) or an inline
- *  VoiceConfig object. `langId` selects the language module ("jp", "en",
- *  "zh", or a custom registered language). */
 export async function* streamScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): AsyncGenerator<AudioChunk> {
   const lang = getLanguage(langId ?? "jp");
   const voice = typeof voiceInput === "object" ? voiceInput : getVoice(voiceInput ?? "female");
@@ -36,35 +29,15 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
     return t;
   }
 
-  function noteSampleDuration(noteTick: number, noteLen: number): number {
-    const end = noteTick + noteLen;
-    let total = 0;
-    let seg = noteTick;
-    let t = tempos[0]?.tempo ?? 120;
-    for (const ev of tempos) {
-      if (ev.tick > seg && ev.tick < end) {
-        total += ticksToDuration(ev.tick - seg, t, resolution, sr);
-        seg = ev.tick;
-      }
-      if (ev.tick <= seg) t = ev.tempo;
-      if (seg >= end) break;
-    }
-    if (seg < end) total += ticksToDuration(end - seg, t, resolution, sr);
-    return total;
-  }
-
   const accentOffsets = computeAccentOffsets(notes, lang);
 
-  // Cross-note overlap: render each note with extra tail samples so that
-  // consecutive notes overlap. The natural envelope decay/attack and the
-  // filter state carry-over (prevFormants) create a smooth crossfade.
   const OVERLAP_MS = 5;
   const overlapSamples = Math.round((OVERLAP_MS / 1000) * sr);
 
   let prevFormants: FormantTarget[] | undefined;
   let prevChunkEnd = 0;
   for (let ni = 0; ni < notes.length; ni++) {
-    const note = notes[ni];
+    let note = notes[ni];
     const noteTick = note.tick ?? currentTick;
     const gap = Math.max(0, noteTick - currentTick);
     if (gap > 0) {
@@ -80,20 +53,14 @@ export async function* streamScore(score: Score, voiceInput?: string | VoiceConf
       tempoIdx++;
     }
 
-    // For non-first notes with no gap, render extra tail samples for overlap.
     const hasOverlap = ni > 0 && gap === 0 && prevChunkEnd > 0;
     const extraSamples = hasOverlap ? overlapSamples : 0;
 
-    const noteSamples = Math.round(noteSampleDuration(noteTick, note.length));
-    const adjustedLength = Math.max(1, Math.round((noteSamples * noteTempo * resolution) / (60 * sr)));
-    const adjustedNote = { ...note, length: adjustedLength + Math.round((extraSamples * noteTempo * resolution) / (60 * sr)) };
     if (accentOffsets[ni] !== undefined) {
-      adjustedNote.pitchAccent = accentOffsets[ni];
+      note = { ...note, pitchAccent: accentOffsets[ni] };
     }
-    const { chunk, finalFormants } = renderNote(adjustedNote, voice, lang, noteTempo, resolution, prevFormants);
+    const { chunk, finalFormants } = renderNote(note, voice, lang, noteTempo, resolution, prevFormants, extraSamples);
     prevFormants = finalFormants;
-    // Overlap: shift startSample backward so the tail overlaps with the
-    // previous note's ending. The playback system sums both signals.
     chunk.startSample = hasOverlap ? prevChunkEnd - overlapSamples : currentSample;
     const chunkLen = chunk.data[0].length;
     if (voice.channels === 2 && chunk.data.length === 1) {
@@ -143,18 +110,12 @@ function computeAccentOffsets(notes: Note[], lang: LanguageModule): (number | un
   return offsets;
 }
 
-/** Render an entire Score into an array of AudioChunks (one per note).
- *  Convenience wrapper around streamScore that collects all chunks into
- *  memory. */
 export async function renderScore(score: Score, voiceInput?: string | VoiceConfig, langId?: string): Promise<AudioChunk[]> {
   const chunks: AudioChunk[] = [];
   for await (const chunk of streamScore(score, voiceInput, langId)) chunks.push(chunk);
   return chunks;
 }
 
-/** Mix multiple AudioChunks into a single continuous AudioChunk by summing
- *  overlapping samples. Chunk start positions are preserved. Returns a new
- *  chunk that spans the full extent of all inputs. */
 export function mixChunks(chunks: AudioChunk[]): AudioChunk {
   if (!chunks.length) return { data: [new Float32Array(0), new Float32Array(0)], sampleRate: 44100, startSample: 0, channels: 2 };
   const sr = chunks[0].sampleRate,

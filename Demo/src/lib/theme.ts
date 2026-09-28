@@ -34,7 +34,6 @@ function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
-// Dark text on light accents, light text on dark accents.
 function inkFor(hex: string): string {
   const [r, g, b] = hexToRgb(hex);
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
@@ -53,5 +52,7 @@ export function applyAccent(id: string): void {
 
 accentId.subscribe((id) => {
   applyAccent(id);
-  try { localStorage.setItem(STORAGE_KEY, id); } catch {}
+  try {
+    localStorage.setItem(STORAGE_KEY, id);
+  } catch {}
 });

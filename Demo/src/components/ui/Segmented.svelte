@@ -1,12 +1,12 @@
-<script lang="ts">
+<script lang="ts" generics="T extends string">
   import { ToggleGroup } from "bits-ui";
   let {
-    value = $bindable<string | undefined>(undefined),
+    value = $bindable(),
     options = [],
     size = "md",
   }: {
-    value?: string | undefined;
-    options: { value: string; label: string }[];
+    value?: T | undefined;
+    options: { value: T; label: string }[];
     size?: "sm" | "md";
   } = $props();
 </script>

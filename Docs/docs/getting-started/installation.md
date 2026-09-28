@@ -13,7 +13,7 @@ npm install ichikara
 
 ```html
 <script type="module">
-import { renderScore, femaleVoice, japanese } from "https://unpkg.com/ichikara/dist/index.mjs";
+import { renderScore, chitoseChika, japanese } from "https://unpkg.com/ichikara/dist/index.mjs";
 </script>
 ```
 

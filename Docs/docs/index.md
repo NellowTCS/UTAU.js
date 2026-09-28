@@ -73,7 +73,7 @@ One parametric voice, infinite variations. Male, female, breathy, bright, tense.
 == tab "Node.js"
 
 ```typescript
-import { renderScore, femaleVoice, japanese, encodeWav } from "ichikara";
+import { renderScore, chitoseChika, japanese, encodeWav } from "ichikara";
 import { writeFileSync } from "node:fs";
 
 const score = {
@@ -88,7 +88,7 @@ const score = {
   ],
 };
 
-const chunks = await renderScore(score, femaleVoice, "jp");
+const chunks = await renderScore(score, chitoseChika, "jp");
 const wav = encodeWav(chunks);
 writeFileSync("hello.wav", Buffer.from(wav));
 ```
@@ -96,7 +96,7 @@ writeFileSync("hello.wav", Buffer.from(wav));
 == tab "Browser"
 
 ```typescript
-import { streamScore, femaleVoice, japanese, StreamPlayer } from "ichikara";
+import { streamScore, chitoseChika, japanese, StreamPlayer } from "ichikara";
 
 const score = { /* ... */ };
 const player = new StreamPlayer();
@@ -106,7 +106,7 @@ player.on((event) => {
   if (event.type === "progress") console.log(`${event.renderedSamples} samples scheduled`);
 });
 
-await player.play(streamScore(score, femaleVoice, "jp"));
+await player.play(streamScore(score, chitoseChika, "jp"));
 ```
 
 == tab "Custom Voice"

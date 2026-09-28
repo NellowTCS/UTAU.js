@@ -22,7 +22,7 @@ src/
     renderer.ts      - Single-note renderer
     stream.ts        - Score-level streaming + mixing
   voices/            - Voice presets and configuration
-    index.ts         - maleVoice, femaleVoice, buildVoice, scaleVoice
+    index.ts         - chitoseChika, chitoseSho, chitoseRen, buildVoice, scaleVoice
   player/            - Web Audio playback
     stream-player.ts - AsyncGenerator consumption + AudioContext scheduling
   import/            - File import (utaformatix-ts based)

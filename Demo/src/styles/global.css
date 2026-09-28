@@ -84,7 +84,6 @@ textarea {
   }
 }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -117,11 +116,7 @@ textarea {
   cursor: not-allowed;
 }
 .btn.primary {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 100%, white 14%),
-    color-mix(in srgb, var(--accent) 100%, black 16%)
-  );
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 100%, white 14%), color-mix(in srgb, var(--accent) 100%, black 16%));
   border-color: transparent;
   color: var(--accent-ink);
   font-weight: 600;
@@ -192,7 +187,6 @@ textarea {
   border-color: var(--accent-line);
 }
 
-/* Slider */
 .slider {
   width: 100%;
   display: flex;
@@ -226,11 +220,7 @@ textarea {
   position: absolute;
   height: 100%;
   border-radius: var(--r-pill);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 100%, white 12%),
-    color-mix(in srgb, var(--accent) 100%, black 14%)
-  );
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 100%, white 12%), color-mix(in srgb, var(--accent) 100%, black 14%));
 }
 .slider-thumb {
   display: block;
@@ -255,7 +245,6 @@ textarea {
   transform: translateY(-50%) scale(1.12);
 }
 
-/* Switch */
 .switch {
   width: 40px;
   height: 22px;
@@ -285,7 +274,6 @@ textarea {
   transform: translateX(21px);
 }
 
-/* Segmented */
 .segmented {
   display: inline-flex;
   background: var(--bg-inset);
@@ -321,7 +309,6 @@ textarea {
   font-size: 11px;
 }
 
-/* Panel */
 .panel {
   background: var(--bg-1);
   border: 1px solid var(--border);
@@ -338,7 +325,6 @@ textarea {
   color: var(--text-faint);
 }
 
-/* Divider */
 .divider {
   height: 1px;
   background: var(--border);
@@ -352,7 +338,6 @@ textarea {
   margin: 0 var(--sp-2);
 }
 
-/* Badge */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -381,7 +366,6 @@ textarea {
   color: var(--bad);
 }
 
-/* Tooltip */
 .tooltip {
   z-index: 200;
   max-width: 240px;
@@ -399,7 +383,6 @@ textarea {
   fill: var(--bg-3);
 }
 
-/* Select */
 .select-trigger {
   display: inline-flex;
   align-items: center;
@@ -456,7 +439,6 @@ textarea {
   gap: 2px;
 }
 
-/* Dialog */
 .dialog-overlay {
   position: fixed;
   inset: 0;
@@ -496,7 +478,6 @@ textarea {
   padding: var(--sp-4);
 }
 
-/* App shell */
 .app {
   display: flex;
   flex-direction: column;
@@ -564,7 +545,6 @@ textarea {
   padding: var(--sp-3);
 }
 
-/* Note editor */
 .note-editor {
   display: flex;
   align-items: center;
@@ -605,7 +585,6 @@ textarea {
   font-family: var(--font-mono);
 }
 
-/* Status pill */
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -644,7 +623,6 @@ textarea {
   background: var(--bad);
 }
 
-/* Transport */
 .transport {
   height: var(--transport-h);
   flex-shrink: 0;
@@ -698,7 +676,6 @@ textarea {
   border-color: var(--accent-line);
 }
 
-/* Voice panel */
 .vp-tabs-root {
   display: flex;
   flex-direction: column;
@@ -776,7 +753,6 @@ textarea {
   gap: 6px;
 }
 
-/* Onboarding */
 .welcome {
   margin: 0 0 var(--sp-3);
   padding: var(--sp-3);
@@ -805,7 +781,6 @@ textarea {
   color: var(--text);
 }
 
-/* Piano roll */
 .piano-scroll {
   flex: 1;
   min-height: 0;

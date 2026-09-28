@@ -52,9 +52,8 @@
           <Switch bind:checked={autoScroll} ariaLabel="Auto-scroll during playback" />
         </label>
         <p class="hint">
-          Tip: scroll the piano roll with the wheel, hold <kbd>Shift</kbd> to scroll
-          horizontally, or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> to zoom. Right-click a note to edit its
-          pitch bend.
+          Tip: scroll the piano roll with the wheel, hold <kbd>Shift</kbd> to scroll horizontally, or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> to zoom. Right-click
+          a note to edit its pitch bend.
         </p>
       </div>
     </Dialog.Content>
@@ -106,7 +105,9 @@
     border-radius: 4px;
     border: 2px solid var(--border-strong);
     cursor: pointer;
-    transition: transform 0.12s ease, border-color 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      border-color 0.12s ease;
   }
   .accent-swatch:hover {
     transform: scale(1.08);
@@ -114,6 +115,8 @@
   }
   .accent-swatch.active {
     border-color: var(--text);
-    box-shadow: 0 0 0 2px var(--bg-1), 0 0 0 4px currentColor;
+    box-shadow:
+      0 0 0 2px var(--bg-1),
+      0 0 0 4px currentColor;
   }
 </style>

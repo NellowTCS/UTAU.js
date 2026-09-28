@@ -17,6 +17,6 @@
   } = $props();
 </script>
 
-<button type="button" class="icon-btn {active ? "active" : ""} {cls}" {disabled} {title} {onclick}>
+<button type="button" class="icon-btn {active ? 'active' : ''} {cls}" {disabled} {title} {onclick}>
   {@render children()}
 </button>

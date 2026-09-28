@@ -31,7 +31,7 @@
     <span class="vp-label">{label}</span>
   {/if}
   <div class="vp-control">
-    <Slider bind:value {min} {max} {step} ariaLabel={label} onChange={onChange} />
+    <Slider bind:value {min} {max} {step} ariaLabel={label} {onChange} />
     <span class="vp-value">{format(value)}</span>
   </div>
 </div>

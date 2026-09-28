@@ -26,6 +26,30 @@ description: "Built-in language support and how to add custom languages"
 - **Tone handling**: Tone numbers (1-5) are stripped from pinyin input; pitch contour is expected to be handled by note-level pitch bend in the score
 - **Data sources**: Wu 1990 (standard Mandarin formant values), general acoustic phonetics
 
+## Rests
+
+A UTAU score marks a rest with an uppercase `R`. Every built-in language maps
+that lyric to the `sil` phoneme, which is defined with `type: "silence"` and
+`voiced: false`, so the note renders as true digital silence:
+
+```typescript
+renderScore({
+  tempos: [{ tick: 0, tempo: 120 }],
+  resolution: 480,
+  notes: [
+    { tick: 0,   lyric: "か", noteNum: 60, length: 480 },
+    { tick: 480, lyric: "R",  noteNum: 60, length: 480 }, // silence
+    { tick: 960, lyric: "な", noteNum: 62, length: 480 },
+  ],
+}, voice, "jp");
+```
+
+The check is case-sensitive. Lowercase `r` stays singable, because it is a real
+phoneme: the Japanese mora ら and the English approximant /ɹ/.
+
+A custom language module must define `sil` as an unvoiced `silence` phoneme and
+map the rest marker to it, or rests in imported scores will be sung.
+
 ## Using Language Modules
 
 ```typescript

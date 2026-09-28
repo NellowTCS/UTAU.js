@@ -52,6 +52,7 @@ Consonants add shaped noise:
 
 - **Fricatives**: noise filtered through resonant peaks at the fricative's spectral centre
 - **Plosives**: short noise burst with fast decay
+- **Affricates**: a silent stop closure followed by a brief decaying release, so `ch` is not a sustained `sh`
 - **Aspiration**: low-passed noise mixed into vowels (controlled by `glottal.aspiration`)
 
 ### 6. Envelope and Normalisation

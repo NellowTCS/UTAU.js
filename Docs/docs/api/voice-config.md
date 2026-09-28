@@ -25,7 +25,7 @@ The glottal source generates the raw pulse train. Its parameters control the sha
 ```typescript
 interface GlottalConfig {
   openQuotient: number;   // 0.2 - 0.9
-  speedQuotient: number;  // 0.3 - 3.0
+  speedQuotient: number;  // 1.3 - 3.0 (see below for why the lower bound exists)
   tenseness: number;      // 0 - 1
   aspiration: number;     // 0 - 0.3
   power: number;          // 0 - 1
@@ -49,13 +49,22 @@ Female voices typically use higher OQ (~0.52) than male voices (~0.4).
 ### speedQuotient
 
 Ratio of the glottal opening duration to closing duration. Controls the skew of the glottal pulse.
+It maps to `Tp = Te * sq / (1 + sq)`, the time of the glottal flow minimum within the open phase.
+
+**Valid range is 1.3 and up.** The opening phase is
+`E0 * exp(alpha*t) * sin(w_g*t)` with `w_g = pi/Tp`, so it sweeps `w_g*Te` radians over
+the open phase. The LF model is only well posed while that sweep stays in `(pi, 2pi)`,
+which means `Tp` must exceed `Te/2`, which means `sq` must exceed 1. At `sq = 0.5` and
+`sq = 1` exactly, `sin(w_g*Te)` is zero and the amplitude `E0` diverges. Below 1 the
+opening completes an extra whole cycle and the continuity equation has no real root.
+Values under 1.22 are therefore clamped to the nearest valid configuration.
 
 | Value | Perceptual Effect                     |
 |-------|---------------------------------------|
-| ~0.5  | Slow closing, darker timbre           |
-| ~1.0  | Neutral balance                       |
-| ~2.0  | Fast closing, brighter, more "twangy" |
-| >2.5  | Very sharp closure, buzzy             |
+| ~1.4  | Slowest valid closure, dark, rounded  |
+| ~2.0  | Natural, balanced                     |
+| ~2.5  | Brighter, crisper onset               |
+| >3.0  | Very sharp closure, buzzy             |
 
 ### tenseness
 
@@ -75,11 +84,11 @@ Amount of turbulence noise mixed into the glottal source. Simulates incomplete g
 | Value | Perceptual Effect                            |
 |-------|----------------------------------------------|
 | 0     | Clean, no audible aspiration                 |
-| ~0.05 | Slight breathiness (natural for most voices) |
-| ~0.15 | Noticeably breathy                           |
-| >0.25 | Very breathy, significant noise floor        |
+| ~0.02 | Slight breathiness (natural for most voices)  |
+| ~0.05 | Noticeably breathy                            |
+| >0.1  | Very breathy, significant noise floor         |
 
-The aspiration noise is low-passed at ~4 kHz to stay in the natural band.
+The aspiration noise is low-passed at ~4 kHz to stay in the natural band. It is shaped by two resonators whose peak gain is several times the nominal amplitude, so values above ~0.05 add an audible hiss in the 3-4.5 kHz band. Keep named voices low and let `breathiness` scale up from there.
 
 ### power
 
@@ -213,34 +222,54 @@ Output sample rate in Hz. 44100 is the standard CD quality. Lower rates (22050) 
 
 ## Voice Presets
 
-The library ships with two built-in presets:
+The library ships with three named voices, one per register:
 
-### Male Voice
-
-```typescript
-{
-  glottal: { openQuotient: 0.4, speedQuotient: 0.65, tenseness: 0.65, aspiration: 0.05, power: 0.75, jitter: 0.01 },
-  formant: { scale: 1.0, shift: 0, bandwidth: 1.0 },
-  vibrato: { rate: 5.5, depth: 30, attack: 0.15 },
-}
-```
-
-### Female Voice
+### Chitose Chika (female)
 
 ```typescript
 {
-  glottal: { openQuotient: 0.52, speedQuotient: 1.1, tenseness: 0.48, aspiration: 0.08, power: 0.65, jitter: 0.02 },
-  formant: { scale: 1.18, shift: 0, bandwidth: 1.0 },
-  vibrato: { rate: 6.0, depth: 40, attack: 0.1 },
+  glottal: { openQuotient: 0.51, speedQuotient: 2.25, tenseness: 0.5, aspiration: 0.018, power: 0.66, jitter: 0.015, shimmer: 0.03 },
+  formant: { scale: 1.16, shift: 0, bandwidth: 1.02 },
+  vibrato: { rate: 5.9, depth: 38, attack: 0.11 },
 }
 ```
+
+### Chitose Sho (male)
+
+```typescript
+{
+  glottal: { openQuotient: 0.42, speedQuotient: 2.7, tenseness: 0.66, aspiration: 0.009, power: 0.78, jitter: 0.012, shimmer: 0.025 },
+  formant: { scale: 0.88, shift: -1, bandwidth: 0.92 },
+  vibrato: { rate: 5.0, depth: 26, attack: 0.16 },
+}
+```
+
+### Chitose Ren (neutral)
+
+```typescript
+{
+  glottal: { openQuotient: 0.48, speedQuotient: 2.5, tenseness: 0.57, aspiration: 0.014, power: 0.7, jitter: 0.017, shimmer: 0.032 },
+  formant: { scale: 0.97, shift: 0, bandwidth: 1.05 },
+  vibrato: { rate: 5.6, depth: 32, attack: 0.14 },
+}
+```
+
+`chitoseVoices` holds all three in that order.
 
 ## Perceptual Scaling
 
-The `scaleVoice()` function maps high-level perceptual controls to the underlying parameters:
+The `scaleVoice()` function maps high-level perceptual controls to the underlying parameters. Each control is a shift *away from the voice you pass in*, so the neutral point of every control returns that voice unchanged:
+
+| Control         | Neutral | Range                                                              |
+| --------------- | ------- | ------------------------------------------------------------------ |
+| `gender`        | `0`     | `-1` masculine to `1` feminine                                     |
+| `breathiness`   | `0.5`   | `0` no breath noise, `0.5` the voice's own aspiration, `1` doubled |
+| `tension`       | `0.5`   | `0` relaxed, `1` pressed                                           |
+| `brightness`    | `0.5`   | `0` dark, `1` bright                                               |
+| `vibratoAmount` | `0.5`   | `0` none, `0.5` the voice's own depth, `1` doubled                 |
 
 ```typescript
-const adjusted = scaleVoice(femaleVoice, {
+const adjusted = scaleVoice(chitoseChika, {
   gender: 0.3,        // More feminine (formant scale + SQ)
   breathiness: 0.4,   // Increase OQ + aspiration
   tension: 0.6,       // Increase tenseness
@@ -257,7 +286,7 @@ Use `buildVoice()` with partial overrides for a neutral starting point:
 const myVoice = buildVoice({
   name: "Custom",
   sampleRate: 48000,
-  glottal: { openQuotient: 0.6, aspiration: 0.1 },
+  glottal: { openQuotient: 0.6, aspiration: 0.03 },
 });
 ```
 

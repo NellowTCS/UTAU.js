@@ -1,5 +1,6 @@
 import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
 import g2pData from "./data/jp-g2p.cjs";
+import { REST_PHONEME, isRestLyric } from "./alias";
 
 // Japanese phoneme data.
 //
@@ -99,6 +100,19 @@ const jpPhonemes: PhonemeDef[] = [
       { f: 2400, bw: 250 },
     ],
     antiformants: [{ f: 350, bw: 100 }],
+  },
+  {
+    symbol: "ny",
+    type: "consonant",
+    consonantType: "nasal",
+    voiced: true,
+    defaultDuration: 0.07,
+    formants: [
+      { f: 280, bw: 100 },
+      { f: 2050, bw: 200 },
+      { f: 2750, bw: 250 },
+    ],
+    antiformants: [{ f: 450, bw: 100 }],
   },
 
   // Plosives:
@@ -283,14 +297,13 @@ const jpPhonemes: PhonemeDef[] = [
     ],
   },
 
-  // Affricates:
   {
     symbol: "ch",
     type: "consonant",
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "ts",
@@ -298,7 +311,7 @@ const jpPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 6000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 6000, bw: 2000 }] },
   },
   {
     symbol: "j",
@@ -311,11 +324,12 @@ const jpPhonemes: PhonemeDef[] = [
       { f: 1800, bw: 150 },
       { f: 2500, bw: 200 },
     ],
-    noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.12, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "sil",
     type: "silence",
+    voiced: false,
     defaultDuration: 0.06,
   },
 ];
@@ -367,7 +381,7 @@ const hiraganaMap: Record<string, string> = {
   ろ: "ro",
   わ: "wa",
   を: "wo",
-  ん: "n",
+  ん: "N",
   が: "ga",
   ぎ: "gi",
   ぐ: "gu",
@@ -441,12 +455,7 @@ function sanitizeLyric(lyric: string): string {
   if (single) return single;
   // Multi-mora kana
   if (/[\u3040-\u309f\u30a0-\u30ff]/.test(cleaned)) {
-    const parts: string[] = [];
-    for (const ch of [...cleaned]) {
-      const m = hiraganaMap[ch];
-      parts.push(m ?? ch);
-    }
-    return parts.join(" ");
+    return kanaToRomaji(cleaned).join(" ");
   }
   return cleaned;
 }
@@ -467,9 +476,9 @@ function romajiToPhonemes(romaji: string): string[] {
     cha: "ch a",
     chu: "ch u",
     cho: "ch o",
-    nya: "n y a",
-    nyu: "n y u",
-    nyo: "n y o",
+    nya: "ny a",
+    nyu: "ny u",
+    nyo: "ny o",
     hya: "h y a",
     hyu: "h y u",
     hyo: "h y o",
@@ -493,39 +502,79 @@ function romajiToPhonemes(romaji: string): string[] {
     pyo: "p y o",
     ye: "y e",
   };
-  const vowels = new Set(["a", "i", "u", "e", "o"]);
-  const consonants = new Set(["k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p", "sh", "ch", "ts", "f", "j", "l"]);
-  let s = romaji.toLowerCase().replace(/\s+/g, "");
-  if (special[s]) {
-    s = special[s];
+  const expanded = special[romaji.trim()] ?? romaji;
+  if (expanded === REST_PHONEME) return [REST_PHONEME];
+  return expanded.split(/\s+/).filter(Boolean).flatMap(parseRomajiUnit);
+}
+
+// The syllabic nasal. ん is a mora in its own right
+const SYLLABIC_NASAL = "N";
+
+const ROMAJI_VOWELS = new Set(["a", "i", "u", "e", "o"]);
+
+const ROMAJI_CONSONANTS = new Set(["k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p", "sh", "ch", "ts", "f", "j", "l"]);
+
+const ROMAJI_DIGRAPHS = new Set(["ts", "ch", "sh", "ny"]);
+
+/**
+ * The next letter carrying phonetic content in `s`, searching from `from`.
+ */
+function nextPhoneticLetter(s: string, from: number): string {
+  for (let j = from; j < s.length; j++) {
+    if (s[j] >= "a" && s[j] <= "z") return s[j];
   }
+  return "";
+}
+
+/**
+ * Parse one whitespace-delimited romaji unit into phoneme symbols.
+ */
+function parseRomajiUnit(unit: string): string[] {
+  if (unit === SYLLABIC_NASAL) return [SYLLABIC_NASAL];
+  const s = unit.toLowerCase();
+  if (s === "n") return [SYLLABIC_NASAL];
   const result: string[] = [];
   let i = 0;
   while (i < s.length) {
-    if (s[i] === " ") {
-      i++;
-      continue;
-    }
-    if (s[i] === "n" && (i + 1 >= s.length || !vowels.has(s[i + 1]))) {
-      result.push("N");
-      i++;
-      continue;
-    }
-    if (s[i] === s[i + 1] && consonants.has(s[i])) {
-      result.push(s[i]);
-      i++;
-      continue;
-    }
     const two = s.slice(i, i + 2);
-    if (two === "ts" || two === "ch" || two === "sh") {
+    if (ROMAJI_DIGRAPHS.has(two)) {
       result.push(two);
       i += 2;
-    } else {
-      result.push(s[i]);
-      i++;
+      continue;
     }
+    if (s[i] === "n" && !ROMAJI_VOWELS.has(nextPhoneticLetter(s, i + 1))) {
+      result.push(SYLLABIC_NASAL);
+      i += 1;
+      continue;
+    }
+    if (s[i] === s[i + 1] && ROMAJI_CONSONANTS.has(s[i])) {
+      result.push(s[i]);
+      i += 1;
+      continue;
+    }
+    result.push(s[i]);
+    i += 1;
   }
   return result;
+}
+
+// Greedy longest-match kana to romaji.
+function kanaToRomaji(kana: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < kana.length) {
+    const pair = kana.slice(i, i + 2);
+    const pairRomaji = hiraganaMap[pair];
+    if (pairRomaji) {
+      out.push(pairRomaji);
+      i += 2;
+      continue;
+    }
+    const romaji = hiraganaMap[kana[i]];
+    if (romaji) out.push(romaji);
+    i++;
+  }
+  return out;
 }
 
 function resolveAccents(lyrics: string[]): (number | undefined)[] {
@@ -534,9 +583,6 @@ function resolveAccents(lyrics: string[]): (number | undefined)[] {
 
 const CV_VOWELS = ["a", "i", "u", "e", "o"];
 
-/** Build the Japanese CV reclist: one sample per mora (consonant+vowel),
- *  plus standalone vowels, the nasal ん ("n"), and the sokuon っ ("sil").
- *  Aliases are romaji; duplicates (e.g. じ/ぢ -> "ji") are collapsed. */
 function buildJpCv(): ReclistEntry[] {
   const map = new Map<string, ReclistEntry>();
   for (const romaji of Object.values(hiraganaMap)) {
@@ -551,9 +597,6 @@ function buildJpCv(): ReclistEntry[] {
   return [...map.values()];
 }
 
-/** Build the Japanese VCV reclist: leading vowels ("- a"), endings ("a -"),
- *  vowel blends ("a i"), and every prev-vowel + mora connection ("a ka").
- *  Morae are every CV alias whose first phoneme is not a standalone vowel. */
 function buildJpVcv(): ReclistEntry[] {
   const out: ReclistEntry[] = [];
   const cv = buildJpCv();
@@ -576,32 +619,24 @@ function buildJpVcv(): ReclistEntry[] {
   return out;
 }
 
-/** Japanese language module with IPA-like phoneme inventory, hiragana/romaji
- *  conversion, and EDICT2-based kanji G2P. Handles pitch-accent resolution
- *  for prosody generation. */
 export const japanese: LanguageModule = {
   id: "jp",
   name: "Japanese",
   phonemes: new Map(jpPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
-    // If lyric contains kanji (CJK Unified Ideographs), look up the reading
-    // from the G2P lexicon, then convert each kana character to phonemes.
+    if (isRestLyric(lyric)) return [REST_PHONEME];
     if (/[\u4e00-\u9fff]/.test(lyric)) {
       const reading = (g2pData as Record<string, string>)[lyric];
       if (reading) {
-        return [...reading]
-          .flatMap((ch) => {
-            const romaji = hiraganaMap[ch];
-            if (!romaji) return [];
-            return romajiToPhonemes(romaji);
-          })
+        return kanaToRomaji(reading)
+          .flatMap((romaji) => romajiToPhonemes(romaji))
           .filter(Boolean);
       }
     }
     return sanitizeLyric(lyric)
       .split(/[\s_-]+/)
       .filter(Boolean)
-      .flatMap((p) => romajiToPhonemes(p));
+      .flatMap((token) => romajiToPhonemes(token));
   },
   resolveAccents,
   reclist(style: ReclistStyle): ReclistEntry[] {

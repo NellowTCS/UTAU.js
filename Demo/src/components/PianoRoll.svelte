@@ -41,9 +41,7 @@
     return Math.round(t / s) * s;
   }
 
-  const maxTick = $derived(
-    notes.reduce((m, n) => Math.max(m, (n.tick ?? 0) + n.length), 0),
-  );
+  const maxTick = $derived(notes.reduce((m, n) => Math.max(m, (n.tick ?? 0) + n.length), 0));
   const contentBeats = $derived(maxTick > 0 ? Math.ceil(maxTick / ticksPerBeat) + 4 : 16);
   const contentWidth = $derived(KEY_WIDTH + contentBeats * pxPerBeat);
   const totalHeight = $derived((noteRangeMax - noteRangeMin + 1) * noteHeight + NOTE_Y_OFFSET);
@@ -142,14 +140,7 @@
     const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return lum > 0.6 ? "#10100f" : "#f6f7fb";
   }
-  function roundRect(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number,
-  ) {
+  function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     const rr = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
     ctx.moveTo(x + rr, y);
@@ -460,11 +451,7 @@
     if (selectedNote != null) {
       const n = notes[selectedNote];
       if (n) {
-        const resizeZone =
-          mx >= noteX(n) + noteW(n) - 10 &&
-          mx <= noteX(n) + noteW(n) &&
-          my >= noteY(n) &&
-          my <= noteY(n) + noteHeight;
+        const resizeZone = mx >= noteX(n) + noteW(n) - 10 && mx <= noteX(n) + noteW(n) && my >= noteY(n) && my <= noteY(n) + noteHeight;
         if (resizeZone) {
           dragging = {
             type: "resize",
@@ -520,8 +507,7 @@
     }
 
     const hitIdx = notes.findIndex(
-      (n: Note) =>
-        mx >= noteX(n) && mx <= noteX(n) + noteW(n) && my >= noteY(n) && my <= noteY(n) + noteHeight,
+      (n: Note) => mx >= noteX(n) && mx <= noteX(n) + noteW(n) && my >= noteY(n) && my <= noteY(n) + noteHeight,
     );
     if (hitIdx >= 0) {
       selectedNote = hitIdx;
@@ -636,8 +622,17 @@
     if (!notes.length || !notesCanvas) return;
     const midTick = (Math.min(...notes.map((n) => n.tick ?? 0)) + Math.max(...notes.map((n) => (n.tick ?? 0) + n.length / 2))) / 2;
     const midNote = (Math.min(...notes.map((n) => n.noteNum)) + Math.max(...notes.map((n) => n.noteNum))) / 2;
-    scrollX = Math.max(0, Math.min(contentWidth - notesCanvas.clientWidth, KEY_WIDTH + (midTick / ticksPerBeat) * pxPerBeat - notesCanvas.clientWidth / 2));
-    scrollY = Math.max(0, Math.min(totalHeight - notesCanvas.clientHeight, NOTE_Y_OFFSET + (noteRangeMax - midNote) * noteHeight - notesCanvas.clientHeight / 2));
+    scrollX = Math.max(
+      0,
+      Math.min(contentWidth - notesCanvas.clientWidth, KEY_WIDTH + (midTick / ticksPerBeat) * pxPerBeat - notesCanvas.clientWidth / 2),
+    );
+    scrollY = Math.max(
+      0,
+      Math.min(
+        totalHeight - notesCanvas.clientHeight,
+        NOTE_Y_OFFSET + (noteRangeMax - midNote) * noteHeight - notesCanvas.clientHeight / 2,
+      ),
+    );
     renderAll();
   }
 

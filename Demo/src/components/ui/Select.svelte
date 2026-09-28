@@ -15,14 +15,14 @@
 
 <Select.Root type="single" bind:value>
   <Select.Trigger class="select-trigger" aria-label={ariaLabel}>
-    <Select.Value placeholder={placeholder} />
+    <Select.Value {placeholder} />
   </Select.Trigger>
   <Select.Portal>
     <Select.Content sideOffset={6} class="select-content">
       <Select.Viewport class="select-viewport">
         {#each options as o (o.value)}
           <Select.Item value={o.value} label={o.label} class="select-item">
-            <Select.ItemText>{o.label}</Select.ItemText>
+            {o.label}
           </Select.Item>
         {/each}
       </Select.Viewport>

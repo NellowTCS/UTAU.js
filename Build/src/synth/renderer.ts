@@ -3,7 +3,10 @@ import { LFGlottalSource } from "../core/dsp/oscillator";
 import { FormantCascade, FormantFilter, interpolateFormants } from "../core/dsp/filter";
 import { hashNote, mulberry32 } from "../core/rng";
 
-const FORMANT_UPDATE_INTERVAL = Math.round(0.005 * 44100);
+const FORMANT_UPDATE_INTERVAL_MS = 5;
+function formantUpdateInterval(sampleRate: number): number {
+  return Math.max(1, Math.round((FORMANT_UPDATE_INTERVAL_MS / 1000) * sampleRate));
+}
 function midiToFrequency(noteNum: number): number {
   return 440 * Math.pow(2, (noteNum - 69) / 12);
 }
@@ -12,11 +15,38 @@ function ticksToDuration(tickLen: number, tempo: number, resolution: number, sam
   return tickLen * (60 / (tempo * resolution)) * sampleRate;
 }
 
-/* Per-note leveling */
 function computeAutoGain(peak: number, voicedRatio: number, peakComp: number, volume: number, target: number): number {
   const volGain = volume * 0.01;
-  const autoGain = peak === 0 ? 1 : Math.pow(target / peak, peakComp * 0.01);
-  return autoGain * volGain;
+  if (peak === 0) return volGain;
+  const voicedTarget = target * Math.max(0, Math.min(1, voicedRatio));
+  if (voicedTarget === 0) return volGain;
+  const exponent = Math.max(0, Math.min(1, peakComp * 0.01));
+  const ratio = voicedTarget / peak;
+  const autoGain = Number.isFinite(ratio) ? Math.pow(ratio, exponent) : 1;
+  const gain = autoGain * volGain;
+  return Number.isFinite(gain) ? gain : volGain;
+}
+
+const OUTPUT_CEILING = 0.99;
+
+const FLOAT32_REL_STEP = 2 ** -23;
+
+const DEFAULT_NORMALIZE_TARGET = 0.5;
+
+function clampNormalizeTarget(requested: number | undefined): number {
+  const value = requested ?? DEFAULT_NORMALIZE_TARGET;
+  if (!Number.isFinite(value)) return DEFAULT_NORMALIZE_TARGET;
+  return Math.max(0, Math.min(OUTPUT_CEILING, value));
+}
+
+function softLimit(x: number): number {
+  if (Number.isNaN(x)) return 0;
+  const magnitude = Math.abs(x);
+  if (magnitude <= OUTPUT_CEILING) return x;
+  if (!Number.isFinite(magnitude)) return x < 0 ? -1 : 1;
+  const headroom = 1 - OUTPUT_CEILING;
+  const limited = OUTPUT_CEILING + headroom * Math.tanh((magnitude - OUTPUT_CEILING) / headroom);
+  return x < 0 ? -limited : limited;
 }
 
 function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, totalSamples: number, noteLenTicks: number): number {
@@ -34,67 +64,113 @@ function interpolatePitchBend(bend: PitchBend | undefined, sampleIdx: number, to
   return bend.values[last];
 }
 
-function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr: number): Int32Array {
-  const dur = new Int32Array(phonemes.length);
-  let totalConsSamp = 0;
-  let vowelWeight = 0;
+const DEFAULT_CONSONANT_DURATION_SEC = 0.06;
 
-  for (const ph of phonemes) {
-    if (ph.type === "consonant" || ph.type === "silence") {
-      totalConsSamp += Math.round((ph.defaultDuration ?? 0.06) * sr);
-    } else {
-      // Diphthongs need more time to glide; last vowel gets a natural tail.
-      const isLast = ph === phonemes[phonemes.length - 1];
-      const weight = (ph.type === "diphthong" ? 1.3 : 1) * (isLast ? 1.2 : 1);
-      vowelWeight += weight;
+const MAX_CONSONANT_FRACTION = 0.4;
+
+const DIPHTHONG_WEIGHT = 1.3;
+
+const FINAL_PHONEME_WEIGHT = 1.2;
+
+const PLOSIVE_CLOSURE_FRACTION = 0.8;
+
+const AFFRICATE_CLOSURE_FRACTION = 0.55;
+
+const AFFRICATE_VOICED_CLOSURE_FRACTION = 0.4;
+
+const RELEASE_ATTACK_SEC = 0.004;
+
+function isConsonantLike(ph: PhonemeDef): boolean {
+  return ph.type === "consonant" || ph.type === "silence";
+}
+
+function distributeSamples(weights: Float64Array, total: number): Int32Array {
+  const n = weights.length;
+  const out = new Int32Array(n);
+  if (n === 0) return out;
+
+  let sum = 0;
+  for (let i = 0; i < n; i++) if (weights[i] > 0) sum += weights[i];
+
+  if (sum <= 0) {
+    const each = Math.floor(total / n);
+    const leftover = total - each * n;
+    for (let i = 0; i < n; i++) out[i] = each + (i < leftover ? 1 : 0);
+    return out;
+  }
+
+  const remainders: Array<{ index: number; frac: number }> = [];
+  let assigned = 0;
+  for (let i = 0; i < n; i++) {
+    const exact = (total * (weights[i] > 0 ? weights[i] : 0)) / sum;
+    out[i] = Math.floor(exact);
+    assigned += out[i];
+    remainders.push({ index: i, frac: exact - out[i] });
+  }
+
+  remainders.sort((a, b) => b.frac - a.frac);
+  let leftover = total - assigned;
+  for (let k = 0; leftover > 0; k = (k + 1) % n, leftover--) out[remainders[k].index]++;
+  return out;
+}
+
+/** Allocate the note's samples across its phonemes.
+ *
+ *  Consonants and silences get their nominal length, collectively capped to
+ *  `MAX_CONSONANT_FRACTION` of the note; vowels share what is left, weighted so
+ *  diphthongs and the final phoneme receive slightly more. A note with no vowels
+ *  spreads itself across the consonants instead of dumping the tail on the last
+ *  one. The result always sums to `noteLenSamp`.
+ *
+ *  @param phonemes Phoneme sequence for the note, in singing order.
+ *  @param noteLenSamp Total samples the note occupies, tail included.
+ *  @param sr Voice sample rate, used to convert nominal durations to samples.
+ *  @returns Per-phoneme sample counts, non-negative and summing to
+ *   `noteLenSamp`. When the note holds fewer samples than phonemes, the
+ *   surplus phonemes receive zero rather than a negative count.
+ */
+export function computePhonemeDurations(phonemes: PhonemeDef[], noteLenSamp: number, sr: number): Int32Array {
+  const n = phonemes.length;
+  const total = Math.max(0, Math.round(noteLenSamp));
+  if (n === 0) return new Int32Array(0);
+
+  const consNominal = new Float64Array(n);
+  let consSum = 0;
+  for (let i = 0; i < n; i++) {
+    if (isConsonantLike(phonemes[i])) {
+      consNominal[i] = (phonemes[i].defaultDuration ?? DEFAULT_CONSONANT_DURATION_SEC) * sr;
+      consSum += consNominal[i];
     }
   }
 
-  const maxConsSamp = Math.round(noteLenSamp * 0.4);
-  if (totalConsSamp > maxConsSamp) {
-    const scale = maxConsSamp / totalConsSamp;
-    totalConsSamp = 0;
-    for (let i = 0; i < phonemes.length; i++) {
-      const ph = phonemes[i];
-      if (ph.type === "consonant" || ph.type === "silence") {
-        const d = Math.max(1, Math.round((ph.defaultDuration ?? 0.06) * sr * scale));
-        dur[i] = d;
-        totalConsSamp += d;
-      }
-    }
+  const consBudget = Math.min(consSum, total * MAX_CONSONANT_FRACTION);
+  if (consSum > consBudget && consSum > 0) {
+    const scale = consBudget / consSum;
+    for (let i = 0; i < n; i++) if (consNominal[i] > 0) consNominal[i] *= scale;
   }
 
-  const remaining = noteLenSamp - totalConsSamp;
-  if (vowelWeight === 0) {
-    const perPh = Math.max(1, Math.floor(noteLenSamp / phonemes.length));
-    let pos = 0;
-    for (let i = 0; i < phonemes.length; i++) {
-      dur[i] = i === phonemes.length - 1 ? noteLenSamp - pos : perPh;
-      pos += dur[i];
+  const vowelWeight = new Float64Array(n);
+  let vowelSum = 0;
+  for (let i = 0; i < n; i++) {
+    if (isConsonantLike(phonemes[i])) continue;
+    const weight = (phonemes[i].type === "diphthong" ? DIPHTHONG_WEIGHT : 1) * (i === n - 1 ? FINAL_PHONEME_WEIGHT : 1);
+    vowelWeight[i] = weight;
+    vowelSum += weight;
+  }
+
+  const weights = new Float64Array(n);
+  if (vowelSum > 0) {
+    const vowelBudget = Math.max(0, total - consBudget);
+    for (let i = 0; i < n; i++) {
+      weights[i] = isConsonantLike(phonemes[i]) ? consNominal[i] : (vowelBudget * vowelWeight[i]) / vowelSum;
     }
   } else {
-    const samplesPerWeight = Math.max(1, remaining / vowelWeight);
-    let pos = 0;
-    for (let i = 0; i < phonemes.length; i++) {
-      const ph = phonemes[i];
-      if (ph.type === "consonant" || ph.type === "silence") {
-        if (dur[i] === 0) dur[i] = Math.max(1, Math.round((ph.defaultDuration ?? 0.06) * sr));
-      } else {
-        const isLast = i === phonemes.length - 1;
-        const weight = (ph.type === "diphthong" ? 1.3 : 1) * (isLast ? 1.2 : 1);
-        dur[i] = Math.max(1, Math.round(samplesPerWeight * weight));
-      }
-      pos += dur[i];
-    }
-    // Correct rounding drift so total matches noteLenSamp exactly.
-    const totalDur = dur.reduce((a, b) => a + b, 0);
-    if (totalDur !== noteLenSamp) {
-      const lastVowel = [...phonemes].findLastIndex((p) => p.type !== "consonant" && p.type !== "silence");
-      if (lastVowel >= 0) dur[lastVowel] += noteLenSamp - totalDur;
+    for (let i = 0; i < n; i++) {
+      weights[i] = consSum > 0 ? (consNominal[i] * total) / consSum : 0;
     }
   }
 
-  return dur;
+  return distributeSamples(weights, total);
 }
 
 function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number; decay: number } {
@@ -108,13 +184,6 @@ function getPhonemeEnvelopeSamples(ph: PhonemeDef, sr: number): { attack: number
   return { attack: Math.round(0.005 * sr), decay: Math.round(0.003 * sr) };
 }
 
-/** Render a single note from an already-resolved phoneme sequence.
- *  Returns the audio chunk, the final formant targets of the last phoneme
- *  (for cross-note continuity), and the start sample of each phoneme within
- *  the chunk (used to compute voicebank slice points).
- *
- *  `prevFormants` provides the ending formant targets from the previous
- *  note for smooth formant transitions across note boundaries. */
 export function renderPhonemes(
   phonemes: PhonemeDef[],
   note: Note,
@@ -122,11 +191,13 @@ export function renderPhonemes(
   tempo: number,
   resolution: number,
   prevFormants?: FormantTarget[],
+  extraSamples = 0,
 ): { chunk: AudioChunk; finalFormants: FormantTarget[]; phonemeStarts: number[] } {
   const sr = voice.sampleRate;
   const baseF0 = midiToFrequency(note.noteNum);
 
-  const noteLen = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
+  const nominalLen = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
+  const noteLen = Math.max(1, nominalLen + Math.max(0, extraSamples));
   const fScale = voice.formant.scale;
   const fShift = voice.formant.shift;
 
@@ -142,9 +213,8 @@ export function renderPhonemes(
   ]);
 
   if (phonemes.length === 0) {
-    const len = Math.max(1, Math.round(ticksToDuration(note.length, tempo, resolution, sr)));
     const chunk: AudioChunk = {
-      data: [new Float32Array(len), new Float32Array(len)],
+      data: [new Float32Array(noteLen), new Float32Array(noteLen)],
       sampleRate: sr,
       startSample: 0,
       channels: voice.channels,
@@ -168,12 +238,10 @@ export function renderPhonemes(
   const fadeLen = Math.round(0.003 * sr);
   const boundaryFadeLen = Math.round(0.002 * sr);
 
-  // Velocity (0-127) modulates breath, shimmer, and aspiration dynamics.
-  // Higher velocity = more breath, less shimmer, stronger aspiration.
   const velNorm = Math.max(0, Math.min(1, (note.velocity ?? 100) / 127));
-  const velBreathScale = 0.5 + velNorm * 0.8;       // 0.5x at v=0, 1.3x at v=127
-  const velShimmerScale = 1 - velNorm * 0.6;         // 1.0x at v=0, 0.4x at v=127
-  const velAspirationScale = 0.6 + velNorm * 0.6;    // 0.6x at v=0, 1.2x at v=127
+  const velBreathScale = 0.5 + velNorm * 0.8;
+  const velShimmerScale = 1 - velNorm * 0.6;
+  const velAspirationScale = 0.6 + velNorm * 0.6;
   const intensity = note.intensity ?? 100;
   const intensityScale = intensity / 100;
 
@@ -203,13 +271,10 @@ export function renderPhonemes(
   let phSegStart = 0;
   let overallPeak = 1e-10;
   let voicedSamples = 0;
-  let lastFormantUpdateSample = -FORMANT_UPDATE_INTERVAL; // force update on first sample
+  let lastFormantUpdateSample = -formantUpdateInterval(sr);
   const parallelFilters: FormantFilter[] = Array.from({ length: 3 }, () => new FormantFilter());
   for (const pf of parallelFilters) pf.setPassthrough();
 
-  // Klatt-style parallel aspiration branch: glottal breath is shaped by a
-  // fixed broadband formant pair and summed *after* the voiced cascade, so it
-  // is independent of the vowel formants (unlike the old pre-cascade injection).
   const breathFilters: FormantFilter[] = [
     (() => {
       const f = new FormantFilter();
@@ -230,10 +295,7 @@ export function renderPhonemes(
     if (pi !== prevPi) {
       phSegStart = i;
       prevPi = pi;
-      // Keep filter state from the previous phoneme: the ringing of the old
-      // coefficients naturally crossfades into the new ones as they settle,
-      // producing a smooth formant glide instead of a discontinuity.
-      // Update parallel noise-filter coefficients for the new phoneme.
+      lastFormantUpdateSample = i - formantUpdateInterval(sr);
       const noiseTargets = cp.noise?.formantShaping ?? [];
       for (let fi = 0; fi < parallelFilters.length; fi++) {
         if (fi < noiseTargets.length) {
@@ -255,8 +317,7 @@ export function renderPhonemes(
     const phDur = phSampleCounts[pi];
     const tt = Math.min(1, segPos / Math.max(1, transitionLen));
 
-    // Throttle formant coefficient updates.
-    if (i - lastFormantUpdateSample >= FORMANT_UPDATE_INTERVAL) {
+    if (i - lastFormantUpdateSample >= formantUpdateInterval(sr)) {
       lastFormantUpdateSample = i;
       const ft = pp.formants ?? [];
       const ct = cp.formants ?? ft;
@@ -278,18 +339,34 @@ export function renderPhonemes(
     }
 
     const gSample = glottal.nextSample({ f0, sampleRate: sr, ...voice.glottal, shimmer: (voice.glottal.shimmer ?? 0) * velShimmerScale });
-    const voiced = cp.voiced !== false;
+    const voiced = cp.type !== "silence" && cp.voiced !== false;
     if (voiced) voicedSamples++;
     const nSample = rng() * 2 - 1;
 
     const noiseFadeIn = Math.min(1, segPos / Math.max(1, fadeLen));
     const noiseFadeOut = Math.max(0, Math.min(1, (phDur - segPos - 1) / Math.max(1, fadeLen)));
-    const noiseEnv =
-      cp.consonantType === "plosive"
-        ? Math.min(noiseFadeIn, Math.max(0, 1 - segPos / Math.max(1, Math.round(0.012 * sr))))
-        : Math.min(noiseFadeIn, noiseFadeOut);
+    let noiseEnv = Math.min(noiseFadeIn, noiseFadeOut);
+    if (cp.consonantType === "plosive" || cp.consonantType === "affricate") {
+      const closureFrac =
+        cp.consonantType === "affricate"
+          ? cp.voiced
+            ? AFFRICATE_VOICED_CLOSURE_FRACTION
+            : AFFRICATE_CLOSURE_FRACTION
+          : PLOSIVE_CLOSURE_FRACTION;
+      const closureLen = Math.min(Math.max(0, phDur - 1), Math.round(phDur * closureFrac));
+      const relPos = segPos - closureLen;
+      if (relPos < 0) {
+        noiseEnv = 0;
+      } else {
+        const relLen = Math.max(1, phDur - closureLen);
+        const attackLen = Math.min(relLen, Math.max(1, Math.round(RELEASE_ATTACK_SEC * sr)));
+        const rise = relPos < attackLen ? relPos / attackLen : 1;
+        const decay = 1 - (relPos - attackLen) / Math.max(1, relLen - attackLen);
+        noiseEnv = Math.min(noiseFadeOut, rise * Math.max(0, decay) ** 2);
+      }
+    }
 
-    let glottalSignal = voiced ? gSample : 0;
+    const glottalSignal = voiced ? gSample : 0;
     let noiseSignal = 0;
     if (cp.type === "consonant" && cp.noise) {
       if (cp.noise.formantShaping && cp.noise.formantShaping.length > 0) {
@@ -303,7 +380,6 @@ export function renderPhonemes(
     }
     let breathSignal = 0;
     if (cp.type === "vowel" || cp.type === "diphthong") {
-      // Parallel aspiration branch (broadband breath), summed post-cascade.
       let breath = 0;
       for (const bf of breathFilters) breath += bf.processSample(nSample);
       breathSignal = breath * voice.glottal.aspiration * noiseEnv * velAspirationScale;
@@ -320,7 +396,7 @@ export function renderPhonemes(
       env *= t * t * (3 - 2 * t);
     }
     const cascaded = cascade.processSample(glottalSignal);
-    const boundaryFade = Math.min(1, segPos / Math.max(1, boundaryFadeLen));
+    const boundaryFade = i < boundaryFadeLen ? Math.min(1, i / Math.max(1, boundaryFadeLen)) : 1;
     const enveloped = (cascaded + noiseSignal + breathSignal) * env * boundaryFade;
     mono[i] = enveloped;
     if (Math.abs(enveloped) > overallPeak) overallPeak = Math.abs(enveloped);
@@ -329,11 +405,10 @@ export function renderPhonemes(
   const voicedRatio = noteLen > 0 ? voicedSamples / noteLen : 1;
   const volume = voice.volume ?? 100;
   const peakComp = voice.peakComp ?? 100;
-  const target = voice.normalizeTarget ?? 0.5;
-  const gain = computeAutoGain(overallPeak, voicedRatio, peakComp, volume, target) * intensityScale;
+  const target = clampNormalizeTarget(voice.normalizeTarget);
+  const gain = computeAutoGain(overallPeak, voicedRatio, peakComp, volume, target * (1 - FLOAT32_REL_STEP)) * intensityScale;
   for (let i = 0; i < noteLen; i++) {
-    const s = mono[i] * gain;
-    mono[i] = s > 0.99 ? 0.99 : s < -0.99 ? -0.99 : s;
+    mono[i] = softLimit(mono[i] * gain);
   }
 
   const lastPh = phonemes[phonemes.length - 1];
@@ -360,10 +435,6 @@ export function renderPhonemes(
   return { chunk, finalFormants, phonemeStarts };
 }
 
-/** Render a single note from a lyric string. Resolves phonemes via the
- *  language module (`lang.lyricToPhonemes`), applies the note-join marker
- *  (＠) rule, and delegates to `renderPhonemes`. Returns the same tuple plus
- *  per-phoneme start samples. */
 export function renderNote(
   note: Note,
   voice: VoiceConfig,
@@ -371,6 +442,7 @@ export function renderNote(
   tempo: number,
   resolution: number,
   prevFormants?: FormantTarget[],
+  extraSamples = 0,
 ): { chunk: AudioChunk; finalFormants: FormantTarget[]; phonemeStarts: number[] } {
   const phonemeSymbols = lang.lyricToPhonemes(note.lyric);
   const phonemes = phonemeSymbols
@@ -381,11 +453,9 @@ export function renderNote(
     })
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
-  // Handle note-join marker (＠): suppress the initial consonant so the
-  // vowel carries through as a continuation of the previous note.
   if (note.lyric.includes("＠") && phonemes.length > 0 && phonemes[0].type === "consonant") {
     phonemes.shift();
   }
 
-  return renderPhonemes(phonemes, note, voice, tempo, resolution, prevFormants);
+  return renderPhonemes(phonemes, note, voice, tempo, resolution, prevFormants, extraSamples);
 }

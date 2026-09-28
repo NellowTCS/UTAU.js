@@ -1,14 +1,3 @@
-/**
- * Usage:
- *   npm run build:voicebank -- --lang jp --style cv --voice female --pitch 60
- *
- * Flags (all optional except where noted):
- *   --lang      jp | en | zh            (default: jp)
- *   --style     cv | vcv                (default: cv)
- *   --voice     male | female | <name>  (default: female)
- *   --pitch     MIDI note number        (default: female 60, male 48)
- *   --out       output directory        (default: Build/voicebank/<voice>-<lang>-<style>)
- */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

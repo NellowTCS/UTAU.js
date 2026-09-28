@@ -13,26 +13,28 @@
     renderScore,
     mixChunks,
     encodeWav,
-    buildVoice,
+    chitoseChika,
     scaleVoice,
     importScoreFromFile,
     downloadScore,
     type AudioChunk,
+    type VoiceConfig,
   } from "ichikara";
-import { StreamPlayer } from "ichikara";
-  import { createDemoScore } from "./lib/score";
+  import { StreamPlayer } from "ichikara";
+  import { createDemoScore, type EditorLanguage } from "./lib/score";
   import { createWorkerStream, type WorkerStream } from "./lib/workerStream";
   import { Undora } from "undora";
 
-  let langId = $state("jp");
+  let langId = $state<EditorLanguage>("jp");
   const _initScore = createDemoScore("jp");
   let score = $state(_initScore);
   let notes = $state(_initScore.notes);
   let selectedNote = $state<number | null>(null);
   let projectName = $state("Untitled");
+  let baseVoice = $state<VoiceConfig>(chitoseChika);
   let voiceParams = $state({
     gender: 0,
-    breathiness: 0.3,
+    breathiness: 0.5,
     tension: 0.5,
     brightness: 0.5,
     vibratoAmount: 0.5,
@@ -112,9 +114,7 @@ import { StreamPlayer } from "ichikara";
     playheadTick = null;
   });
 
-  const totalTicks = $derived(
-    notes.reduce((m, n) => Math.max(m, (n.tick ?? 0) + n.length), 0),
-  );
+  const totalTicks = $derived(notes.reduce((m, n) => Math.max(m, (n.tick ?? 0) + n.length), 0));
 
   async function handlePlay() {
     player?.stop();
@@ -156,7 +156,7 @@ import { StreamPlayer } from "ichikara";
     p.on((ev) => {
       if (ev.type === "progress") bufferAhead = ev.bufferAhead;
     });
-    const v = scaleVoice(buildVoice(), voiceParams);
+    const v = scaleVoice(baseVoice, voiceParams);
     playSr = v.sampleRate;
     const currentLang = langId;
     currentStream = createWorkerStream({ score: $state.snapshot(score), voice: v, langId: currentLang });
@@ -215,7 +215,7 @@ import { StreamPlayer } from "ichikara";
     if (exporting) return;
     exporting = true;
     try {
-      const v = scaleVoice(buildVoice(), voiceParams);
+      const v = scaleVoice(baseVoice, voiceParams);
       const chunks = await renderScore(score, v, langId);
       const mixed = mixChunks(chunks);
       const wav = encodeWav([mixed], volume);
@@ -314,21 +314,13 @@ import { StreamPlayer } from "ichikara";
           <div class="welcome">
             <h4><Music2 size={14} style="vertical-align:-2px" /> Welcome to Ichikara</h4>
             <p>
-              Click the grid to add notes, drag to move, drag the right edge to resize. Right-click a
-              note to add or remove <b>pitch-bend</b> points. Use the sliders to shape the voice.
+              Click the grid to add notes, drag to move, drag the right edge to resize. Right-click a note to add or remove <b>pitch-bend</b
+              > points. Use the sliders to shape the voice.
             </p>
             <button class="welcome-close" onclick={() => (showWelcome = false)}>Got it</button>
           </div>
         {/if}
-        <PianoRoll
-          bind:notes
-          bind:selectedNote
-          bind:playheadTick
-          bind:autoScroll
-          {saveSnapshot}
-          {handleUndo}
-          {handleRedo}
-        />
+        <PianoRoll bind:notes bind:selectedNote bind:playheadTick bind:autoScroll {saveSnapshot} {handleUndo} {handleRedo} />
         {#if selectedNote != null && notes[selectedNote]}
           <div class="note-editor">
             <span class="field">
@@ -337,35 +329,23 @@ import { StreamPlayer } from "ichikara";
             </span>
             <span class="field">
               <span class="ed-label">Note</span>
-              <input
-                type="number"
-                min={0}
-                max={127}
-                bind:value={notes[selectedNote].noteNum}
-                onblur={saveSnapshot}
-              />
+              <input type="number" min={0} max={127} bind:value={notes[selectedNote].noteNum} onblur={saveSnapshot} />
             </span>
             <span class="note-name">{noteName(notes[selectedNote].noteNum)}</span>
             <span class="field">
               <span class="ed-label">Velocity</span>
-              <input
-                type="number"
-                min={0}
-                max={127}
-                bind:value={notes[selectedNote].velocity}
-                onblur={saveSnapshot}
-              />
+              <input type="number" min={0} max={127} bind:value={notes[selectedNote].velocity} onblur={saveSnapshot} />
             </span>
           </div>
         {/if}
       </div>
       <div class="voice-area">
-        <VoicePanel bind:params={voiceParams} bind:advancedOpen />
+        <VoicePanel bind:params={voiceParams} bind:advancedOpen bind:baseVoice />
       </div>
     </main>
 
     <TransportBar
-      bind:state={playerState}
+      state={playerState}
       bind:volume
       bind:tempo
       {buffering}
@@ -405,7 +385,10 @@ import { StreamPlayer } from "ichikara";
     padding: 4px 8px;
     border-radius: var(--r-sm);
     width: 150px;
-    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      background 0.15s ease;
   }
   .project-name:hover {
     border-color: var(--border);

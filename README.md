@@ -44,6 +44,7 @@ const score = {
   notes: [
     { lyric: "こ", noteNum: 60, length: 480 },
     { lyric: "ん", noteNum: 62, length: 480 },
+    { lyric: "R", noteNum: 62, length: 480 },  // rest: renders as silence
     { lyric: "に", noteNum: 64, length: 480 },
     { lyric: "ち", noteNum: 65, length: 480 },
     { lyric: "は", noteNum: 67, length: 960 },

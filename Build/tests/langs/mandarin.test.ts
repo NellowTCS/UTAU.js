@@ -136,3 +136,20 @@ describe("mandarin", () => {
     }
   });
 });
+
+describe("mandarin rests", () => {
+  it("maps the UTAU rest marker to the silence phoneme", () => {
+    expect(mandarin.lyricToPhonemes("R")).toEqual(["sil"]);
+  });
+
+  it("defines the rest phoneme as unvoiced silence", () => {
+    const def = mandarin.phonemes.get("sil");
+    expect(def?.type).toBe("silence");
+    expect(def?.voiced).toBe(false);
+  });
+
+  it("does not parse the rest marker as the pinyin syllable r", () => {
+    const symbols = mandarin.lyricToPhonemes("R");
+    expect(symbols).toEqual(["sil"]);
+  });
+});

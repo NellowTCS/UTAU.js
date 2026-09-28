@@ -1,30 +1,40 @@
 import type { VoiceConfig } from "../core/types";
 
-/** Default male voice preset. Lower OQ, moderate SQ, tight vibrato.
- *  Formant scale 1.0 (no adjustment). */
-export const maleVoice: VoiceConfig = {
-  name: "Male",
+const GENDER_FORMANT_RANGE = 0.3;
+const GENDER_SQ_RANGE = 0.35;
+const GENDER_TENSENESS_RANGE = 0.1;
+const GENDER_OQ_RANGE = 0.05;
+const BREATHINESS_OQ_RANGE = 0.12;
+
+export const chitoseChika: VoiceConfig = {
+  name: "Chitose Chika",
   sampleRate: 44100,
   channels: 2,
-  glottal: { openQuotient: 0.4, speedQuotient: 2.5, tenseness: 0.65, aspiration: 0.05, power: 0.75, jitter: 0.01, shimmer: 0.03 },
-  formant: { scale: 1.0, shift: 0, bandwidth: 1.0 },
-  vibrato: { rate: 5.5, depth: 30, attack: 0.15 },
+  glottal: { openQuotient: 0.51, speedQuotient: 2.25, tenseness: 0.5, aspiration: 0.018, power: 0.66, jitter: 0.015, shimmer: 0.03 },
+  formant: { scale: 1.16, shift: 0, bandwidth: 1.02 },
+  vibrato: { rate: 5.9, depth: 38, attack: 0.11 },
 };
 
-/** Default female voice preset. Higher OQ, faster SQ, brighter formant
- *  scale (1.18), wider vibrato. */
-export const femaleVoice: VoiceConfig = {
-  name: "Female",
+export const chitoseSho: VoiceConfig = {
+  name: "Chitose Sho",
   sampleRate: 44100,
   channels: 2,
-  glottal: { openQuotient: 0.52, speedQuotient: 2.2, tenseness: 0.48, aspiration: 0.08, power: 0.65, jitter: 0.02, shimmer: 0.04 },
-  formant: { scale: 1.18, shift: 0, bandwidth: 1.0 },
-  vibrato: { rate: 6.0, depth: 40, attack: 0.1 },
+  glottal: { openQuotient: 0.42, speedQuotient: 2.7, tenseness: 0.66, aspiration: 0.009, power: 0.78, jitter: 0.012, shimmer: 0.025 },
+  formant: { scale: 0.88, shift: -1, bandwidth: 0.92 },
+  vibrato: { rate: 5.0, depth: 26, attack: 0.16 },
 };
 
-/** Build a VoiceConfig from partial overrides. Missing fields fall through
- *  to sensible defaults (neutral voice with medium breathiness, moderate
- *  vibrato). */
+export const chitoseRen: VoiceConfig = {
+  name: "Chitose Ren",
+  sampleRate: 44100,
+  channels: 2,
+  glottal: { openQuotient: 0.48, speedQuotient: 2.5, tenseness: 0.57, aspiration: 0.014, power: 0.7, jitter: 0.017, shimmer: 0.032 },
+  formant: { scale: 0.97, shift: 0, bandwidth: 1.05 },
+  vibrato: { rate: 5.6, depth: 32, attack: 0.14 },
+};
+
+export const chitoseVoices: readonly VoiceConfig[] = [chitoseChika, chitoseSho, chitoseRen];
+
 export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
   return {
     name: "Custom",
@@ -35,7 +45,7 @@ export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
       openQuotient: 0.48,
       speedQuotient: 2.4,
       tenseness: 0.55,
-      aspiration: 0.08,
+      aspiration: 0.015,
       power: 0.7,
       jitter: 0.015,
       shimmer: 0.03,
@@ -46,43 +56,30 @@ export function buildVoice(overrides: Partial<VoiceConfig> = {}): VoiceConfig {
   };
 }
 
-/** Scale a voice along perceptual dimensions. Each parameter maps a [-1, 1]
- *  or [0, 1] input to the underlying GlottalConfig / FormantConfig fields.
- *  This is a high-level convenience, you should hand-tune the raw configs for precise
- *  control. */
+function clamp01(v: number): number {
+  return Math.max(0, Math.min(1, v));
+}
+
 export function scaleVoice(
   voice: VoiceConfig,
   params: {
-    /** Gender shift: -1 = more masculine, 1 = more feminine (formant scale
-     *  and SQ). */
     gender?: number;
-    /** Breathiness: 0 = clean, 1 = very breathy (OQ, aspiration). */
     breathiness?: number;
-    /** Vocal tension: 0 = relaxed, 1 = pressed (tenseness). */
     tension?: number;
-    /** Spectral brightness: 0 = dark, 1 = bright (formant bandwidth). */
     brightness?: number;
-    /** Vibrato amount: 0 = none, 1 = full (multiplied against voice depth). */
     vibratoAmount?: number;
-    /** Direct open-quotient override. */
     oq?: number;
-    /** Direct speed-quotient override. */
     sq?: number;
-    /** Direct shimmer (amplitude jitter) override. */
     shimmer?: number;
-    /** Direct formant scale override. */
     fScale?: number;
-    /** Direct formant shift override (semitones). */
     fShift?: number;
-    /** Direct vibrato rate override (Hz). */
     vRate?: number;
-    /** Direct vibrato attack override (seconds). */
     vAttack?: number;
   },
 ): VoiceConfig {
   const {
     gender = 0,
-    breathiness = 0,
+    breathiness = 0.5,
     tension = 0.5,
     brightness = 0.5,
     vibratoAmount = 0.5,
@@ -94,20 +91,25 @@ export function scaleVoice(
     vRate,
     vAttack,
   } = params;
-  const fScale = fs ?? voice.formant.scale * (1.0 + 0.2 * gender);
-  const baseTenseness = 0.55 - gender * 0.12;
+  const g = Math.max(-1, Math.min(1, gender));
+  const fScale = fs ?? voice.formant.scale * (1.0 + GENDER_FORMANT_RANGE * g);
   return {
     ...voice,
     glottal: {
       ...voice.glottal,
-      openQuotient: oq ?? voice.glottal.openQuotient + breathiness * 0.06,
-      speedQuotient: sq ?? voice.glottal.speedQuotient * (1 + gender * 0.3),
-      tenseness: baseTenseness + tension * 0.3,
-      aspiration: breathiness * 0.1 + 0.02,
+      openQuotient: oq ?? voice.glottal.openQuotient + g * GENDER_OQ_RANGE + (breathiness - 0.5) * BREATHINESS_OQ_RANGE,
+      speedQuotient: sq ?? voice.glottal.speedQuotient * (1 + g * GENDER_SQ_RANGE),
+      tenseness: clamp01(voice.glottal.tenseness - g * GENDER_TENSENESS_RANGE + (tension - 0.5) * 0.3),
+      aspiration: voice.glottal.aspiration * breathiness * 2,
       shimmer: shimmer ?? voice.glottal.shimmer ?? 0.03,
-      jitter: voice.glottal.jitter ?? 0.02,
+      jitter: voice.glottal.jitter ?? 0.015,
     },
-    formant: { ...voice.formant, scale: fScale, shift: fShift ?? voice.formant.shift, bandwidth: 0.8 + (1 - brightness) * 0.4 },
+    formant: {
+      ...voice.formant,
+      scale: fScale,
+      shift: fShift ?? voice.formant.shift,
+      bandwidth: voice.formant.bandwidth * (0.8 + (1 - brightness) * 0.4),
+    },
     vibrato: {
       ...voice.vibrato,
       rate: vRate ?? voice.vibrato.rate,
@@ -117,18 +119,12 @@ export function scaleVoice(
   };
 }
 
-const registry = new Map<string, VoiceConfig>([
-  ["male", maleVoice],
-  ["female", femaleVoice],
-]);
+const registry = new Map<string, VoiceConfig>(chitoseVoices.map((v) => [v.name.toLowerCase(), v]));
 
-/** Look up a registered voice config by name (case-insensitive). */
 export function getVoice(name: string): VoiceConfig | undefined {
   return registry.get(name.toLowerCase());
 }
 
-/** Register a custom voice config under a name for later lookup via
- *  `getVoice`. Overwrites any existing entry with the same name. */
 export function registerVoice(name: string, config: VoiceConfig): void {
   registry.set(name.toLowerCase(), config);
 }

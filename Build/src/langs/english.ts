@@ -1,4 +1,5 @@
 import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import { isRestLyric, REST_PHONEME } from "./alias";
 import g2pData from "./data/en-g2p.cjs";
 
 // English (ARPAbet) phoneme data.
@@ -425,7 +426,7 @@ const enPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "JH",
@@ -438,7 +439,13 @@ const enPhonemes: PhonemeDef[] = [
       { f: 1800, bw: 150 },
       { f: 2500, bw: 200 },
     ],
-    noise: { amplitude: 0.25, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.12, formantShaping: [{ f: 3500, bw: 1500 }] },
+  },
+  {
+    symbol: REST_PHONEME,
+    type: "silence",
+    voiced: false,
+    defaultDuration: 0.06,
   },
 ];
 
@@ -446,8 +453,6 @@ const g2p = g2pData as Record<string, string[]>;
 const EN_VOWELS = enPhonemes.filter((p) => p.type === "vowel" || p.type === "diphthong").map((p) => p.symbol);
 const EN_CONSONANTS = enPhonemes.filter((p) => p.type === "consonant").map((p) => p.symbol);
 
-/** English CV reclist: standalone vowels plus one consonant+vowel sample per
- *  (consonant, vowel) pair. */
 function buildEnCv(): ReclistEntry[] {
   const out: ReclistEntry[] = [];
   for (const v of EN_VOWELS) out.push({ alias: v.toLowerCase(), phonemes: [v] });
@@ -457,8 +462,6 @@ function buildEnCv(): ReclistEntry[] {
   return out;
 }
 
-/** English VCCV-style reclist: leading/ending vowels, vowel blends, and every
- *  vowel+consonant and consonant+vowel connection. */
 function buildEnVcv(): ReclistEntry[] {
   const out: ReclistEntry[] = [];
   for (const v of EN_VOWELS) {
@@ -477,16 +480,13 @@ function buildEnVcv(): ReclistEntry[] {
   return out;
 }
 
-/** English language module with ARPAbet phoneme inventory and CMUDict-based
- *  G2P. Handles letter-to-phoneme conversion via a compressed CMU Pronouncing
- *  Dictionary lookup, with a character-level fallback for unknown words. */
 export const english: LanguageModule = {
   id: "en",
   name: "English",
   phonemes: new Map(enPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
+    if (isRestLyric(lyric)) return [REST_PHONEME];
     const clean = lyric.trim().toLowerCase();
-    if (clean === "r") return ["R"]; // silence/rest marker
     if (g2p[clean]) return [...g2p[clean]];
     const parts = clean.split(/[\s_-]+/).filter(Boolean);
     if (parts.every((p) => this.phonemes.has(p))) return parts;

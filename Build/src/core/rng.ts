@@ -1,4 +1,3 @@
-/** Deterministic PRNG (mulberry32) and a stable note hash. */
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return function () {
@@ -9,7 +8,6 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-/** Stable 32-bit FNV-1a hash of a note's identity, used to seed its noise. */
 export function hashNote(note: { noteNum: number; length: number; lyric: string }, extra = ""): number {
   let h = 0x811c9dc5;
   const s = `${note.noteNum}:${note.length}:${note.lyric}:${extra}`;

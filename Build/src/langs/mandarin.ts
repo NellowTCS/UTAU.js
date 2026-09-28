@@ -1,4 +1,5 @@
 import type { PhonemeDef, LanguageModule, ReclistEntry, ReclistStyle } from "../core/types";
+import { REST_PHONEME, isRestLyric } from "./alias";
 
 // Mandarin Chinese (Pǔtōnghuà) phoneme data.
 //
@@ -43,7 +44,7 @@ const cnPhonemes: PhonemeDef[] = [
   baseVowel("e", 580, 1500, 2500),
   baseVowel("i", 290, 2360, 3100, 60, 80, 120),
   baseVowel("u", 380, 620, 2800, 70, 90, 130),
-  baseVowel("v", 290, 2050, 3100, 60, 80, 120), // ü
+  baseVowel("v", 290, 2050, 3100, 60, 80, 120),
 
   // Retroflex vowel er
   {
@@ -193,7 +194,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 7000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 7000, bw: 2000 }] },
   },
   {
     symbol: "c",
@@ -201,7 +202,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.45, formantShaping: [{ f: 7000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 7000, bw: 2000 }] },
   },
   {
     symbol: "zh",
@@ -209,7 +210,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "ch",
@@ -217,7 +218,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.45, formantShaping: [{ f: 3500, bw: 1500 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 3500, bw: 1500 }] },
   },
   {
     symbol: "j",
@@ -225,7 +226,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.06,
-    noise: { amplitude: 0.35, formantShaping: [{ f: 5000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 5000, bw: 2000 }] },
   },
   {
     symbol: "q",
@@ -233,7 +234,7 @@ const cnPhonemes: PhonemeDef[] = [
     consonantType: "affricate",
     voiced: false,
     defaultDuration: 0.08,
-    noise: { amplitude: 0.45, formantShaping: [{ f: 5000, bw: 2000 }] },
+    noise: { amplitude: 0.2, formantShaping: [{ f: 5000, bw: 2000 }] },
   },
 
   // Nasals:
@@ -309,6 +310,7 @@ const cnPhonemes: PhonemeDef[] = [
   {
     symbol: "sil",
     type: "silence" as const,
+    voiced: false,
     defaultDuration: 0.06,
   },
 ];
@@ -422,18 +424,14 @@ function pinyinToPhonemes(syllable: string): string[] {
   const s = syllable.toLowerCase().trim();
   if (!s) return [];
 
-  // Check for direct lookup
   if (pinyinG2P[s]) return [...pinyinG2P[s]];
 
-  // Pure vowel syllable (a, o, e, i, u, v, er)
   if (VOWELS.has(s)) return [s];
   if (s === "er") return ["er"];
 
-  // Split into initial + final
   let initial = "";
   let final = s;
 
-  // Try the longest initial match (zh, ch, sh before z, c, s, etc.)
   for (let len = 2; len >= 1; len--) {
     const candidate = s.slice(0, len);
     if (INITIALS.has(candidate) && candidate !== "y" && candidate !== "w") {
@@ -443,10 +441,8 @@ function pinyinToPhonemes(syllable: string): string[] {
     }
   }
 
-  // Handle y/w spelling changes
   if (!initial && (s.startsWith("y") || s.startsWith("w"))) {
     if (s.startsWith("yu")) {
-      // yu -> v
       initial = "";
       final = "v" + s.slice(2);
     } else if (s === "yi") {
@@ -470,9 +466,7 @@ function pinyinToPhonemes(syllable: string): string[] {
     }
   }
 
-  // If no initial found, treat whole syllable as final
   if (!initial) {
-    // Map syllable-initial y/w back
     if (final.startsWith("yu")) final = "v" + final.slice(2);
     else if (final.startsWith("yi")) final = "i" + final.slice(2);
     else if (final.startsWith("y")) final = "i" + final.slice(1);
@@ -480,23 +474,16 @@ function pinyinToPhonemes(syllable: string): string[] {
     else if (final.startsWith("w")) final = "u" + final.slice(1);
   }
 
-  // Look up the final in the G2P table
   const finalPhonemes = pinyinG2P[final] ?? (VOWELS.has(final) ? [final] : null);
 
-  // Fallback: if the final is a single vowel, use it; otherwise try a simple split
   if (!finalPhonemes) {
-    // Check if the whole syllable is a known phoneme sequence
     if (INITIALS.has(s) && s !== "y" && s !== "w") return [s];
-    // Last resort: split into individual characters as phonemes
     return [...s].filter((ch) => ch !== " ").map((ch) => ch);
   }
 
   return initial ? [initial, ...finalPhonemes] : finalPhonemes;
 }
 
-// Pinyin finals (after y/w normalisation). Used to enumerate syllables for
-// the voicebank reclists. Medial i/u/ü finals are listed in their phonemic
-// form (ia, ua, ve, ...); y/w spelling is restored by pinyinOrthography.
 const ZH_FINALS = [
   "a",
   "o",
@@ -536,10 +523,6 @@ const ZH_FINALS = [
   "vn",
 ];
 
-// Phonotactically valid onset sets per final ("" = zero onset). Encodes the
-// standard Putonghua onset-rime constraints so the reclist only contains real
-// syllables. (Apical syllables zhi/chi/shi/ri/zi/ci/si decompose to ir/iz and
-// are covered by the ir/iz finals contained in the phoneme inventory.)
 const ZH_FINAL_ONSETS: Record<string, string[]> = {
   a: ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "zh", "ch", "sh", "r", "z", "c", "s"],
   o: ["", "b", "p", "m", "f"],
@@ -579,7 +562,6 @@ const ZH_FINAL_ONSETS: Record<string, string[]> = {
   vn: ["", "j", "q", "x"],
 };
 
-// Nucleus vowels used as the "previous vowel" unit in VCV connections.
 const ZH_NUCLEUS = ["a", "o", "e", "i", "u", "v"];
 
 /** Render a (onset, final) pair in canonical pinyin orthography, applying the
@@ -596,7 +578,7 @@ function pinyinOrthography(onset: string, final: string): string {
     if (final === "van") return "yuan";
     if (final.startsWith("i")) return "y" + final.slice(1);
     if (final.startsWith("u")) return "w" + final.slice(1);
-    return final; // a, o, e, er
+    return final;
   }
   return onset + final;
 }
@@ -659,13 +641,12 @@ export const mandarin: LanguageModule = {
   name: "Mandarin Chinese",
   phonemes: new Map(cnPhonemes.map((p) => [p.symbol, p])),
   lyricToPhonemes(lyric: string): string[] {
+    if (isRestLyric(lyric)) return [REST_PHONEME];
     const clean = lyric.trim();
     if (!clean) return [];
 
-    // Strip tone numbers (1-5) from the end of each syllable
     const noTone = clean.replace(/[1-5]$/, "");
 
-    // Handle multi-syllable lyrics separated by spaces
     const syllables = noTone.split(/[\s_-]+/).filter(Boolean);
     return syllables.flatMap((syl) => pinyinToPhonemes(syl));
   },

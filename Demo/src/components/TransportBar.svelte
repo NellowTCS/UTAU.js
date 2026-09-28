@@ -48,9 +48,7 @@
     else if (state === "paused") onResume();
     else onPlay();
   }
-  let statusClass = $derived(
-    buffering ? "buffering" : state === "playing" ? "playing" : state === "paused" ? "paused" : "",
-  );
+  let statusClass = $derived(buffering ? "buffering" : state === "playing" ? "playing" : state === "paused" ? "paused" : "");
   let statusText = $derived(
     buffering
       ? "Buffering"
@@ -65,12 +63,7 @@
 </script>
 
 <div class="transport">
-  <Button
-    variant="primary"
-    class="play-btn"
-    onclick={handlePrimary}
-    title={state === "playing" ? "Pause" : "Play"}
-  >
+  <Button variant="primary" class="play-btn" onclick={handlePrimary} title={state === "playing" ? "Pause" : "Play"}>
     {#if state === "playing"}
       <Pause size={18} />
     {:else}
